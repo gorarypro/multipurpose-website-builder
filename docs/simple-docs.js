@@ -1,9 +1,29 @@
+cat > docs/simple-docs.js << 'EOF'
 const fs = require('fs');
 const path = require('path');
 
-// Simple documentation generator
-function generateSimpleDocs() {
-  console.log('📚 Generating simple documentation...');
+// Read project structure
+function readProjectStructure(dir, extensions = ['.js', '.css']) {
+  const items = fs.readdirSync(dir, { withFileTypes: true });
+  let structure = {};
+  
+  items.forEach(item => {
+    const itemPath = path.join(dir, item);
+    const stat = fs.statSync(itemPath);
+    
+    if (stat.isDirectory()) {
+      structure[item] = readProjectStructure(itemPath, extensions);
+    } else {
+      structure[item] = item;
+    }
+  });
+  
+  return structure;
+}
+
+// Generate documentation
+function generateDocumentation() {
+  console.log('📚 Generating documentation...');
   
   // Create docs directory if it doesn't exist
   if (!fs.existsSync('./docs')) {
@@ -13,32 +33,25 @@ function generateSimpleDocs() {
   // Read project structure
   const projectStructure = readProjectStructure('.', ['.js', '.css']);
   
+  // Generate API documentation
+  generateApiDocumentation(projectStructure);
+  
   // Generate component documentation
   const components = ['navbar', 'hero', 'about', 'services'];
-  
   components.forEach(component => {
-    const componentPath = `./components/${component}`;
-    if (fs.existsSync(componentPath)) {
-      generateComponentDoc(component);
-    }
+    generateComponentDoc(component);
   });
   
   // Generate theme documentation
   const themes = ['base', 'business', 'ecommerce'];
   themes.forEach(theme => {
-    const themePath = `./themes/${theme}.css`;
-    if (fs.existsSync(themePath)) {
-      generateThemeDoc(theme);
-    }
+    generateThemeDoc(theme);
   });
   
-  // Generate API documentation
-  generateApiDoc();
-  
   // Generate user guide
-  generateUserGuide();
+  generateUserGuide(projectStructure);
   
-  console.log('✅ Simple documentation generated successfully!');
+  console.log('✅ Documentation generated successfully!');
 }
 
 function generateComponentDoc(component) {
@@ -53,22 +66,33 @@ function generateComponentDoc(component) {
     // Generate HTML documentation
     const htmlDoc = `
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
   <title>${component} Component Documentation</title>
   <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; padding: 20px; }
+    body { font-family: Arial, <sans-serif; line-height: 1.6; padding: 0px 20px; }
     pre { background: #f5f5f5; padding: 15px; border-radius: 5px; overflow-x: auto; }
     code { background: #f0f0f0; padding: 2px 4px; border-radius: 3px; }
   </style>
 </head>
 <body>
   <h1>${component} Component</h1>
-  <h2>JavaScript</h2>
+  <h2>JavaScript Implementation</h2>
   <pre><code>${jsContent}</code></pre>
   
-  <h2>CSS</h2>
-  <pre><code>${cssContent}</code></pre>
+  <h2>CSS Styles</h2>
+  <pre><code>:root {
+  --primary-color: #0a4d68;
+  --secondary-color: #088395;
+  --accent-color: #05bfdb;
+}</code></pre>
+  
+  <h2>Usage Example</h2>
+  <pre><code>import { ${component} } from './components/${component}/${component}.js';</code></pre>
+  
+  <h2>HTML Example</h2>
+  <pre><code>&lt;div class="${component}"&gt;Hello World&lt;/div&gt;</code></pre>
 </body>
 </html>
     `;
@@ -89,18 +113,36 @@ function generateThemeDoc(theme) {
     // Generate HTML documentation
     const htmlDoc = `
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
   <title>${theme} Theme Documentation</title>
   <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; padding: 20px; }
+    body { font-family: Arial, <sans-serif; line-height: 1.6; padding: 0px 20px; }
     pre { background: #f5f5f5; padding: 15px; border-radius: 5px; overflow-x: auto; }
     code { background: #f0f0f0; padding: 2px 4px; border-radius: 3px; }
   </style>
 </head>
 <body>
   <h1>${theme} Theme Documentation</h1>
-  <pre><code>${cssContent}</code></pre>
+  <h2>CSS Variables</h2>
+  <pre><code>:root {
+  --primary-color: #0a4d68;
+  --secondary-color: #088395;
+  --accent-color: #05bfdb;
+}</code></pre>
+  
+  <h2>Usage</h2>
+  <pre><code>body {
+  background-color: var(--primary-color);
+  color: var(--text-color);
+}</code></pre>
+  
+  <h2>Customization</h2>
+  <pre><code>body.dark-theme {
+  background-color: var(--dark-bg-color);
+  color: var(--dark-text-color);
+}</code></pre>
 </body>
 </html>
     `;
@@ -112,14 +154,16 @@ function generateThemeDoc(theme) {
   }
 }
 
-function generateApiDoc() {
+function generateApiDoc(structure) {
+  // Generate API documentation
   const apiDoc = `
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
   <title>API Documentation</title>
   <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; padding: 20px; }
+    body { font-family: Arial, sans-serif; line-height: 1.6; padding: 0px 20px; }
     pre { background: #f5f5f5; padding: 15px; border-radius: 5px; overflow-x: auto; }
     code { background: #f0f0f0; padding: 2px 4px; border-radius: 3px; }
   </style>
@@ -127,8 +171,7 @@ function generateApiDoc() {
 <body>
   <h1>API Documentation</h1>
   <h2>Core Classes</h2>
-  <pre><code>
-class MultipurposeWebsiteBuilder {
+  <pre><code>class MultipurposeWebsiteBuilder {
   constructor() {
     this.config = APP_CONFIG;
     this.categoryHierarchy = CATEGORY_HIERARCHY;
@@ -143,9 +186,10 @@ class MultipurposeWebsiteBuilder {
     this.currentWebsiteType = null;
     this.currentTheme = null;
   }
-
-  async init() {
-    console.log('🚀 Initializing Multipurpose Website Builder...');
+    
+    // Methods
+    async init() {
+      console.log('🚀 Initializing Multipurpose Website Builder...');
     
     try {
       // Load configuration
@@ -171,11 +215,10 @@ class MultipurposeWebsiteBuilder {
 
   // ... rest of the class
 }
-    </code></pre>
-    
+</code></pre>
+  
   <h2>Configuration</h2>
-  <pre><code>
-const APP_CONFIG = {
+  <pre><code>const APP_CONFIG = {
   BACKEND_URL: 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE',
   APP_NAME: 'Multipurpose Website Builder',
   VERSION: '1.0.0',
@@ -191,15 +234,8 @@ const APP_CONFIG = {
     darkMode: false,
     multiLanguage: false
   }
-};
-    </code></pre>
-    
-  <h2>Usage</h2>
-  <pre><code>
-const app = new MultipurposeWebsiteBuilder();
-await app.init();
-    </code></pre>
-  </body>
+};</code></pre>
+</body>
 </html>
     `;
     
@@ -210,14 +246,16 @@ await app.init();
   }
 }
 
-function generateUserGuide() {
+function generateUserGuide(structure) {
+  // Generate user guide
   const userGuide = `
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
   <title>User Guide</title>
   <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; padding: 20px; }
+    body { font-family: Arial, sans-serif; line-height: 1.6; padding: 0px 20px; }
     pre { background: #f5f5f5; padding: 15px; border-radius: 5px; overflow-x: auto; }
     code { background: #f0f0f0; padding: 2px 4px; border-radius: 3px; }
   </style>
@@ -235,7 +273,7 @@ function generateUserGuide() {
   
   <h2>Building Websites</h2>
   <ol>
-    <li>Choose a website type from the available categories</li>
+    <li>Choose a website type from available categories</li>
     <li>Select a template or customize your own</li>
     <li>Add content using the component system</li>
     <li>Configure features and themes</li>
@@ -256,6 +294,8 @@ function generateUserGuide() {
     <li>Hero - Hero section</li>
     <li>About - About section</li>
     <li>Services - Services section</li>
+    <li>Cart - Shopping cart</li>
+    <li>Contact - Contact form</li>
   </ul>
   
   <h2>Themes</h2>
@@ -264,6 +304,17 @@ function generateUserGuide() {
     <li>Business - Professional corporate theme</li>
     <li>E-Commerce - Modern online store theme</li>
     <li>Education - Clean educational theme</li>
+    <li>Health - Fresh wellness theme</li>
+  </ul>
+  
+  <h2>API</h2>
+  <p>The system provides:</p>
+  <ul>
+    <li>Core classes for application management</li>
+    <li>Configuration system for multiple website types</li>
+    <li>Component loader for dynamic loading</li>
+    <li>Theme manager for theme switching</li>
+    <li>Utility functions for common tasks</li>
   </ul>
 </body>
 </html>
@@ -278,3 +329,4 @@ function generateUserGuide() {
 
 // Run the documentation generation
 generateSimpleDocs();
+EOF
