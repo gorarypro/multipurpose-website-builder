@@ -1,4 +1,3 @@
-cat > package.json << 'EOF'
 {
   "name": "multipurpose-website-builder",
   "version": "1.0.0",
@@ -16,4 +15,3 @@ cat > package.json << 'EOF'
     "http-server": "^14.1.1"
   }
 }
-EOF
