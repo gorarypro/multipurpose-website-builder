@@ -1,4 +1,3 @@
-cat > docs/simple-docs.js << 'EOF'
 const fs = require('fs');
 const path = require('path');
 
@@ -329,4 +328,3 @@ function generateUserGuide(structure) {
 
 // Run the documentation generation
 generateSimpleDocs();
-EOF
