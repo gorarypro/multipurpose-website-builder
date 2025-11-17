@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multipurpose Website Builder - User Guide</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 1rem;
+        }
+        h2 {
+            color: #666;
+            margin-bottom: 1rem;
+        }
+        h3 {
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+        code {
+            background-color: #f4f4f4;
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+        pre {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        .btn {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .card-header {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-bottom: 1px solid #dee2e6;
+            border-radius: 8px 8px 8px 0;
+        }
+        .card-title {
+            color: #333;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        .card-text {
+            color: #666;
+            margin-bottom: 1rem;
+        }
+        .section {
+            margin-bottom: 2rem;
+        }
+        .section-title {
+            color: #333;
+            font-size: 1.25rem;
+            font-weight: 600;
+            border-bottom: 2px solid #dee2e6;
+            padding-bottom: 0.5rem;
+        }
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+        .feature-list li {
+            margin-bottom: 0.5rem;
+            color: #666;
+        }
+        .feature-list li::before {
+            content: "✓";
+            color: #28a745;
+            margin-right: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Multipurpose Website Builder - User Guide</h1>
+        <p>Welcome to the comprehensive website builder documentation!</p>
+        
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">📚 Getting Started</h2>
+            </div>
+            <div class="card-body">
+                <div class="section">
+                    <h3 class="section-title">1. Installation</h3>
+                    <p>Clone the repository and install dependencies:</p>
+                    <pre><code>git clone https://github.com/YOUR_USERNAME/multipurpose-website-builder.git
+cd multipurpose-website-builder
+npm install
+</code></pre>
+                </div>
+                
+                <div class="section">
+                    <h3 class="section-title">2. Project Structure</h3>
+                    <p>Understanding the project structure:</p>
+                    <pre><code>multipurpose-website-builder/
+├── config/           # Configuration files
+├── core/             # Core application logic
+├── components/        # Reusable components
+├── templates/          # HTML templates
+├── themes/            # CSS themes
+├── assets/            # Static assets
+├── backend/           # Google Apps Script
+├── builder/           # Website builder interface
+└── docs/              # Documentation
+</code></pre>
+                </div>
+                
+                <div class="section">
+                    <h3 class="section-title">3. Available Website Types</h3>
+                    <p>The system supports 20+ website categories:</p>
+                    <ul class="feature-list">
+                        <li>📊 Business & Corporate</li>
+                        <li>🛒 Directory & E-Commerce</li>
+                        <li>🎓 Education & E-Learning</li>
+                        <li>🏥 Health & Wellness</li>
+                        <li>🎭 Entertainment & Media</li>
+                        <li>💻 Technology & Software</li>
+                        <li>✈️ Travel & Hospitality</li>
+                        <li>🏠 Real Estate</li>
+                        <li>🍽 Food & Beverage</li>
+                        <li>👗 Fashion & Beauty</li>
+                        <li>🏛 Non-Profit & Charity</li>
+                        <li>🏛️ Government & Public Sector</li>
+                        <li>🎨 Arts & Culture</li>
+                        <li>⚖️ Legal & Financial</li>
+                        <li>🚗 Automotive</li>
+                        <li>🏡 Home & Garden</li>
+                        <li>📷 Photography & Creative Arts</li>
+                        <li>🔬 Science & Environment</li>
+                        <li>🎫 Events & Ticketing</li>
+                        <li>🌐 Others</li>
+                    </ul>
+                </div>
+                
+                <div class="section">
+                    <h3 class="section-title">4. Component System</h3>
+                    <p>The modular component system includes:</p>
+                    <ul class="feature-list">
+                        <li>📦 Component Loader</li>
+                        <li>🎨 Theme Manager</li>
+                        <li>🔧 Utils</li>
+                    </ul>
+                </div>
+                
+                <div class="section">
+                    <h3 class="section-title">5. Theme System</h3>
+                    <p>Multiple themes with customization options:</p>
+                    <ul class="feature-list">
+                        <li>🎨 Business Theme</li>
+                        <li>🛒 E-Commerce Theme</li>
+                        <li>🎓 Education Theme</li>
+                        <li>🏥 Health Theme</li>
+                    </ul>
+                </div>
+                
+                <div class="section">
+                    <h3 class="section-title">6. Template System</h3>
+                    <p>Pre-built templates for different website types:</p>
+                    <ul class="feature-list">
+                        <li>📄 Corporate Templates</li>
+                        <li>🛒 E-Commerce Templates</li>
+                        <li>🎓 Education Templates</li>
+                    </ul>
+                </div>
+                
+                <div class="section">
+                    <h3 class="section-title">7. Configuration System</h3>
+                    <p>Flexible configuration for all website types:</p>
+                    <ul class="feature-list">
+                        <li>⚙️ Feature Matrix</li>
+                        <li>🏗️ Category Hierarchy</li>
+                        <li>🎨 Template Config</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">🚀 Quick Start</h2>
+            </div>
+            <div class="card-body">
+                <div class="section">
+                    <h3 class="section-title">Start Building in 3 Easy Steps</h3>
+                    <ol>
+                        <li>Choose a website type from available categories</li>
+                        <li>Select a template or create your own</li>
+                        <li>Customize features and themes as needed</li>
+                    </ol>
+                </div>
+                
+                <div class="section">
+                    <h3 class="section-title">📚 Advanced Features</h3>
+                    <ul class="feature-list">
+                        <li>🔧 Component Development</li>
+                        <li>🎨 Theme Customization</li>
+                        <li>📝 Backend Integration</li>
+                        <li>📱 Documentation Generation</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">📖 Documentation</h2>
+            </div>
+            <div class="card-body">
+                <div class="section">
+                    <h3 class="section-title">Auto-Generated Documentation</h3>
+                    <p>Professional documentation automatically generated from your code:</p>
+                    <ul class="feature-list">
+                        <li>📚 API Documentation</li>
+                        <li>📖 Component Examples</li>
+                        <li>🎨 Theme Examples</li>
+                        <li>📖 User Guide</li>
+                    </ul>
+                </div>
+                
+                <div class="section">
+                    <h3 class="section-title">🔗 Deployment Options</h3>
+                    <ul class="feature-list">
+                        <li>🌐 GitHub Pages</li>
+                        <li>🌐 Netlify</li>
+                        <li>🚀 Vercel</li>
+                        <li>🔧 Firebase Hosting</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
