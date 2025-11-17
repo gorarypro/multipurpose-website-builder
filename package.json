@@ -1,3 +1,4 @@
+cat > package.json << 'EOF'
 {
   "name": "multipurpose-website-builder",
   "version": "1.0.0",
@@ -6,14 +7,13 @@
   "scripts": {
     "start": "http-server . -p 8080",
     "dev": "http-server . -p 8080 -o",
-    "docs": "node docs/generate-docs.js && node docs/generate-docs.js",
-    "build-docs": "heredoc -c ./core -c ./components -c ./themes -o ./docs"
+    "docs": "node docs/simple-docs.js && node docs/simple-docs.js"
   },
   "keywords": ["website", "builder", "multipurpose", "templates", "components"],
   "author": "Your Name",
   "license": "MIT",
   "devDependencies": {
-    "http-server": "^14.1.1",
-    "heredoc": "^3.2.7"
+    "http-server": "^14.1.1"
   }
 }
+EOF
