@@ -110,6 +110,7 @@ ENDOFFILE
 echo "Creating core files..."
 
 # Create core/apps-script/Code.gs
+# FIX: Removed JSON.stringify() from return values to prevent Double JSON encoding
 cat > core/apps-script/Code.gs <<'ENDOFFILE'
 /**
  * CONFIGURATION
@@ -120,6 +121,7 @@ const BLOG_FEED_URL = 'https://multipurpose-website-builder.blogspot.com/feeds/p
 
 /**
  * HELPER FUNCTION - Creates JSONP response
+ * This handles the JSON stringification.
  */
 function createJsonpResponse(data, callback) {
   const jsonpData = callback + '(' + JSON.stringify(data) + ')';
@@ -143,7 +145,8 @@ function doGet(e) {
 
   if (action === 'getWebsiteTypes') {
     try {
-      const websiteTypes = getWebsiteTypes();
+      // Returns OBJECT, not string
+      const websiteTypes = getWebsiteTypes(); 
       return createJsonpResponse(websiteTypes, callback);
     } catch (error) {
       return createJsonpResponse({ error: error.message }, callback);
@@ -152,6 +155,7 @@ function doGet(e) {
   else if (action === 'getData') {
     try {
       const typeToFetch = websiteType || 'Home Improvement';
+      // Returns OBJECT, not string
       const data = getData(typeToFetch);
       return createJsonpResponse(data, callback);
     } catch (error) {
@@ -172,41 +176,39 @@ function doGet(e) {
 }
 
 /**
- * Get website types from JSON
+ * Get website types
+ * FIX: Returns pure Object, does not Stringify
  */
 function getWebsiteTypes() {
-  // Matches website-types.json
-  const websiteTypes = {
+  return {
     "website_types": [
-      { "name": "Home Improvement", "subcategories": ["DIY Projects", "Renovation Tips", "Interior Design Ideas", "Gardening"], "icon": "tools", "color": "#e67e22" },
-      { "name": "Real Estate Investment", "subcategories": ["Property Management", "Landlord Resources", "Market Analysis", "Rental Listings"], "icon": "building", "color": "#2c3e50" },
-      { "name": "Insurance", "subcategories": ["Policy Comparisons", "Claims Advice", "Insurance Types", "Risk Management"], "icon": "shield-check", "color": "#2980b9" },
-      { "name": "Self-Improvement", "subcategories": ["Personal Development Blogs", "Productivity Tools", "Goal Setting Resources", "Motivational Content"], "icon": "person-bounding-box", "color": "#16a085" },
-      { "name": "Cryptocurrency", "subcategories": ["Blockchain Technology", "Trading Platforms", "Cryptocurrency News", "Investment Strategies"], "icon": "currency-bitcoin", "color": "#f39c12" },
-      { "name": "Hobbies and Crafts", "subcategories": ["Crafting Tutorials", "Hobbyist Communities", "Supplies and Materials", "Project Ideas"], "icon": "scissors", "color": "#d35400" },
-      { "name": "Events and Conferences", "subcategories": ["Event Listings", "Event Planning Resources", "Conference Reviews", "Networking Opportunities"], "icon": "calendar-event", "color": "#8e44ad" },
-      { "name": "Dance", "subcategories": ["Dance Studios", "Choreography Tutorials", "Dance Competitions", "Styles and Techniques"], "icon": "music-note-beamed", "color": "#e84393" },
-      { "name": "Music", "subcategories": ["Music Streaming Services", "Artist Highlights", "Music Theory Resources", "Concert and Festival Information"], "icon": "music-note", "color": "#0984e3" },
-      { "name": "Philosophy", "subcategories": ["Philosophical Discussions", "Ethics Resources", "Book Recommendations", "Historical Philosophy"], "icon": "book", "color": "#6c5ce7" },
-      { "name": "Mythology", "subcategories": ["Mythological Stories", "Cultural Significance", "Comparative Mythology", "Modern Adaptations"], "icon": "lightning-charge", "color": "#fdcb6e" },
-      { "name": "Survival Skills", "subcategories": ["Outdoor Survival Guides", "Wilderness Training", "Emergency Preparedness", "Camping Tips"], "icon": "fire", "color": "#d63031" },
-      { "name": "Fashion Design", "subcategories": ["Design Portfolios", "Fashion Shows", "Trend Analysis", "Fashion Illustration Techniques"], "icon": "handbag", "color": "#e17055" },
-      { "name": "Culinary Arts", "subcategories": ["Professional Cooking Schools", "Culinary Competitions", "Chef Profiles", "Food Photography"], "icon": "egg-fried", "color": "#f1c40f" },
-      { "name": "Film and Television", "subcategories": ["Film Festivals", "TV Show Reviews", "Filmmaking Resources", "Genre Analyses"], "icon": "film", "color": "#2d3436" },
-      { "name": "Spirituality", "subcategories": ["Meditation Resources", "Holistic Living", "Spiritual Practices", "Community Support"], "icon": "flower1", "color": "#00b894" },
-      { "name": "Digital Marketing", "subcategories": ["SEO Strategies", "Social Media Marketing", "Content Marketing", "Email Marketing Solutions"], "icon": "graph-up", "color": "#0984e3" },
-      { "name": "Women’s Interests", "subcategories": ["Empowerment Resources", "Women in Leadership", "Health and Wellness for Women", "Fashion and Lifestyle for Women"], "icon": "gender-female", "color": "#e84393" },
-      { "name": "Men’s Interests", "subcategories": ["Grooming and Lifestyle", "Fitness for Men", "Fatherhood Resources", "Men's Fashion Trends"], "icon": "gender-male", "color": "#34495e" },
-      { "name": "Aging and Senior Care", "subcategories": ["Elder Care Resources", "Retirement Planning", "Health and Wellness for Seniors", "Activities for Seniors"], "icon": "heart-pulse", "color": "#74b9ff" },
-      { "name": "Travel Hacking", "subcategories": ["Travel Deals", "Frequent Flyer Tips", "Budget Travel Strategies", "Travel Rewards Programs"], "icon": "airplane", "color": "#00cec9" },
-      { "name": "Food and Beverage", "subcategories": ["Brewery and Winery Reviews", "Food Blogging", "Specialty Foods", "Beverage Pairings"], "icon": "cup-straw", "color": "#d63031" },
-      { "name": "Urban Exploration", "subcategories": ["Abandoned Places", "City Guides", "Photography from Urban Settings", "History of Urban Spaces"], "icon": "building", "color": "#636e72" },
-      { "name": "Alternative Energy", "subcategories": ["Solar and Wind Energy Resources", "Sustainable Living Tips", "Reviews on Renewable Technologies", "Policy and Advocacy"], "icon": "sun", "color": "#f1c40f" },
-      { "name": "Sustainability", "subcategories": ["Eco-Friendly Products", "Sustainable Practices", "Green Living Resources", "Environmental Activism"], "icon": "tree", "color": "#27ae60" }
+      { "name": "Home Improvement", "subcategories": ["DIY Projects", "Renovation Tips", "Interior Design Ideas", "Gardening"], "icon": "tools", "color": "#e67e22", "features": ["posts", "gallery"] },
+      { "name": "Real Estate Investment", "subcategories": ["Property Management", "Landlord Resources", "Market Analysis", "Rental Listings"], "icon": "building", "color": "#2c3e50", "features": ["listings", "map"] },
+      { "name": "Insurance", "subcategories": ["Policy Comparisons", "Claims Advice", "Insurance Types", "Risk Management"], "icon": "shield-check", "color": "#2980b9", "features": ["forms", "posts"] },
+      { "name": "Self-Improvement", "subcategories": ["Personal Development Blogs", "Productivity Tools", "Goal Setting Resources", "Motivational Content"], "icon": "person-bounding-box", "color": "#16a085", "features": ["posts", "newsletter"] },
+      { "name": "Cryptocurrency", "subcategories": ["Blockchain Technology", "Trading Platforms", "Cryptocurrency News", "Investment Strategies"], "icon": "currency-bitcoin", "color": "#f39c12", "features": ["charts", "posts"] },
+      { "name": "Hobbies and Crafts", "subcategories": ["Crafting Tutorials", "Hobbyist Communities", "Supplies and Materials", "Project Ideas"], "icon": "scissors", "color": "#d35400", "features": ["gallery", "tutorials"] },
+      { "name": "Events and Conferences", "subcategories": ["Event Listings", "Event Planning Resources", "Conference Reviews", "Networking Opportunities"], "icon": "calendar-event", "color": "#8e44ad", "features": ["calendar", "tickets"] },
+      { "name": "Dance", "subcategories": ["Dance Studios", "Choreography Tutorials", "Dance Competitions", "Styles and Techniques"], "icon": "music-note-beamed", "color": "#e84393", "features": ["video", "classes"] },
+      { "name": "Music", "subcategories": ["Music Streaming Services", "Artist Highlights", "Music Theory Resources", "Concert and Festival Information"], "icon": "music-note", "color": "#0984e3", "features": ["player", "playlist"] },
+      { "name": "Philosophy", "subcategories": ["Philosophical Discussions", "Ethics Resources", "Book Recommendations", "Historical Philosophy"], "icon": "book", "color": "#6c5ce7", "features": ["posts", "forum"] },
+      { "name": "Mythology", "subcategories": ["Mythological Stories", "Cultural Significance", "Comparative Mythology", "Modern Adaptations"], "icon": "lightning-charge", "color": "#fdcb6e", "features": ["stories", "wiki"] },
+      { "name": "Survival Skills", "subcategories": ["Outdoor Survival Guides", "Wilderness Training", "Emergency Preparedness", "Camping Tips"], "icon": "fire", "color": "#d63031", "features": ["guides", "checklist"] },
+      { "name": "Fashion Design", "subcategories": ["Design Portfolios", "Fashion Shows", "Trend Analysis", "Fashion Illustration Techniques"], "icon": "handbag", "color": "#e17055", "features": ["gallery", "lookbook"] },
+      { "name": "Culinary Arts", "subcategories": ["Professional Cooking Schools", "Culinary Competitions", "Chef Profiles", "Food Photography"], "icon": "egg-fried", "color": "#f1c40f", "features": ["recipes", "menu"] },
+      { "name": "Film and Television", "subcategories": ["Film Festivals", "TV Show Reviews", "Filmmaking Resources", "Genre Analyses"], "icon": "film", "color": "#2d3436", "features": ["reviews", "trailers"] },
+      { "name": "Spirituality", "subcategories": ["Meditation Resources", "Holistic Living", "Spiritual Practices", "Community Support"], "icon": "flower1", "color": "#00b894", "features": ["meditation", "blog"] },
+      { "name": "Digital Marketing", "subcategories": ["SEO Strategies", "Social Media Marketing", "Content Marketing", "Email Marketing Solutions"], "icon": "graph-up", "color": "#0984e3", "features": ["analytics", "services"] },
+      { "name": "Women’s Interests", "subcategories": ["Empowerment Resources", "Women in Leadership", "Health and Wellness for Women", "Fashion and Lifestyle for Women"], "icon": "gender-female", "color": "#e84393", "features": ["community", "blog"] },
+      { "name": "Men’s Interests", "subcategories": ["Grooming and Lifestyle", "Fitness for Men", "Fatherhood Resources", "Men's Fashion Trends"], "icon": "gender-male", "color": "#34495e", "features": ["lifestyle", "blog"] },
+      { "name": "Aging and Senior Care", "subcategories": ["Elder Care Resources", "Retirement Planning", "Health and Wellness for Seniors", "Activities for Seniors"], "icon": "heart-pulse", "color": "#74b9ff", "features": ["resources", "care"] },
+      { "name": "Travel Hacking", "subcategories": ["Travel Deals", "Frequent Flyer Tips", "Budget Travel Strategies", "Travel Rewards Programs"], "icon": "airplane", "color": "#00cec9", "features": ["deals", "guides"] },
+      { "name": "Food and Beverage", "subcategories": ["Brewery and Winery Reviews", "Food Blogging", "Specialty Foods", "Beverage Pairings"], "icon": "cup-straw", "color": "#d63031", "features": ["reviews", "menu"] },
+      { "name": "Urban Exploration", "subcategories": ["Abandoned Places", "City Guides", "Photography from Urban Settings", "History of Urban Spaces"], "icon": "building", "color": "#636e72", "features": ["map", "gallery"] },
+      { "name": "Alternative Energy", "subcategories": ["Solar and Wind Energy Resources", "Sustainable Living Tips", "Reviews on Renewable Technologies", "Policy and Advocacy"], "icon": "sun", "color": "#f1c40f", "features": ["tech", "news"] },
+      { "name": "Sustainability", "subcategories": ["Eco-Friendly Products", "Sustainable Practices", "Green Living Resources", "Environmental Activism"], "icon": "tree", "color": "#27ae60", "features": ["shop", "blog"] }
     ]
   };
-  
-  return JSON.stringify(websiteTypes);
 }
 
 /**
@@ -230,6 +232,7 @@ function saveDataToSheet(data) {
 
 /**
  * Get data from blog feed
+ * FIX: Returns pure Array, does not Stringify
  */
 function getData(websiteType) {
   const response = UrlFetchApp.fetch(BLOG_FEED_URL, { muteHttpExceptions: true });
@@ -262,14 +265,13 @@ function processGenericData(posts, websiteType) {
       publishedDate: new Date(post.published.$t).toLocaleDateString()
     });
   });
-  return JSON.stringify(postsArray);
+  return postsArray; // Return object/array, NOT string
 }
 ENDOFFILE
 
 # Create core/blogger-theme/theme.xml
-# FIX: Moved ALL UI HTML out of the <b:widget> and directly into <body>
-# FIX: Added self-closing tags for inputs and scripts where necessary
-# FIX: Used CDATA for script content
+# FIX: Added robustness check in handleWebsiteTypes to handle string or object data
+# FIX: JavaScript wrapped in CDATA
 cat > core/blogger-theme/theme.xml <<'ENDOFFILE'
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE html>
@@ -291,51 +293,49 @@ cat > core/blogger-theme/theme.xml <<'ENDOFFILE'
 
 <body>
 
-  <!-- MOVED HTML OUTSIDE OF WIDGET TO PREVENT RENDERING ISSUES -->
-
-  <!-- Matrix Code Input -->
-  <div class='container mt-4'>
-     <div class='input-group mb-3' style='max-width: 400px; margin: 0 auto;'>
-       <span class='input-group-text bg-primary text-white'><i class="bi bi-grid-3x3-gap-fill"></i></span>
-       <input type='text' class='form-control' id='matrixCodeInput' placeholder='Enter Matrix Code (e.g. 12 or 1-2)' />
-       <button class='btn btn-primary' type='button' onclick='applyMatrixCode()'>Go</button>
-     </div>
-  </div>
-
-  <!-- Website Type Selector -->
-  <div class='container website-type-selector'>
-    <div class='selector-group'>
-      <div>
-        <label class='selector-label'>Website Type:</label>
-        <select class='selector-select' id='websiteTypeSelector'>
-          <option value="" disabled='disabled' selected='selected'>Loading categories...</option>
-        </select>
-      </div>
-    </div>
-  </div>
-
-  <!-- Subcategory Display -->
-  <div class='container mb-4' id='subcategoryContainer'></div>
-
-  <!-- Loading Container -->
-  <div class='loading-container' id='loadingContainer' style='display:flex;'>
-    <div class='loading-spinner'/>
-    <div class='loading-text'>Loading content...</div>
-  </div>
-
-  <!-- Main Content -->
-  <section class='container' id='mainContent' style='display:none;'>
-    <!-- Content will be loaded here dynamically -->
-  </section>
-
-  <!-- REQUIRED BLOGGER SECTION (kept empty/minimal to satisfy parser) -->
   <b:section class='main' id='main' maxwidgets='1' showaddelement='no'>
-    <b:widget id='HTML1' locked='true' title='Hidden Widget' type='HTML' version='1'>
+    <b:widget id='HTML1' locked='true' title='SPA Body' type='HTML' version='1'>
       <b:widget-settings>
         <b:widget-setting name='content'/>
       </b:widget-settings>
       <b:includable id='main'>
-        <!-- Empty -->
+
+        <!-- Matrix Code Input -->
+        <div class='container mt-4'>
+           <div class='input-group mb-3' style='max-width: 400px; margin: 0 auto;'>
+             <span class='input-group-text bg-primary text-white'><i class="bi bi-grid-3x3-gap-fill"></i></span>
+             <!-- FIX: Input tag self-closed -->
+             <input type='text' class='form-control' id='matrixCodeInput' placeholder='Enter Matrix Code (e.g. 12 or 1-2)' />
+             <button class='btn btn-primary' type='button' onclick='applyMatrixCode()'>Go</button>
+           </div>
+        </div>
+
+        <!-- Website Type Selector -->
+        <div class='container website-type-selector'>
+          <div class='selector-group'>
+            <div>
+              <label class='selector-label'>Website Type:</label>
+              <select class='selector-select' id='websiteTypeSelector'>
+                <option value="" disabled='disabled' selected='selected'>Loading categories...</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Subcategory Display -->
+        <div class='container mb-4' id='subcategoryContainer'></div>
+
+        <!-- Loading Container -->
+        <div class='loading-container' id='loadingContainer' style='display:flex;'>
+          <div class='loading-spinner'/>
+          <div class='loading-text'>Loading content...</div>
+        </div>
+
+        <!-- Main Content -->
+        <section class='container' id='mainContent' style='display:none;'>
+          <!-- Content will be loaded here dynamically -->
+        </section>
+
       </b:includable>
     </b:widget>
   </b:section>
@@ -344,6 +344,7 @@ cat > core/blogger-theme/theme.xml <<'ENDOFFILE'
   <script>
   //<![CDATA[
     // Configuration
+    // **IMPORTANT: YOU MUST DEPLOY THE NEW CODE.GS AND PASTE THE NEW URL HERE**
     const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxBOuXmYcOpeijxpBMwEV5clzoUg1zYG6hwQ93AFj5FRjXE3rHPR5fdauhInRh4uB00BA/exec';
     let currentWebsiteType = '';
     let websiteTypesConfig = [];
@@ -419,6 +420,21 @@ cat > core/blogger-theme/theme.xml <<'ENDOFFILE'
 
     // Handle website types response
     function handleWebsiteTypes(data) {
+      // ROBUSTNESS FIX: If data comes in as a string despite Code.gs fixes, parse it.
+      if (typeof data === 'string') {
+          try {
+              data = JSON.parse(data);
+          } catch (e) {
+              console.error("Failed to parse website types", e);
+              return;
+          }
+      }
+      
+      if (!data || !data.website_types) {
+          console.error("Invalid data structure received", data);
+          return;
+      }
+
       websiteTypesConfig = data.website_types;
       const selector = document.getElementById('websiteTypeSelector');
       
@@ -471,6 +487,16 @@ cat > core/blogger-theme/theme.xml <<'ENDOFFILE'
 
     // Handle data response
     function handleDataResponse(data) {
+      // ROBUSTNESS FIX: If data comes in as a string, parse it.
+      if (typeof data === 'string') {
+          try {
+              data = JSON.parse(data);
+          } catch (e) {
+              console.error("Failed to parse data", e);
+              return;
+          }
+      }
+
       const loadingEl = document.getElementById('loadingContainer');
       const contentEl = document.getElementById('mainContent');
       
@@ -482,14 +508,18 @@ cat > core/blogger-theme/theme.xml <<'ENDOFFILE'
 
     function generateGenericHTML(posts) {
       let html = '<div class="blog-container">';
-      posts.forEach(function(post) {
-        html += '<article class="blog-post">';
-        if(post.imageUrl) html += '<img src="' + post.imageUrl + '" style="max-height:200px; width:100%; object-fit:cover; border-radius:4px;" />';
-        html += '<h3 class="mt-2">' + post.title + '</h3>';
-        html += '<p>' + post.excerpt + '</p>';
-        html += '<small class="text-muted">' + post.publishedDate + '</small>';
-        html += '</article>';
-      });
+      if (Array.isArray(posts)) {
+        posts.forEach(function(post) {
+          html += '<article class="blog-post">';
+          if(post.imageUrl) html += '<img src="' + post.imageUrl + '" style="max-height:200px; width:100%; object-fit:cover; border-radius:4px;" />';
+          html += '<h3 class="mt-2">' + post.title + '</h3>';
+          html += '<p>' + post.excerpt + '</p>';
+          html += '<small class="text-muted">' + post.publishedDate + '</small>';
+          html += '</article>';
+        });
+      } else {
+        html += '<p>No content found.</p>';
+      }
       html += '</div>';
       
       const contentEl = document.getElementById('mainContent');
@@ -529,3 +559,4 @@ echo "========================================"
 echo "All files created successfully!"
 echo "========================================"
 echo
+echo "IMPORTANT: You MUST update your Apps Script deployment and paste the NEW URL into theme.xml line 88."
