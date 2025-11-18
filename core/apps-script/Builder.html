@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+      body { background-color: #f8f9fa; }
+      .builder-card { max-width: 800px; margin: 50px auto; padding: 30px; background: white; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+      .icon-preview { font-size: 2rem; color: #6c757d; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="builder-card">
+        <h2 class="text-center mb-4">🏗️ Website Builder</h2>
+        <p class="text-center text-muted mb-4">Select a category to transform your Blogger site instantly.</p>
+        
+        <form id="builderForm">
+          <div class="mb-4">
+            <label class="form-label fw-bold">1. Select Website Type</label>
+            <select class="form-select form-select-lg" id="websiteType" onchange="updatePreview()">
+              <option value="" disabled selected>Choose a category...</option>
+              <!-- Options populated by JS -->
+            </select>
+          </div>
+
+          <div class="mb-4">
+             <label class="form-label fw-bold">2. Subcategories Available</label>
+             <div id="subcatPreview" class="p-3 bg-light rounded text-muted">Select a type above...</div>
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label fw-bold">3. Customization</label>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">Site Title</label>
+                <input type="text" class="form-control" id="siteTitle" placeholder="My Awesome Site">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Primary Color</label>
+                <input type="color" class="form-control form-control-color w-100" id="siteColor" value="#0d6efd" title="Choose your color">
+              </div>
+            </div>
+          </div>
+
+          <div class="d-grid gap-2">
+            <button type="button" class="btn btn-primary btn-lg" onclick="saveConfig()">
+              🚀 Publish Website
+            </button>
+          </div>
+          <div id="status" class="mt-3 text-center"></div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      // Categories Config (Should match website-types.json)
+      const types = [
+        { name: "Home Improvement", sub: ["DIY Projects", "Renovation"], color: "#e67e22" },
+        { name: "Real Estate Investment", sub: ["Property Management", "Rentals"], color: "#2c3e50" },
+        { name: "Insurance", sub: ["Policy Comparisons", "Claims"], color: "#2980b9" },
+        { name: "Self-Improvement", sub: ["Productivity", "Motivation"], color: "#16a085" },
+        { name: "Cryptocurrency", sub: ["Blockchain", "Trading"], color: "#f39c12" },
+        { name: "Hobbies and Crafts", sub: ["Tutorials", "Supplies"], color: "#d35400" },
+        { name: "Events and Conferences", sub: ["Listings", "Planning"], color: "#8e44ad" },
+        { name: "Dance", sub: ["Studios", "Tutorials"], color: "#e84393" },
+        { name: "Music", sub: ["Streaming", "Artists"], color: "#0984e3" },
+        { name: "Philosophy", sub: ["Ethics", "Discussions"], color: "#6c5ce7" },
+        { name: "Mythology", sub: ["Stories", "Culture"], color: "#fdcb6e" },
+        { name: "Survival Skills", sub: ["Guides", "Gear"], color: "#d63031" },
+        { name: "Fashion Design", sub: ["Portfolios", "Trends"], color: "#e17055" },
+        { name: "Culinary Arts", sub: ["Recipes", "Chefs"], color: "#f1c40f" },
+        { name: "Film and Television", sub: ["Reviews", "Filmmaking"], color: "#2d3436" },
+        { name: "Spirituality", sub: ["Meditation", "Yoga"], color: "#00b894" },
+        { name: "Digital Marketing", sub: ["SEO", "Social Media"], color: "#0984e3" },
+        { name: "Women’s Interests", sub: ["Health", "Lifestyle"], color: "#e84393" },
+        { name: "Men’s Interests", sub: ["Fitness", "Grooming"], color: "#34495e" },
+        { name: "Aging and Senior Care", sub: ["Health", "Retirement"], color: "#74b9ff" },
+        { name: "Travel Hacking", sub: ["Deals", "Tips"], color: "#00cec9" },
+        { name: "Food and Beverage", sub: ["Reviews", "Specialty"], color: "#d63031" },
+        { name: "Urban Exploration", sub: ["Abandoned", "City Guides"], color: "#636e72" },
+        { name: "Alternative Energy", sub: ["Solar", "Wind"], color: "#f1c40f" },
+        { "name": "Sustainability", "subcategories": ["Eco-Friendly Products", "Sustainable Practices"], "color": "#27ae60" }
+      ];
+
+      // Populate Dropdown
+      const select = document.getElementById('websiteType');
+      types.forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t.name;
+        opt.textContent = t.name;
+        select.appendChild(opt);
+      });
+
+      function updatePreview() {
+        const typeName = select.value;
+        const config = types.find(t => t.name === typeName);
+        if (config) {
+          document.getElementById('subcatPreview').innerText = config.sub ? config.sub.join(', ') : "Generic";
+          document.getElementById('siteColor').value = config.color;
+        }
+      }
+
+      function saveConfig() {
+        const btn = document.querySelector('button');
+        btn.disabled = true;
+        btn.innerText = "Publishing...";
+        
+        const config = {
+          type: document.getElementById('websiteType').value,
+          title: document.getElementById('siteTitle').value,
+          color: document.getElementById('siteColor').value
+        };
+
+        if(!config.type) { alert("Please select a website type"); btn.disabled=false; return; }
+
+        google.script.run.withSuccessHandler(function(res) {
+           document.getElementById('status').innerHTML = '<div class="alert alert-success">✅ Website Updated! Refresh your blog to see changes.</div>';
+           btn.innerText = "Published";
+           btn.disabled = false;
+        }).withFailureHandler(function(err) {
+           document.getElementById('status').innerHTML = '<div class="alert alert-danger">Error: ' + err + '</div>';
+           btn.disabled = false;
+        }).saveConfig(config);
+      }
+    </script>
+  </body>
+</html>
