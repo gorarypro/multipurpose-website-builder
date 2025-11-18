@@ -1,18 +1,12 @@
 /**
- * =================================================================
  * CONFIGURATION
- * =================================================================
  */
 const SPREADSHEET_ID = '1JEqIVnhjDaz7otgNAikpQj7Trw1SRG_0-iSfYMLQwtA';
 const SHEET_NAME = 'Data';
-const BLOG_FEED_URL = 'https://multipurpose-website-builder.blogspot.com/feeds/posts/default?alt=json&amp;max-results=50';
-const NOTIFICATION_EMAIL = 'gorarypro@gmail.com';
-const CACHE_EXPIRATION = 7200;
+const BLOG_FEED_URL = 'https://multipurpose-website-builder.blogspot.com/feeds/posts/default?alt=json&max-results=50';
 
 /**
- * =================================================================
  * HELPER FUNCTION - Creates JSONP response
- * =================================================================
  */
 function createJsonpResponse(data, callback) {
   const jsonpData = callback + '(' + JSON.stringify(data) + ')';
@@ -22,14 +16,12 @@ function createJsonpResponse(data, callback) {
 }
 
 /**
- * =================================================================
  * MAIN GET REQUEST HANDLER
- * =================================================================
  */
 function doGet(e) {
   const action = e.parameter.action;
   const callback = e.parameter.callback;
-  const websiteType = e.parameter.websiteType || 'business';
+  const websiteType = e.parameter.websiteType;
 
   if (!callback) {
     return ContentService.createTextOutput("Error: 'callback' parameter is missing.")
@@ -41,34 +33,24 @@ function doGet(e) {
       const websiteTypes = getWebsiteTypes();
       return createJsonpResponse(websiteTypes, callback);
     } catch (error) {
-      Logger.log('getWebsiteTypes Error: ' + error.message);
       return createJsonpResponse({ error: error.message }, callback);
     }
   }
   else if (action === 'getData') {
     try {
-      const data = getData(websiteType);
+      // Default to 'Home Improvement' if no type provided, or handle generic
+      const typeToFetch = websiteType || 'Home Improvement';
+      const data = getData(typeToFetch);
       return createJsonpResponse(data, callback);
     } catch (error) {
-      Logger.log('getData Error: ' + error.message);
       return createJsonpResponse({ error: error.message }, callback);
     }
   }
   else if (action === 'saveData') {
     try {
-      const data = {
-        type: e.parameter.type,
-        websiteType: websiteType,
-        name: e.parameter.name,
-        email: e.parameter.email,
-        phone: e.parameter.phone,
-        message: e.parameter.message
-      };
-      
-      const result = saveDataToSheet(data);
+      const result = saveDataToSheet(e.parameter);
       return createJsonpResponse(result, callback);
     } catch (error) {
-      Logger.log('saveData Error: ' + error.message);
       return createJsonpResponse({ status: 'error', message: error.message }, callback);
     }
   }
@@ -79,34 +61,37 @@ function doGet(e) {
 
 /**
  * Get website types from JSON
+ * UPDATED: Includes all new categories
  */
 function getWebsiteTypes() {
+  // This matches the structure of website-types.json
   const websiteTypes = {
     "website_types": [
-      {
-        "name": "Business",
-        "subcategories": ["Corporate", "Small Business", "Enterprise", "Startup"],
-        "icon": "briefcase",
-        "color": "#2c3e50"
-      },
-      {
-        "name": "E-commerce",
-        "subcategories": ["Online Store", "Marketplace", "Dropshipping", "Subscription Service"],
-        "icon": "shopping-cart",
-        "color": "#27ae60"
-      },
-      {
-        "name": "Portfolio",
-        "subcategories": ["Creative Portfolio", "Photography Portfolio", "Design Portfolio", "Artist Portfolio"],
-        "icon": "palette",
-        "color": "#8e44ad"
-      },
-      {
-        "name": "Blog",
-        "subcategories": ["Personal Blog", "Tech Blog", "Travel Blog", "Food Blog", "Fashion Blog"],
-        "icon": "journal-text",
-        "color": "#e74c3c"
-      }
+      { "name": "Home Improvement", "subcategories": ["DIY Projects", "Renovation Tips", "Interior Design Ideas", "Gardening"], "icon": "tools", "color": "#e67e22" },
+      { "name": "Real Estate Investment", "subcategories": ["Property Management", "Landlord Resources", "Market Analysis", "Rental Listings"], "icon": "building", "color": "#2c3e50" },
+      { "name": "Insurance", "subcategories": ["Policy Comparisons", "Claims Advice", "Insurance Types", "Risk Management"], "icon": "shield-check", "color": "#2980b9" },
+      { "name": "Self-Improvement", "subcategories": ["Personal Development Blogs", "Productivity Tools", "Goal Setting Resources", "Motivational Content"], "icon": "person-bounding-box", "color": "#16a085" },
+      { "name": "Cryptocurrency", "subcategories": ["Blockchain Technology", "Trading Platforms", "Cryptocurrency News", "Investment Strategies"], "icon": "currency-bitcoin", "color": "#f39c12" },
+      { "name": "Hobbies and Crafts", "subcategories": ["Crafting Tutorials", "Hobbyist Communities", "Supplies and Materials", "Project Ideas"], "icon": "scissors", "color": "#d35400" },
+      { "name": "Events and Conferences", "subcategories": ["Event Listings", "Event Planning Resources", "Conference Reviews", "Networking Opportunities"], "icon": "calendar-event", "color": "#8e44ad" },
+      { "name": "Dance", "subcategories": ["Dance Studios", "Choreography Tutorials", "Dance Competitions", "Styles and Techniques"], "icon": "music-note-beamed", "color": "#e84393" },
+      { "name": "Music", "subcategories": ["Music Streaming Services", "Artist Highlights", "Music Theory Resources", "Concert and Festival Information"], "icon": "music-note", "color": "#0984e3" },
+      { "name": "Philosophy", "subcategories": ["Philosophical Discussions", "Ethics Resources", "Book Recommendations", "Historical Philosophy"], "icon": "book", "color": "#6c5ce7" },
+      { "name": "Mythology", "subcategories": ["Mythological Stories", "Cultural Significance", "Comparative Mythology", "Modern Adaptations"], "icon": "lightning-charge", "color": "#fdcb6e" },
+      { "name": "Survival Skills", "subcategories": ["Outdoor Survival Guides", "Wilderness Training", "Emergency Preparedness", "Camping Tips"], "icon": "fire", "color": "#d63031" },
+      { "name": "Fashion Design", "subcategories": ["Design Portfolios", "Fashion Shows", "Trend Analysis", "Fashion Illustration Techniques"], "icon": "handbag", "color": "#e17055" },
+      { "name": "Culinary Arts", "subcategories": ["Professional Cooking Schools", "Culinary Competitions", "Chef Profiles", "Food Photography"], "icon": "egg-fried", "color": "#f1c40f" },
+      { "name": "Film and Television", "subcategories": ["Film Festivals", "TV Show Reviews", "Filmmaking Resources", "Genre Analyses"], "icon": "film", "color": "#2d3436" },
+      { "name": "Spirituality", "subcategories": ["Meditation Resources", "Holistic Living", "Spiritual Practices", "Community Support"], "icon": "flower1", "color": "#00b894" },
+      { "name": "Digital Marketing", "subcategories": ["SEO Strategies", "Social Media Marketing", "Content Marketing", "Email Marketing Solutions"], "icon": "graph-up", "color": "#0984e3" },
+      { "name": "Women’s Interests", "subcategories": ["Empowerment Resources", "Women in Leadership", "Health and Wellness for Women", "Fashion and Lifestyle for Women"], "icon": "gender-female", "color": "#e84393" },
+      { "name": "Men’s Interests", "subcategories": ["Grooming and Lifestyle", "Fitness for Men", "Fatherhood Resources", "Men's Fashion Trends"], "icon": "gender-male", "color": "#34495e" },
+      { "name": "Aging and Senior Care", "subcategories": ["Elder Care Resources", "Retirement Planning", "Health and Wellness for Seniors", "Activities for Seniors"], "icon": "heart-pulse", "color": "#74b9ff" },
+      { "name": "Travel Hacking", "subcategories": ["Travel Deals", "Frequent Flyer Tips", "Budget Travel Strategies", "Travel Rewards Programs"], "icon": "airplane", "color": "#00cec9" },
+      { "name": "Food and Beverage", "subcategories": ["Brewery and Winery Reviews", "Food Blogging", "Specialty Foods", "Beverage Pairings"], "icon": "cup-straw", "color": "#d63031" },
+      { "name": "Urban Exploration", "subcategories": ["Abandoned Places", "City Guides", "Photography from Urban Settings", "History of Urban Spaces"], "icon": "building", "color": "#636e72" },
+      { "name": "Alternative Energy", "subcategories": ["Solar and Wind Energy Resources", "Sustainable Living Tips", "Reviews on Renewable Technologies", "Policy and Advocacy"], "icon": "sun", "color": "#f1c40f" },
+      { "name": "Sustainability", "subcategories": ["Eco-Friendly Products", "Sustainable Practices", "Green Living Resources", "Environmental Activism"], "icon": "tree", "color": "#27ae60" }
     ]
   };
   
@@ -119,20 +104,15 @@ function getWebsiteTypes() {
 function saveDataToSheet(data) {
   try {
     const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(SHEET_NAME);
-    
     if (sheet.getLastRow() === 0) {
-      const headers = ["Timestamp", "Website Type", "Type"].concat(Object.keys(data));
+      const headers = ["Timestamp", "Website Type", "Type", "Name", "Email", "Phone", "Message"];
       sheet.appendRow(headers);
     }
-    
     const timestamp = new Date();
-    const row = [timestamp, data.websiteType, data.type].concat(Object.values(data));
-    
+    const row = [timestamp, data.websiteType, data.type, data.name, data.email, data.phone, data.message];
     sheet.appendRow(row);
-    
     return { status: 'success' };
   } catch (error) {
-    Logger.log('Save error: ' + error.message);
     return { status: 'error', message: error.message };
   }
 }
@@ -141,160 +121,41 @@ function saveDataToSheet(data) {
  * Get data from blog feed
  */
 function getData(websiteType) {
-  const response = UrlFetchApp.fetch(BLOG_FEED_URL, {
-    muteHttpExceptions: true
-  });
-  
+  const response = UrlFetchApp.fetch(BLOG_FEED_URL, { muteHttpExceptions: true });
   const responseCode = response.getResponseCode();
   const data = response.getContentText();
   
-  if (responseCode !== 200) {
-    throw new Error('Blogger API request failed with status ' + responseCode + ': ' + data);
-  }
+  if (responseCode !== 200) throw new Error('Blogger API failed');
   
   const bloggerJson = JSON.parse(data);
   const posts = bloggerJson.feed.entry || [];
   
-  // Process data based on website type
-  if (websiteType === 'E-commerce') {
-    return processProductData(posts);
-  } else if (websiteType === 'Portfolio') {
-    return processPortfolioData(posts);
-  } else if (websiteType === 'Blog') {
-    return processBlogData(posts);
-  } else {
-    return processGenericData(posts);
-  }
+  // Generic processor for all new types
+  return processGenericData(posts, websiteType);
 }
 
-function processProductData(posts) {
-  const categories = {};
-  
-  posts.forEach(function(post) {
-    const title = post.title.$t;
-    let description = '';
-    if (post.content && post.content.$t) {
-      description = post.content.$t.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-    }
-    
-    let imageUrl = 'https://placehold.co/600x400/fe7301/white?text=No+Image';
-    if (post.content && post.content.$t) {
-      const match = post.content.$t.match(/<img[^>]+src="([^"]+)"/);
-      if (match && match[1]) {
-        imageUrl = match[1];
-      }
-    }
-    
-    let price = 0;
-    let currency = 'USD';
-    let postCategory = 'Products';
-    
-    if (post.category) {
-      post.category.forEach(function(cat) {
-        const term = cat.term;
-        
-        if (!categories[term]) {
-          categories[term] = {
-            title: term,
-            icon: '📦',
-            description: term + ' items',
-            color: term.toLowerCase(),
-            posts: []
-          };
-        }
-        
-        postCategory = term;
-        
-        if (term.indexOf('price-') === 0) {
-          price = parseFloat(term.replace('price-', ''));
-        } else if (term.indexOf('currency-') === 0) {
-          currency = term.replace('currency-', '');
-        }
-      });
-    }
-    
-    if (categories[postCategory]) {
-      const postId = post.id.$t.split('.post-')[1];
-      categories[postCategory].posts.push({
-        id: postId,
-        title: title,
-        description: description.substring(0, 100) + (description.length > 100 ? '...' : ''),
-        category: postCategory,
-        imageUrl: imageUrl,
-        price: price,
-        currency: currency
-      });
-    }
-  });
-
-  return JSON.stringify(Object.values(categories));
-}
-
-function processPortfolioData(posts) {
-  const projects = [];
-  
-  posts.forEach(function(post) {
-    const title = post.title.$t;
-    let description = '';
-    if (post.content && post.content.$t) {
-      description = post.content.$t.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-    }
-    
-    let imageUrl = 'https://placehold.co/600x400/fe7301/white?text=No+Image';
-    if (post.content && post.content.$t) {
-      const match = post.content.$t.match(/<img[^>]+src="([^"]+)"/);
-      if (match && match[1]) {
-        imageUrl = match[1];
-      }
-    }
-    
-    const postId = post.id.$t.split('.post-')[1];
-    projects.push({
-      id: postId,
-      title: title,
-      description: description.substring(0, 100) + (description.length > 100 ? '...' : ''),
-      imageUrl: imageUrl,
-      projectType: 'Design'
-    });
-  });
-  
-  return JSON.stringify(projects);
-}
-
-function processBlogData(posts) {
+function processGenericData(posts, websiteType) {
   const postsArray = [];
   
   posts.forEach(function(post) {
     const title = post.title.$t;
-    let content = '';
-    if (post.content && post.content.$t) {
-      content = post.content.$t;
-    }
+    let content = post.content ? post.content.$t : '';
     
     let imageUrl = 'https://placehold.co/600x400/fe7301/white?text=No+Image';
-    if (post.content && post.content.$t) {
-      const match = post.content.$t.match(/<img[^>]+src="([^"]+)"/);
-      if (match && match[1]) {
-        imageUrl = match[1];
-      }
+    if (content) {
+      const match = content.match(/<img[^>]+src="([^"]+)"/);
+      if (match && match[1]) imageUrl = match[1];
     }
     
-    const postId = post.id.$t.split('.post-')[1];
-    const publishedDate = new Date(post.published.$t);
-    
     postsArray.push({
-      id: postId,
+      id: post.id.$t.split('.post-')[1],
       title: title,
       content: content,
-      excerpt: content.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().substring(0, 150) + '...',
+      excerpt: content.replace(/<[^>]+>/g, ' ').trim().substring(0, 150) + '...',
       imageUrl: imageUrl,
-      publishedDate: publishedDate.toLocaleDateString()
+      publishedDate: new Date(post.published.$t).toLocaleDateString()
     });
   });
   
   return JSON.stringify(postsArray);
-}
-
-function processGenericData(posts) {
-  return processBlogData(posts);
 }
