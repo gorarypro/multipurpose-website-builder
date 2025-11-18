@@ -29,7 +29,8 @@
         <div class='container mt-4'>
            <div class='input-group mb-3' style='max-width: 400px; margin: 0 auto;'>
              <span class='input-group-text bg-primary text-white'><i class="bi bi-grid-3x3-gap-fill"></i></span>
-             <input type='text' class='form-control' id='matrixCodeInput' placeholder='Enter Matrix Code (e.g. 12 or 1-2)'>
+             <!-- FIX: Input tag self-closed -->
+             <input type='text' class='form-control' id='matrixCodeInput' placeholder='Enter Matrix Code (e.g. 12 or 1-2)' />
              <button class='btn btn-primary' type='button' onclick='applyMatrixCode()'>Go</button>
            </div>
         </div>
