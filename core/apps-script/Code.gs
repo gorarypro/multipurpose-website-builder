@@ -38,7 +38,6 @@ function doGet(e) {
   }
   else if (action === 'getData') {
     try {
-      // Default to 'Home Improvement' if no type provided, or handle generic
       const typeToFetch = websiteType || 'Home Improvement';
       const data = getData(typeToFetch);
       return createJsonpResponse(data, callback);
@@ -61,10 +60,9 @@ function doGet(e) {
 
 /**
  * Get website types from JSON
- * UPDATED: Includes all new categories
  */
 function getWebsiteTypes() {
-  // This matches the structure of website-types.json
+  // Matches website-types.json
   const websiteTypes = {
     "website_types": [
       { "name": "Home Improvement", "subcategories": ["DIY Projects", "Renovation Tips", "Interior Design Ideas", "Gardening"], "icon": "tools", "color": "#e67e22" },
@@ -129,24 +127,19 @@ function getData(websiteType) {
   
   const bloggerJson = JSON.parse(data);
   const posts = bloggerJson.feed.entry || [];
-  
-  // Generic processor for all new types
   return processGenericData(posts, websiteType);
 }
 
 function processGenericData(posts, websiteType) {
   const postsArray = [];
-  
   posts.forEach(function(post) {
     const title = post.title.$t;
     let content = post.content ? post.content.$t : '';
-    
     let imageUrl = 'https://placehold.co/600x400/fe7301/white?text=No+Image';
     if (content) {
       const match = content.match(/<img[^>]+src="([^"]+)"/);
       if (match && match[1]) imageUrl = match[1];
     }
-    
     postsArray.push({
       id: post.id.$t.split('.post-')[1],
       title: title,
@@ -156,6 +149,5 @@ function processGenericData(posts, websiteType) {
       publishedDate: new Date(post.published.$t).toLocaleDateString()
     });
   });
-  
   return JSON.stringify(postsArray);
 }

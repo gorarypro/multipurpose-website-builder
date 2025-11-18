@@ -25,7 +25,7 @@ mkdir -p docs
 
 echo "Creating root files..."
 
-# Create website-types.json with ALL new categories 
+# Create website-types.json with ALL categories
 cat > website-types.json <<'ENDOFFILE'
 {
   "website_types": [
@@ -90,7 +90,6 @@ ENDOFFILE
 echo "Creating core files..."
 
 # Create core/apps-script/Code.gs
-# UPDATED: Includes the full list of categories in getWebsiteTypes
 cat > core/apps-script/Code.gs <<'ENDOFFILE'
 /**
  * CONFIGURATION
@@ -132,7 +131,6 @@ function doGet(e) {
   }
   else if (action === 'getData') {
     try {
-      // Default to 'Home Improvement' if no type provided, or handle generic
       const typeToFetch = websiteType || 'Home Improvement';
       const data = getData(typeToFetch);
       return createJsonpResponse(data, callback);
@@ -155,10 +153,9 @@ function doGet(e) {
 
 /**
  * Get website types from JSON
- * UPDATED: Includes all new categories
  */
 function getWebsiteTypes() {
-  // This matches the structure of website-types.json
+  // Matches website-types.json
   const websiteTypes = {
     "website_types": [
       { "name": "Home Improvement", "subcategories": ["DIY Projects", "Renovation Tips", "Interior Design Ideas", "Gardening"], "icon": "tools", "color": "#e67e22" },
@@ -223,24 +220,19 @@ function getData(websiteType) {
   
   const bloggerJson = JSON.parse(data);
   const posts = bloggerJson.feed.entry || [];
-  
-  // Generic processor for all new types
   return processGenericData(posts, websiteType);
 }
 
 function processGenericData(posts, websiteType) {
   const postsArray = [];
-  
   posts.forEach(function(post) {
     const title = post.title.$t;
     let content = post.content ? post.content.$t : '';
-    
     let imageUrl = 'https://placehold.co/600x400/fe7301/white?text=No+Image';
     if (content) {
       const match = content.match(/<img[^>]+src="([^"]+)"/);
       if (match && match[1]) imageUrl = match[1];
     }
-    
     postsArray.push({
       id: post.id.$t.split('.post-')[1],
       title: title,
@@ -250,16 +242,12 @@ function processGenericData(posts, websiteType) {
       publishedDate: new Date(post.published.$t).toLocaleDateString()
     });
   });
-  
   return JSON.stringify(postsArray);
 }
 ENDOFFILE
 
 # Create core/blogger-theme/theme.xml
-# UPDATED: 
-# 1. Added Matrix Code Input field
-# 2. Updated JS to parse codes (e.g. "12" or "1-2")
-# 3. Updated UI to show index numbers
+# FIX: JavaScript code is now wrapped in CDATA to prevent SAXParseExceptions
 cat > core/blogger-theme/theme.xml <<'ENDOFFILE'
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE html>
@@ -288,7 +276,7 @@ cat > core/blogger-theme/theme.xml <<'ENDOFFILE'
       </b:widget-settings>
       <b:includable id='main'>
 
-        <!-- Matrix Code Input (New) -->
+        <!-- Matrix Code Input -->
         <div class='container mt-4'>
            <div class='input-group mb-3' style='max-width: 400px; margin: 0 auto;'>
              <span class='input-group-text bg-primary text-white'><i class="bi bi-grid-3x3-gap-fill"></i></span>
@@ -302,7 +290,6 @@ cat > core/blogger-theme/theme.xml <<'ENDOFFILE'
           <div class='selector-group'>
             <div>
               <label class='selector-label'>Website Type:</label>
-              <!-- Select options will be populated via JS -->
               <select class='selector-select' id='websiteTypeSelector'>
                 <option value="" disabled selected>Loading categories...</option>
               </select>
@@ -330,6 +317,7 @@ cat > core/blogger-theme/theme.xml <<'ENDOFFILE'
 
   <script src='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js'/>
   <script>
+  //<![CDATA[
     // Configuration
     const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxBOuXmYcOpeijxpBMwEV5clzoUg1zYG6hwQ93AFj5FRjXE3rHPR5fdauhInRh4uB00BA/exec';
     let currentWebsiteType = '';
@@ -351,9 +339,6 @@ cat > core/blogger-theme/theme.xml <<'ENDOFFILE'
     function applyMatrixCode() {
        const rawInput = document.getElementById('matrixCodeInput').value;
        // Replace any separators with a standard separator or empty string
-       // If input is "12", digit 1 is cat, digit 2 is sub (for <10 cats).
-       // If input is "1-2", clear intent.
-       
        let cleanInput = rawInput.replace(/[^0-9\-\.\s]/g, '');
        if(!cleanInput) return;
        
@@ -367,9 +352,6 @@ cat > core/blogger-theme/theme.xml <<'ENDOFFILE'
            if(parts[1]) subIndex = parseInt(parts[1]) - 1;
        } else {
            // Continuous string logic
-           // If length is 2, assume single digit category. E.g. "12" = Cat 1, Sub 2.
-           // If length is 3+, it is ambiguous without separator, but let's assume first digit is category for now unless >9 categories exist.
-           // Actually, standard matrix practice: "12" = 1, 2.
            if (cleanInput.length > 0) {
               catIndex = parseInt(cleanInput.charAt(0)) - 1;
               if (cleanInput.length > 1) {
@@ -393,17 +375,15 @@ cat > core/blogger-theme/theme.xml <<'ENDOFFILE'
            
            // Handle Subcategory highlighting (optional visual feedback)
            if(subIndex > -1 && websiteTypesConfig[catIndex].subcategories[subIndex]) {
-               // Wait for subcategories to render then highlight
                setTimeout(() => {
                   const badges = document.querySelectorAll('#subcategoryContainer .badge');
                   if(badges[subIndex]) {
                       badges[subIndex].classList.remove('bg-secondary');
-                      badges[subIndex].classList.add('bg-primary'); // Highlight
+                      badges[subIndex].classList.add('bg-primary');
                   }
                }, 100);
            }
            
-           // Clear input
            document.getElementById('matrixCodeInput').value = '';
        } else {
            alert('Invalid Matrix Code');
@@ -413,7 +393,7 @@ cat > core/blogger-theme/theme.xml <<'ENDOFFILE'
     // Fetch website types
     function fetchWebsiteTypes() {
       const script = document.createElement('script');
-      script.src = WEB_APP_URL + '?action=getWebsiteTypes&amp;callback=handleWebsiteTypes';
+      script.src = WEB_APP_URL + '?action=getWebsiteTypes&callback=handleWebsiteTypes';
       document.body.appendChild(script);
     }
 
@@ -421,13 +401,12 @@ cat > core/blogger-theme/theme.xml <<'ENDOFFILE'
     function handleWebsiteTypes(data) {
       websiteTypesConfig = data.website_types;
       const selector = document.getElementById('websiteTypeSelector');
-      selector.innerHTML = ''; // Clear loading message
+      selector.innerHTML = ''; 
       
-      // Populate dropdown with index numbers [1] Name
       websiteTypesConfig.forEach((type, index) => {
         const option = document.createElement('option');
         option.value = type.name;
-        option.textContent = `[${index + 1}] ${type.name}`; // Show Matrix Index
+        option.textContent = `[${index + 1}] ${type.name}`;
         selector.appendChild(option);
       });
       
@@ -441,7 +420,6 @@ cat > core/blogger-theme/theme.xml <<'ENDOFFILE'
        const config = websiteTypesConfig.find(t => t.name === typeName);
        const container = document.getElementById('subcategoryContainer');
        if(config && config.subcategories) {
-         // Show subcategory with its index
          container.innerHTML = config.subcategories.map((sub, idx) => 
            `<span class="badge bg-secondary me-1 mb-1">[${idx + 1}] ${sub}</span>`
          ).join('');
@@ -491,6 +469,7 @@ cat > core/blogger-theme/theme.xml <<'ENDOFFILE'
       updateSubcategories(currentWebsiteType);
       fetchData();
     });
+  //]]>
   </script>
   <style>
     .website-type-selector { margin: 20px 0; }
@@ -511,6 +490,6 @@ ENDOFFILE
 
 echo
 echo "========================================"
-echo "All files created successfully with Matrix Code navigation!"
+echo "All files created successfully!"
 echo "========================================"
 echo
