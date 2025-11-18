@@ -26,7 +26,7 @@ mkdir -p docs
 echo "Creating root files..."
 
 # Create website-types.json
-cat > website-types.json << 'EOF'
+cat > website-types.json <<'ENDOFFILE'
 {
   "website_types": [
     {
@@ -59,10 +59,10 @@ cat > website-types.json << 'EOF'
     }
   ]
 }
-EOF
+ENDOFFILE
 
 # Create README.md
-cat > README.md << 'EOF'
+cat > README.md <<'ENDOFFILE'
 # Multipurpose Website Builder
 
 A flexible, customizable website builder that supports multiple categories.
@@ -82,10 +82,10 @@ A flexible, customizable website builder that supports multiple categories.
 ## Project Structure
 
 ## License
-EOF
+ENDOFFILE
 
 # Create LICENSE
-cat > LICENSE << 'EOF'
+cat > LICENSE <<'ENDOFFILE'
 MIT License
 
 Copyright (c) 2024 Multipurpose Website Builder
@@ -107,12 +107,12 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-EOF
+ENDOFFILE
 
 echo "Creating core files..."
 
 # Create core/apps-script/Code.gs
-cat > core/apps-script/Code.gs << 'EOF'
+cat > core/apps-script/Code.gs <<'ENDOFFILE'
 /**
  * =================================================================
  * CONFIGURATION
@@ -120,7 +120,7 @@ cat > core/apps-script/Code.gs << 'EOF'
  */
 const SPREADSHEET_ID = '1JEqIVnhjDaz7otgNAikpQj7Trw1SRG_0-iSfYMLQwtA';
 const SHEET_NAME = 'Data';
-const BLOG_FEED_URL = 'https://multipurpose-website-builder.blogspot.com/feeds/posts/default?alt=json&max-results=50';
+const BLOG_FEED_URL = 'https://multipurpose-website-builder.blogspot.com/feeds/posts/default?alt=json&amp;max-results=50';
 const NOTIFICATION_EMAIL = 'gorarypro@gmail.com';
 const CACHE_EXPIRATION = 7200;
 
@@ -130,7 +130,7 @@ const CACHE_EXPIRATION = 7200;
  * =================================================================
  */
 function createJsonpResponse(data, callback) {
-  const jsonpData = `${callback}(${JSON.stringify(data)})`;
+  const jsonpData = callback + '(' + JSON.stringify(data) + ')';
   const output = ContentService.createTextOutput(jsonpData);
   output.setMimeType(ContentService.MimeType.JAVASCRIPT);
   return output;
@@ -156,7 +156,7 @@ function doGet(e) {
       const websiteTypes = getWebsiteTypes();
       return createJsonpResponse(websiteTypes, callback);
     } catch (error) {
-      Logger.log(`getWebsiteTypes Error: ${error.message}`);
+      Logger.log('getWebsiteTypes Error: ' + error.message);
       return createJsonpResponse({ error: error.message }, callback);
     }
   }
@@ -165,7 +165,7 @@ function doGet(e) {
       const data = getData(websiteType);
       return createJsonpResponse(data, callback);
     } catch (error) {
-      Logger.log(`getData Error: ${error.message}`);
+      Logger.log('getData Error: ' + error.message);
       return createJsonpResponse({ error: error.message }, callback);
     }
   }
@@ -183,7 +183,7 @@ function doGet(e) {
       const result = saveDataToSheet(data);
       return createJsonpResponse(result, callback);
     } catch (error) {
-      Logger.log(`saveData Error: ${error.message}`);
+      Logger.log('saveData Error: ' + error.message);
       return createJsonpResponse({ status: 'error', message: error.message }, callback);
     }
   }
@@ -236,25 +236,187 @@ function saveDataToSheet(data) {
     const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(SHEET_NAME);
     
     if (sheet.getLastRow() === 0) {
-      const headers = ["Timestamp", "Website Type", "Type", ...Object.keys(data)];
+      const headers = ["Timestamp", "Website Type", "Type"].concat(Object.keys(data));
       sheet.appendRow(headers);
     }
     
     const timestamp = new Date();
-    const row = [timestamp, data.websiteType, data.type, ...Object.values(data)];
+    const row = [timestamp, data.websiteType, data.type].concat(Object.values(data));
     
     sheet.appendRow(row);
     
     return { status: 'success' };
   } catch (error) {
-    Logger.log(`Save error: ${error.message}`);
+    Logger.log('Save error: ' + error.message);
     return { status: 'error', message: error.message };
   }
 }
-EOF
+
+/**
+ * Get data from blog feed
+ */
+function getData(websiteType) {
+  const response = UrlFetchApp.fetch(BLOG_FEED_URL, {
+    muteHttpExceptions: true
+  });
+  
+  const responseCode = response.getResponseCode();
+  const data = response.getContentText();
+  
+  if (responseCode !== 200) {
+    throw new Error('Blogger API request failed with status ' + responseCode + ': ' + data);
+  }
+  
+  const bloggerJson = JSON.parse(data);
+  const posts = bloggerJson.feed.entry || [];
+  
+  // Process data based on website type
+  if (websiteType === 'E-commerce') {
+    return processProductData(posts);
+  } else if (websiteType === 'Portfolio') {
+    return processPortfolioData(posts);
+  } else if (websiteType === 'Blog') {
+    return processBlogData(posts);
+  } else {
+    return processGenericData(posts);
+  }
+}
+
+function processProductData(posts) {
+  const categories = {};
+  
+  posts.forEach(function(post) {
+    const title = post.title.$t;
+    let description = '';
+    if (post.content && post.content.$t) {
+      description = post.content.$t.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+    }
+    
+    let imageUrl = 'https://placehold.co/600x400/fe7301/white?text=No+Image';
+    if (post.content && post.content.$t) {
+      const match = post.content.$t.match(/<img[^>]+src="([^"]+)"/);
+      if (match && match[1]) {
+        imageUrl = match[1];
+      }
+    }
+    
+    let price = 0;
+    let currency = 'USD';
+    let postCategory = 'Products';
+    
+    if (post.category) {
+      post.category.forEach(function(cat) {
+        const term = cat.term;
+        
+        if (!categories[term]) {
+          categories[term] = {
+            title: term,
+            icon: '📦',
+            description: term + ' items',
+            color: term.toLowerCase(),
+            posts: []
+          };
+        }
+        
+        postCategory = term;
+        
+        if (term.indexOf('price-') === 0) {
+          price = parseFloat(term.replace('price-', ''));
+        } else if (term.indexOf('currency-') === 0) {
+          currency = term.replace('currency-', '');
+        }
+      });
+    }
+    
+    if (categories[postCategory]) {
+      const postId = post.id.$t.split('.post-')[1];
+      categories[postCategory].posts.push({
+        id: postId,
+        title: title,
+        description: description.substring(0, 100) + (description.length > 100 ? '...' : ''),
+        category: postCategory,
+        imageUrl: imageUrl,
+        price: price,
+        currency: currency
+      });
+    }
+  });
+
+  return JSON.stringify(Object.values(categories));
+}
+
+function processPortfolioData(posts) {
+  const projects = [];
+  
+  posts.forEach(function(post) {
+    const title = post.title.$t;
+    let description = '';
+    if (post.content && post.content.$t) {
+      description = post.content.$t.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+    }
+    
+    let imageUrl = 'https://placehold.co/600x400/fe7301/white?text=No+Image';
+    if (post.content && post.content.$t) {
+      const match = post.content.$t.match(/<img[^>]+src="([^"]+)"/);
+      if (match && match[1]) {
+        imageUrl = match[1];
+      }
+    }
+    
+    const postId = post.id.$t.split('.post-')[1];
+    projects.push({
+      id: postId,
+      title: title,
+      description: description.substring(0, 100) + (description.length > 100 ? '...' : ''),
+      imageUrl: imageUrl,
+      projectType: 'Design'
+    });
+  });
+  
+  return JSON.stringify(projects);
+}
+
+function processBlogData(posts) {
+  const postsArray = [];
+  
+  posts.forEach(function(post) {
+    const title = post.title.$t;
+    let content = '';
+    if (post.content && post.content.$t) {
+      content = post.content.$t;
+    }
+    
+    let imageUrl = 'https://placehold.co/600x400/fe7301/white?text=No+Image';
+    if (post.content && post.content.$t) {
+      const match = post.content.$t.match(/<img[^>]+src="([^"]+)"/);
+      if (match && match[1]) {
+        imageUrl = match[1];
+      }
+    }
+    
+    const postId = post.id.$t.split('.post-')[1];
+    const publishedDate = new Date(post.published.$t);
+    
+    postsArray.push({
+      id: postId,
+      title: title,
+      content: content,
+      excerpt: content.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().substring(0, 150) + '...',
+      imageUrl: imageUrl,
+      publishedDate: publishedDate.toLocaleDateString()
+    });
+  });
+  
+  return JSON.stringify(postsArray);
+}
+
+function processGenericData(posts) {
+  return processBlogData(posts);
+}
+ENDOFFILE
 
 # Create core/blogger-theme/theme.xml
-cat > core/blogger-theme/theme.xml << 'EOF'
+cat > core/blogger-theme/theme.xml <<'ENDOFFILE'
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE html>
 <html b:css='false' b:responsive='true' xmlns='http://www.w3.org/1999/xhtml' xmlns:b='http://www.google.com/2005/gml/b' xmlns:data='http://www.google.com/2005/gml/data' xmlns:expr='http://www.google.com/2005/gml/expr'>
@@ -315,7 +477,7 @@ cat > core/blogger-theme/theme.xml << 'EOF'
   <script src='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js'/>
   <script>
     // Configuration
-    const WEB_APP_URL = 'YOUR_WEB_APP_URL';
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxBOuXmYcOpeijxpBMwEV5clzoUg1zYG6hwQ93AFj5FRjXE3rHPR5fdauhInRh4uB00BA/exec';
     let currentWebsiteType = 'Business';
     let allData = [];
 
@@ -327,7 +489,7 @@ cat > core/blogger-theme/theme.xml << 'EOF'
     // Fetch website types
     function fetchWebsiteTypes() {
       const script = document.createElement('script');
-      script.src = `${WEB_APP_URL}?action=getWebsiteTypes&callback=handleWebsiteTypes`;
+      script.src = WEB_APP_URL + '?action=getWebsiteTypes&amp;callback=handleWebsiteTypes';
       document.body.appendChild(script);
     }
 
@@ -344,7 +506,7 @@ cat > core/blogger-theme/theme.xml << 'EOF'
 
       const script = document.createElement('script');
       script.id = 'jsonp-data-script';
-      script.src = `${WEB_APP_URL}?action=getData&websiteType=${currentWebsiteType}&callback=handleDataResponse`;
+      script.src = WEB_APP_URL + '?action=getData&websiteType=' + currentWebsiteType + '&callback=handleDataResponse';
       document.body.appendChild(script);
     }
 
@@ -369,15 +531,9 @@ cat > core/blogger-theme/theme.xml << 'EOF'
     // Generate HTML functions
     function generateEcommerceHTML(categories) {
       let html = '<div class="product-grid">';
-      categories.forEach(category => {
-        category.posts.forEach(product => {
-          html += `
-            <div class="product-item">
-              <h3>${product.title}</h3>
-              <p>${product.description}</p>
-              <p>Price: ${product.price} ${product.currency}</p>
-            </div>
-          `;
+      categories.forEach(function(category) {
+        category.posts.forEach(function(product) {
+          html += '<div class="product-item"><h3>' + product.title + '</h3><p>' + product.description + '</p><p>Price: ' + product.price + ' ' + product.currency + '</p></div>';
         });
       });
       html += '</div>';
@@ -386,13 +542,8 @@ cat > core/blogger-theme/theme.xml << 'EOF'
 
     function generatePortfolioHTML(projects) {
       let html = '<div class="portfolio-grid">';
-      projects.forEach(project => {
-        html += `
-          <div class="portfolio-item">
-            <h3>${project.title}</h3>
-            <p>${project.description}</p>
-          </div>
-        `;
+      projects.forEach(function(project) {
+        html += '<div class="portfolio-item"><h3>' + project.title + '</h3><p>' + project.description + '</p></div>';
       });
       html += '</div>';
       document.getElementById('mainContent').innerHTML = html;
@@ -400,14 +551,8 @@ cat > core/blogger-theme/theme.xml << 'EOF'
 
     function generateBlogHTML(posts) {
       let html = '<div class="blog-container">';
-      posts.forEach(post => {
-        html += `
-          <article class="blog-post">
-            <h3>${post.title}</h3>
-            <p>${post.excerpt}</p>
-            <small>${post.publishedDate}</small>
-          </article>
-        `;
+      posts.forEach(function(post) {
+        html += '<article class="blog-post"><h3>' + post.title + '</h3><p>' + post.excerpt + '</p><small>' + post.publishedDate + '</small></article>';
       });
       html += '</div>';
       document.getElementById('mainContent').innerHTML = html;
@@ -416,6 +561,14 @@ cat > core/blogger-theme/theme.xml << 'EOF'
     function generateGenericHTML(data) {
       generateBlogHTML(data);
     }
+
+    // Website type selector change
+    document.getElementById('websiteTypeSelector').addEventListener('change', function() {
+      currentWebsiteType = this.value;
+      document.getElementById('loadingContainer').style.display = 'flex';
+      document.getElementById('mainContent').style.display = 'none';
+      fetchData();
+    });
   </script>
   <style>
     .website-type-selector { margin: 20px 0; }
@@ -431,10 +584,10 @@ cat > core/blogger-theme/theme.xml << 'EOF'
 
 </body>
 </html>
-EOF
+ENDOFFILE
 
 # Create core/css/base.css
-cat > core/css/base.css << 'EOF'
+cat > core/css/base.css <<'ENDOFFILE'
 /* Base styles */
 * {
     margin: 0;
@@ -459,10 +612,10 @@ img {
     max-width: 100%;
     height: auto;
 }
-EOF
+ENDOFFILE
 
 # Create core/js/app.js
-cat > core/js/app.js << 'EOF'
+cat > core/js/app.js <<'ENDOFFILE'
 // Main application logic
 console.log('Multipurpose Website Builder loaded');
 
@@ -470,12 +623,12 @@ console.log('Multipurpose Website Builder loaded');
 document.addEventListener('DOMContentLoaded', function() {
     console.log('App initialized');
 });
-EOF
+ENDOFFILE
 
 echo "Creating website type configurations..."
 
 # Create website-types/business/config.js
-cat > website-types/business/config.js << 'EOF'
+cat > website-types/business/config.js <<'ENDOFFILE'
 const BUSINESS_CONFIG = {
   websiteType: "Business",
   icon: "briefcase",
@@ -490,10 +643,10 @@ const BUSINESS_CONFIG = {
     { name: "Implementation", description: "Turn plans into reality" }
   ]
 };
-EOF
+ENDOFFILE
 
 # Create website-types/ecommerce/config.js
-cat > website-types/ecommerce/config.js << 'EOF'
+cat > website-types/ecommerce/config.js <<'ENDOFFILE'
 const ECOMMERCE_CONFIG = {
   websiteType: "E-commerce",
   icon: "shopping-cart",
@@ -504,10 +657,10 @@ const ECOMMERCE_CONFIG = {
   },
   features: ["products", "cart", "checkout", "orders"]
 };
-EOF
+ENDOFFILE
 
 # Create website-types/portfolio/config.js
-cat > website-types/portfolio/config.js << 'EOF'
+cat > website-types/portfolio/config.js <<'ENDOFFILE'
 const PORTFOLIO_CONFIG = {
   websiteType: "Portfolio",
   icon: "palette",
@@ -518,10 +671,10 @@ const PORTFOLIO_CONFIG = {
   },
   features: ["gallery", "projects", "about", "contact"]
 };
-EOF
+ENDOFFILE
 
 # Create website-types/blog/config.js
-cat > website-types/blog/config.js << 'EOF'
+cat > website-types/blog/config.js <<'ENDOFFILE'
 const BLOG_CONFIG = {
   websiteType: "Blog",
   icon: "journal-text",
@@ -532,12 +685,12 @@ const BLOG_CONFIG = {
   },
   features: ["posts", "categories", "comments"]
 };
-EOF
+ENDOFFILE
 
 echo "Creating documentation..."
 
 # Create docs/getting-started.md
-cat > docs/getting-started.md << 'EOF'
+cat > docs/getting-started.md <<'ENDOFFILE'
 # Getting Started
 
 ## Prerequisites
@@ -553,7 +706,7 @@ cat > docs/getting-started.md << 'EOF'
 
 ## Configuration
 Update the configuration files with your details.
-EOF
+ENDOFFILE
 
 echo
 echo "========================================"
@@ -566,7 +719,3 @@ echo "2. Go to your repository folder"
 echo "3. Review the changes"
 echo "4. Commit with message: 'Initial setup - Add multipurpose website builder structure'"
 echo "5. Push to GitHub"
-EOF
-
-# Make the script executable
-chmod +x setup.sh
