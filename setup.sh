@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "Multipurpose Website Builder Setup (Final Fix)"
+echo "Multipurpose Website Builder Setup (Label Fix)"
 echo "============================================"
 echo
 
@@ -125,6 +125,7 @@ ENDOFFILE
 # ==========================================
 # 2. APPS SCRIPT BACKEND (Code.gs)
 # ==========================================
+# FIX: Added Label extraction logic so filtering works
 cat > core/apps-script/Code.gs <<'ENDOFFILE'
 // CONFIGURATION
 const SPREADSHEET_ID = '1JEqIVnhjDaz7otgNAikpQj7Trw1SRG_0-iSfYMLQwtA'; // <-- YOUR SHEET ID
@@ -199,24 +200,17 @@ function saveConfigToSheet(config) {
 }
 
 function getSavedConfig() {
-  // DEFAULT CONFIG (Used if Sheet is empty)
-  const defaultConfig = { 
-    type: "Home Improvement", 
-    title: "My New Website", 
-    color: "#333333" 
-  };
+  const defaultConfig = { type: "Home Improvement", title: "My New Website", color: "#333333" };
 
   try {
     const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(SETTINGS_SHEET);
     if (!sheet) return defaultConfig;
     
     const data = sheet.getDataRange().getValues();
-    if (data.length < 2) return defaultConfig; // No data rows
+    if (data.length < 2) return defaultConfig; 
 
     const config = {};
     for (let i = 1; i < data.length; i++) config[data[i][0]] = data[i][1];
-    
-    // Merge with defaults to prevent undefined
     return { ...defaultConfig, ...config };
   } catch (e) {
     return defaultConfig;
@@ -235,16 +229,20 @@ function getBloggerData() {
          const match = p.content.$t.match(/<img[^>]+src="([^"]+)"/);
          if (match) img = match[1];
       }
-      // Check labels
+      
+      // --- FIX: EXTRACT LABELS ---
       let labels = [];
-      if (p.category) labels = p.category.map(c => c.term);
+      if (p.category) {
+        labels = p.category.map(c => c.term);
+      }
+      // ---------------------------
 
       return {
         id: p.id.$t.split('.post-')[1],
         title: p.title.$t,
         excerpt: p.content ? p.content.$t.replace(/<[^>]+>/g, ' ').substring(0, 100) + '...' : '',
         image: img,
-        labels: labels,
+        labels: labels, // Send labels to frontend
         date: new Date(p.published.$t).toLocaleDateString()
       };
     });
@@ -344,12 +342,12 @@ cat > core/blogger-theme/theme.xml <<'ENDOFFILE'
 
         Promise.all([p1, p2, p3]).then(([configData, typesData, postsData]) => {
             
-            // Safe Defaults if API fails
+            // Store data
             siteConfig = configData || { title: "My Site", type: "Home Improvement", color: "#333" };
             allTypes = typesData.website_types || [];
             allPosts = postsData || [];
 
-            // Determine Current Type
+            // Determine Current Type (from Config)
             const typeName = siteConfig.type || "Home Improvement";
             currentTypeConfig = allTypes.find(t => t.name === typeName);
 
@@ -407,6 +405,7 @@ cat > core/blogger-theme/theme.xml <<'ENDOFFILE'
         // Filter Logic
         const filtered = allPosts.filter(p => {
             if (!p.labels) return false;
+            // Check if post labels include the subcategory name (case insensitive)
             return p.labels.some(l => l.toLowerCase() === subName.toLowerCase());
         });
 
@@ -440,7 +439,7 @@ cat > core/blogger-theme/theme.xml <<'ENDOFFILE'
     function renderPosts(posts) {
         const grid = document.getElementById('content-area');
         if (!posts || posts.length === 0) {
-            grid.innerHTML = '<div class="col-12 text-center p-5"><h3>No posts found.</h3><p class="text-muted">Posts must have Labels that match the category names.</p></div>';
+            grid.innerHTML = '<div class="col-12 text-center p-5"><h3>No results.</h3><p class="text-muted">Ensure your Blogger posts have the correct Labels.</p></div>';
             return;
         }
 
@@ -481,9 +480,8 @@ ENDOFFILE
 
 echo
 echo "========================================"
-echo "Setup Complete! (Unified CMS Edition)"
+echo "Setup Complete! (Labels Fixed)"
 echo "========================================"
 echo "1. Push to GitHub."
 echo "2. Deploy Apps Script (New deployment -> Anyone)."
-echo "3. OPEN THE BUILDER URL and click 'Publish'."
-echo "4. Update theme.xml with the new URL."
+echo "3. Update theme.xml with the new URL."

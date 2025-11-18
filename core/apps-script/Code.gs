@@ -71,24 +71,17 @@ function saveConfigToSheet(config) {
 }
 
 function getSavedConfig() {
-  // DEFAULT CONFIG (Used if Sheet is empty)
-  const defaultConfig = { 
-    type: "Home Improvement", 
-    title: "My New Website", 
-    color: "#333333" 
-  };
+  const defaultConfig = { type: "Home Improvement", title: "My New Website", color: "#333333" };
 
   try {
     const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(SETTINGS_SHEET);
     if (!sheet) return defaultConfig;
     
     const data = sheet.getDataRange().getValues();
-    if (data.length < 2) return defaultConfig; // No data rows
+    if (data.length < 2) return defaultConfig; 
 
     const config = {};
     for (let i = 1; i < data.length; i++) config[data[i][0]] = data[i][1];
-    
-    // Merge with defaults to prevent undefined
     return { ...defaultConfig, ...config };
   } catch (e) {
     return defaultConfig;
@@ -107,16 +100,20 @@ function getBloggerData() {
          const match = p.content.$t.match(/<img[^>]+src="([^"]+)"/);
          if (match) img = match[1];
       }
-      // Check labels
+      
+      // --- FIX: EXTRACT LABELS ---
       let labels = [];
-      if (p.category) labels = p.category.map(c => c.term);
+      if (p.category) {
+        labels = p.category.map(c => c.term);
+      }
+      // ---------------------------
 
       return {
         id: p.id.$t.split('.post-')[1],
         title: p.title.$t,
         excerpt: p.content ? p.content.$t.replace(/<[^>]+>/g, ' ').substring(0, 100) + '...' : '',
         image: img,
-        labels: labels,
+        labels: labels, // Send labels to frontend
         date: new Date(p.published.$t).toLocaleDateString()
       };
     });

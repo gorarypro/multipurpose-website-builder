@@ -86,12 +86,12 @@
 
         Promise.all([p1, p2, p3]).then(([configData, typesData, postsData]) => {
             
-            // Safe Defaults if API fails
+            // Store data
             siteConfig = configData || { title: "My Site", type: "Home Improvement", color: "#333" };
             allTypes = typesData.website_types || [];
             allPosts = postsData || [];
 
-            // Determine Current Type
+            // Determine Current Type (from Config)
             const typeName = siteConfig.type || "Home Improvement";
             currentTypeConfig = allTypes.find(t => t.name === typeName);
 
@@ -149,6 +149,7 @@
         // Filter Logic
         const filtered = allPosts.filter(p => {
             if (!p.labels) return false;
+            // Check if post labels include the subcategory name (case insensitive)
             return p.labels.some(l => l.toLowerCase() === subName.toLowerCase());
         });
 
@@ -182,7 +183,7 @@
     function renderPosts(posts) {
         const grid = document.getElementById('content-area');
         if (!posts || posts.length === 0) {
-            grid.innerHTML = '<div class="col-12 text-center p-5"><h3>No posts found.</h3><p class="text-muted">Posts must have Labels that match the category names.</p></div>';
+            grid.innerHTML = '<div class="col-12 text-center p-5"><h3>No results.</h3><p class="text-muted">Ensure your Blogger posts have the correct Labels.</p></div>';
             return;
         }
 
