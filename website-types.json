@@ -1,0 +1,32 @@
+{
+  "website_types": [
+    {
+      "name": "Business",
+      "subcategories": ["Corporate", "Small Business", "Enterprise", "Startup"],
+      "icon": "briefcase",
+      "color": "#2c3e50",
+      "features": ["about", "services", "team", "testimonials", "contact"]
+    },
+    {
+      "name": "E-commerce",
+      "subcategories": ["Online Store", "Marketplace", "Dropshipping", "Subscription Service"],
+      "icon": "shopping-cart",
+      "color": "#27ae60",
+      "features": ["products", "cart", "checkout", "orders", "account"]
+    },
+    {
+      "name": "Portfolio",
+      "subcategories": ["Creative Portfolio", "Photography Portfolio", "Design Portfolio", "Artist Portfolio"],
+      "icon": "palette",
+      "color": "#8e44ad",
+      "features": ["gallery", "projects", "about", "skills", "contact"]
+    },
+    {
+      "name": "Blog",
+      "subcategories": ["Personal Blog", "Tech Blog", "Travel Blog", "Food Blog", "Fashion Blog"],
+      "icon": "journal-text",
+      "color": "#e74c3c",
+      "features": ["posts", "categories", "comments", "newsletter", "search"]
+    }
+  ]
+}

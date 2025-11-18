@@ -1,21 +1,19 @@
 # Multipurpose Website Builder
 
-A flexible system for building websites across multiple categories.
+A flexible, customizable website builder that supports multiple categories.
 
 ## Features
-- 🎨 Multiple Themes
+- 🎨 Multiple Website Types
 - 🔧 Modular Components
 - 📱 Responsive Design
 - 🚀 Easy Deployment
-- 🛠️ No-Code Builder
 
 ## Quick Start
-1. Clone this repository
-2. Run `npm install`
-3. Run `npm run dev` to start development server
-4. Open `index.html` to view the website
+1. Set up Google Apps Script backend
+2. Apply theme to Blogger
+3. Configure your website type
+4. Add content to Blogger
 
 ## Project Structure
 
 ## License
-MIT License
