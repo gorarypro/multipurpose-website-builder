@@ -8,13 +8,14 @@
     <style>
       body { background-color: #f0f2f5; font-family: sans-serif; padding: 20px; }
       .card { border: none; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 800px; margin: 0 auto; }
+      .preview-box { background: #fff; border: 2px dashed #ddd; border-radius: 8px; padding: 15px; margin-top: 10px; min-height: 60px; }
     </style>
   </head>
   <body>
     <div class="card p-4">
       <div class="text-center mb-4">
         <h2>🛠️ Website Builder Admin</h2>
-        <p class="text-muted">Configure and Download your Theme</p>
+        <p class="text-muted">Configure your site</p>
       </div>
       
       <form id="builderForm">
@@ -22,11 +23,11 @@
         <div class="row mb-3">
           <div class="col-md-6">
             <label class="form-label">Website Title</label>
-            <input type="text" class="form-control" id="siteTitle" value="My New Website">
+            <input type="text" class="form-control" id="siteTitle" value="Event Sushi">
           </div>
           <div class="col-md-6">
             <label class="form-label">Primary Color</label>
-            <input type="color" class="form-control form-control-color w-100" id="siteColor" value="#0d6efd">
+            <input type="color" class="form-control form-control-color w-100" id="siteColor" value="#fe7301">
           </div>
         </div>
 
@@ -36,6 +37,9 @@
           <select class="form-select" id="websiteType" onchange="updatePreview()">
             <option value="" disabled selected>Loading...</option>
           </select>
+          <div id="subcatPreview" class="preview-box text-muted text-center small mt-2">
+            Select a category to see Matrix codes...
+          </div>
         </div>
         
         <div class="mb-4 form-check form-switch">
@@ -44,12 +48,9 @@
         </div>
 
         <!-- Actions -->
-        <div class="d-grid gap-2">
+        <div class="d-grid">
           <button type="button" class="btn btn-success btn-lg" onclick="saveConfig()">
-            💾 Save Settings
-          </button>
-          <button type="button" class="btn btn-dark btn-lg" onclick="downloadTheme()">
-            📥 Download Blogger Theme
+            💾 Publish Changes
           </button>
         </div>
         <div id="status" class="mt-3 text-center"></div>
@@ -86,7 +87,12 @@
       function updatePreview() {
         const typeName = document.getElementById('websiteType').value;
         const config = allTypes.find(t => t.name === typeName);
-        if(config) document.getElementById('siteColor').value = config.color || '#000000';
+        if(config) {
+           document.getElementById('siteColor').value = config.color || '#000000';
+           document.getElementById('subcatPreview').innerHTML = config.subcategories.map((sub, i) => 
+            `<span class="badge bg-secondary me-1">[${i+1}] ${sub}</span>`
+           ).join(' ');
+        }
       }
 
       function saveConfig() {
@@ -101,41 +107,13 @@
           featMatrix: document.getElementById('featMatrix').checked.toString()
         };
 
+        if(!config.type) { alert("Select a category"); btn.disabled=false; return; }
+
         google.script.run.withSuccessHandler(() => {
-           document.getElementById('status').innerHTML = '<div class="alert alert-success">Settings Saved!</div>';
+           document.getElementById('status').innerHTML = '<div class="alert alert-success">Settings Saved! Refresh your blog.</div>';
            btn.disabled = false; 
-           btn.innerText = "💾 Save Settings";
+           btn.innerText = "💾 Publish Changes";
         }).saveConfigToSheet(config);
-      }
-
-      function downloadTheme() {
-        const btn = document.querySelector('.btn-dark');
-        btn.disabled = true;
-        btn.innerText = "Generating XML...";
-        
-        // Pass current UI values directly to generator so download works even without saving
-        const config = {
-          type: document.getElementById('websiteType').value || "Home Improvement",
-          title: document.getElementById('siteTitle').value || "My Site",
-          color: document.getElementById('siteColor').value || "#333",
-          featMatrix: document.getElementById('featMatrix').checked.toString()
-        };
-
-        google.script.run.withSuccessHandler(xmlContent => {
-           downloadFile("theme-" + config.type.replace(/\s+/g, '-').toLowerCase() + ".xml", xmlContent);
-           btn.disabled = false;
-           btn.innerText = "📥 Download Blogger Theme";
-        }).generateThemeXml(config);
-      }
-
-      function downloadFile(filename, content) {
-        const element = document.createElement('a');
-        element.setAttribute('href', 'data:text/xml;charset=utf-8,' + encodeURIComponent(content));
-        element.setAttribute('download', filename);
-        element.style.display = 'none';
-        document.body.appendChild(element);
-        element.click();
-        document.body.removeChild(element);
       }
     </script>
   </body>

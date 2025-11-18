@@ -1,6 +1,8 @@
-const SPREADSHEET_ID = '1JEqIVnhjDaz7otgNAikpQj7Trw1SRG_0-iSfYMLQwtA'; 
+// CONFIGURATION
+const SPREADSHEET_ID = '1JEqIVnhjDaz7otgNAikpQj7Trw1SRG_0-iSfYMLQwtA'; // <-- Verify this ID
 const SETTINGS_SHEET = 'Settings';
-const BLOG_FEED_URL = 'https://multipurpose-website-builder.blogspot.com/feeds/posts/default?alt=json&max-results=50';
+// IMPORTANT: Change this to YOUR blog URL
+const BLOG_FEED_URL = 'https://eventsushi1.blogspot.com/feeds/posts/default?alt=json&max-results=50';
 
 function doGet(e) {
   if (!e.parameter.action) {
@@ -9,17 +11,24 @@ function doGet(e) {
       .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
       .addMetaTag('viewport', 'width=device-width, initial-scale=1');
   }
-  // JSONP API Logic
-  const action = e.parameter.action;
+
   const callback = e.parameter.callback;
   if (!callback) return ContentService.createTextOutput("Error");
-  
+
   let result = {};
-  if (action === 'getConfig') result = getSavedConfig();
-  else if (action === 'getWebsiteTypes') result = getWebsiteTypes();
-  else if (action === 'getData') result = getBloggerData();
+  const action = e.parameter.action;
+
+  try {
+    if (action === 'getConfig') result = getSavedConfig();
+    else if (action === 'getWebsiteTypes') result = getWebsiteTypes();
+    else if (action === 'getData') result = getBloggerData();
+    else result = { error: "Unknown action" };
+  } catch (err) {
+    result = { error: "Server Error: " + err.toString() };
+  }
   
-  return ContentService.createTextOutput(callback + '(' + JSON.stringify(result) + ')').setMimeType(ContentService.MimeType.JAVASCRIPT);
+  return ContentService.createTextOutput(callback + '(' + JSON.stringify(result) + ')')
+    .setMimeType(ContentService.MimeType.JAVASCRIPT);
 }
 
 function getWebsiteTypes() {
@@ -35,28 +44,6 @@ function getWebsiteTypes() {
   };
 }
 
-// --- THEME GENERATOR ---
-function generateThemeXml(uiConfig) {
-  // 1. Read the raw template file
-  let xml = HtmlService.createHtmlOutputFromFile('ThemeTemplate').getContent();
-  
-  // 2. Get current Web App URL dynamically
-  const url = ScriptApp.getService().getUrl();
-  
-  // 3. Replace placeholders
-  xml = xml.replace('{{WEB_APP_URL}}', url);
-  xml = xml.replace('{{SITE_TITLE}}', uiConfig.title);
-  xml = xml.replace('{{SITE_TYPE}}', uiConfig.type);
-  xml = xml.replace('{{SITE_COLOR}}', uiConfig.color);
-  
-  // 4. Handle Feature Logic
-  const matrixClass = (uiConfig.featMatrix === 'true') ? '' : 'feature-hidden';
-  xml = xml.replace('{{MATRIX_CLASS}}', matrixClass);
-
-  return xml;
-}
-
-// --- DATABASE ---
 function saveConfigToSheet(config) {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   let sheet = ss.getSheetByName(SETTINGS_SHEET);
@@ -69,19 +56,23 @@ function saveConfigToSheet(config) {
 }
 
 function getSavedConfig() {
+  const defaultConfig = { type: "Home Improvement", title: "Event Sushi", color: "#fe7301", featMatrix: "true" };
   try {
     const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(SETTINGS_SHEET);
-    if (!sheet) return {};
+    if (!sheet) return defaultConfig;
     const data = sheet.getDataRange().getValues();
+    if (data.length < 2) return defaultConfig; 
     const config = {};
     for (let i = 1; i < data.length; i++) config[data[i][0]] = data[i][1];
-    return config;
-  } catch (e) { return {}; }
+    return { ...defaultConfig, ...config };
+  } catch (e) { return defaultConfig; }
 }
 
 function getBloggerData() {
   try {
     const response = UrlFetchApp.fetch(BLOG_FEED_URL, { muteHttpExceptions: true });
+    if (response.getResponseCode() !== 200) return []; 
+    
     const json = JSON.parse(response.getContentText());
     return (json.feed.entry || []).map(p => {
       let img = 'https://placehold.co/600x400/eee/999?text=No+Image';
@@ -89,6 +80,11 @@ function getBloggerData() {
          const match = p.content.$t.match(/<img[^>]+src="([^"]+)"/);
          if (match) img = match[1];
       }
+      
+      // Extract price from content or label? 
+      // For now, random price if not found, or extract from content if you put "Price: 50" in text.
+      let price = 0;
+      
       let labels = p.category ? p.category.map(c => c.term) : [];
       return {
         id: p.id.$t.split('.post-')[1],
@@ -96,6 +92,8 @@ function getBloggerData() {
         excerpt: p.content ? p.content.$t.replace(/<[^>]+>/g, ' ').substring(0, 100) + '...' : '',
         image: img,
         labels: labels,
+        price: price,
+        currency: 'DH',
         date: new Date(p.published.$t).toLocaleDateString()
       };
     });
