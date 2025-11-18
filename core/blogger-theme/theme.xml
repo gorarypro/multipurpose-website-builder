@@ -9,14 +9,17 @@
   <link href='https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css' rel='stylesheet'/>
   <b:skin><![CDATA[ 
     body { background-color: #f8f9fa; font-family: 'Segoe UI', sans-serif; }
-    #app-header { padding: 80px 0 40px; color: white; text-align: center; margin-bottom: 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-    .matrix-bar { max-width: 400px; margin: -25px auto 30px; background: white; padding: 10px; border-radius: 50px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: flex; align-items: center; }
+    #app-header { padding: 60px 0 40px; color: white; text-align: center; margin-bottom: 40px; transition: background 0.3s; }
+    .matrix-container { max-width: 400px; margin: -30px auto 30px; }
+    .matrix-input-group { background: white; padding: 8px; border-radius: 50px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: flex; }
     .matrix-input { border: none; outline: none; flex-grow: 1; padding: 5px 15px; font-size: 1.1rem; }
-    .matrix-btn { border-radius: 50px; padding: 8px 25px; }
-    .post-card { background: white; border: none; border-radius: 12px; overflow: hidden; transition: transform 0.3s; height: 100%; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-    .post-card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+    .btn-go { border-radius: 50px; padding: 8px 25px; background: #333; color: white; border: none; }
+    .post-card { background: white; border-radius: 12px; overflow: hidden; height: 100%; box-shadow: 0 2px 10px rgba(0,0,0,0.05); transition: transform 0.2s; }
+    .post-card:hover { transform: translateY(-5px); }
     .post-img { height: 200px; width: 100%; object-fit: cover; }
     .post-body { padding: 20px; }
+    .badge-sub { cursor: pointer; transition: 0.2s; }
+    .badge-sub:hover { opacity: 0.8; }
     .loader-overlay { position: fixed; top:0; left:0; right:0; bottom:0; background: white; z-index: 9999; display: flex; justify-content: center; align-items: center; flex-direction: column; }
   ]]></b:skin>
 </head>
@@ -28,31 +31,35 @@
     <p class="mt-3 text-muted">Building your site...</p>
   </div>
 
-  <!-- Header (Dynamic Color) -->
+  <!-- Header -->
   <header id="app-header" style="background-color: #333;">
     <div class="container">
-      <h1 class="display-4 fw-bold" id="app-title">Loading...</h1>
+      <h1 class="display-4 fw-bold" id="app-title">...</h1>
       <p class="lead opacity-75" id="app-subtitle">...</p>
     </div>
   </header>
 
   <!-- Matrix Navigation -->
-  <div class="container">
-    <div class="matrix-bar">
-      <span class="ms-2 text-muted"><i class="bi bi-grid-3x3-gap-fill"></i></span>
-      <input type="text" id="matrixInput" class="matrix-input" placeholder="Matrix Code (e.g. 1-2)" />
-      <button class="btn btn-primary matrix-btn" id="matrixBtn" onclick="runMatrix()">Go</button>
+  <div class="container matrix-container">
+    <div class="matrix-input-group">
+      <span class="ms-2 align-self-center text-muted"><i class="bi bi-grid-3x3-gap-fill"></i></span>
+      <!-- FIX: Self-closing input -->
+      <input type="text" id="matrixInput" class="matrix-input" placeholder="Matrix Code (e.g. 1 or 2)" />
+      <button class="btn-go" id="matrixBtn" onclick="runMatrix()">Go</button>
     </div>
   </div>
 
-  <!-- Main Content Area -->
+  <!-- Subcategories Display -->
+  <div class="container text-center mb-4">
+     <div id="subcat-badges"></div>
+  </div>
+
+  <!-- Content -->
   <div class="container mb-5">
-    <div id="content-area" class="row g-4">
-      <!-- Posts injected here -->
-    </div>
+    <div id="content-area" class="row g-4"></div>
   </div>
 
-  <!-- Required Blogger Widget (Hidden) -->
+  <!-- Required Widget -->
   <b:section class='main' id='main' maxwidgets='1' showaddelement='no'>
     <b:widget id='HTML1' locked='true' title='App' type='HTML' version='1'>
       <b:widget-settings><b:widget-setting name='content'/></b:widget-settings>
@@ -60,43 +67,127 @@
     </b:widget>
   </b:section>
 
+  <script src='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js'></script>
   <script>
   //<![CDATA[
     // ** IMPORTANT: PASTE YOUR NEW WEB APP URL HERE **
     const API_URL = 'https://script.google.com/macros/s/AKfycbxBOuXmYcOpeijxpBMwEV5clzoUg1zYG6hwQ93AFj5FRjXE3rHPR5fdauhInRh4uB00BA/exec';
 
     let siteConfig = {};
+    let allTypes = [];
+    let allPosts = [];
+    let currentTypeConfig = null;
 
     document.addEventListener('DOMContentLoaded', () => {
-        // 1. Fetch Configuration
-        fetchJsonp(API_URL + '?action=getConfig', (config) => {
-            siteConfig = config;
-            applyTheme(config);
-            // 2. Fetch Content
-            fetchJsonp(API_URL + '?action=getData&type=' + encodeURIComponent(config.type), renderPosts);
+        
+        // 1. Load everything in parallel
+        const p1 = new Promise(r => fetchJsonp(API_URL + '?action=getConfig', r));
+        const p2 = new Promise(r => fetchJsonp(API_URL + '?action=getWebsiteTypes', r));
+        const p3 = new Promise(r => fetchJsonp(API_URL + '?action=getData', r));
+
+        Promise.all([p1, p2, p3]).then(([configData, typesData, postsData]) => {
+            
+            // Store data
+            siteConfig = configData;
+            allTypes = typesData.website_types || [];
+            allPosts = postsData || [];
+
+            // Determine Current Type (from Config)
+            const typeName = siteConfig.type || "Home Improvement";
+            currentTypeConfig = allTypes.find(t => t.name === typeName);
+
+            // Apply Theme
+            applyTheme();
+            
+            // Initial Render (Show all posts matching main category logic if needed, or just all)
+            // For simplicity, we show all posts initially
+            renderPosts(allPosts);
+
+            document.getElementById('siteLoader').style.display = 'none';
         });
 
-        // Matrix Input Enter Key
-        document.getElementById('matrixInput').addEventListener('keypress', (e) => {
-            if(e.key === 'Enter') runMatrix();
-        });
+        // Input Enter Key
+        const input = document.getElementById('matrixInput');
+        if(input) input.addEventListener('keypress', (e) => { if(e.key === 'Enter') runMatrix(); });
     });
 
-    function applyTheme(config) {
-        document.getElementById('app-title').innerText = config.title;
-        document.getElementById('app-subtitle').innerText = config.type;
-        document.getElementById('app-header').style.backgroundColor = config.color;
-        document.getElementById('matrixBtn').style.backgroundColor = config.color;
-        document.getElementById('matrixBtn').style.borderColor = config.color;
-        document.title = config.title;
+    function applyTheme() {
+        document.getElementById('app-title').innerText = siteConfig.title;
+        document.getElementById('app-subtitle').innerText = siteConfig.type;
+        
+        const color = siteConfig.color || '#333';
+        document.getElementById('app-header').style.backgroundColor = color;
+        document.getElementById('matrixBtn').style.backgroundColor = color;
+        
+        // Render Subcategory Badges with Matrix Numbers
+        if (currentTypeConfig && currentTypeConfig.subcategories) {
+            const html = currentTypeConfig.subcategories.map((sub, i) => 
+                `<span class="badge bg-secondary badge-sub me-1 mb-1" onclick="filterByMatrix(${i+1})">[${i+1}] ${sub}</span>`
+            ).join('');
+            document.getElementById('subcat-badges').innerHTML = html;
+        }
+    }
+
+    function runMatrix() {
+        const val = document.getElementById('matrixInput').value.trim();
+        const index = parseInt(val);
+        if (index && index > 0) {
+            filterByMatrix(index);
+        } else {
+            alert("Please enter a valid number (e.g., 1, 2, 3)");
+        }
+    }
+
+    function filterByMatrix(index) {
+        if (!currentTypeConfig || !currentTypeConfig.subcategories) return;
+        
+        // Array is 0-indexed, Matrix is 1-indexed
+        const subName = currentTypeConfig.subcategories[index - 1];
+        
+        if (!subName) {
+            alert("Code " + index + " not found for this category.");
+            return;
+        }
+
+        // Filter Logic
+        const filtered = allPosts.filter(p => {
+            if (!p.labels) return false;
+            // Check if post labels include the subcategory name (case insensitive)
+            return p.labels.some(l => l.toLowerCase() === subName.toLowerCase());
+        });
+
+        // Update UI
+        renderPosts(filtered);
+        
+        // Highlight Badge
+        const badges = document.querySelectorAll('.badge-sub');
+        badges.forEach(b => {
+            b.classList.remove('bg-primary');
+            b.classList.add('bg-secondary');
+        });
+        if(badges[index-1]) {
+             badges[index-1].classList.remove('bg-secondary');
+             badges[index-1].classList.add('bg-primary');
+        }
+
+        // Show alert toast/message
+        const subtitle = document.getElementById('app-subtitle');
+        subtitle.innerHTML = `Filtering: <strong>${subName}</strong> <a href="#" onclick="resetFilter(); return false;" class="text-white small">(Reset)</a>`;
+    }
+    
+    function resetFilter() {
+        renderPosts(allPosts);
+        document.getElementById('app-subtitle').innerText = siteConfig.type;
+        document.querySelectorAll('.badge-sub').forEach(b => {
+             b.classList.remove('bg-primary'); 
+             b.classList.add('bg-secondary'); 
+        });
     }
 
     function renderPosts(posts) {
         const grid = document.getElementById('content-area');
-        document.getElementById('siteLoader').style.display = 'none'; // Hide loader
-        
         if (!posts || posts.length === 0) {
-            grid.innerHTML = '<div class="col-12 text-center p-5"><h3>No posts found.</h3><p class="text-muted">Add posts to your Blogger backend.</p></div>';
+            grid.innerHTML = '<div class="col-12 text-center p-5"><h3>No results.</h3><p class="text-muted">Ensure your Blogger posts have the correct Labels.</p></div>';
             return;
         }
 
@@ -107,19 +198,16 @@
                     <div class="post-body">
                         <h5 class="card-title">${p.title}</h5>
                         <p class="card-text small text-muted">${p.excerpt}</p>
-                        <button class="btn btn-sm btn-outline-secondary mt-2">Read More</button>
+                        <div class="mt-2">
+                           ${p.labels.map(l => `<span class="badge bg-light text-dark border me-1">${l}</span>`).join('')}
+                        </div>
                     </div>
                 </div>
             </div>
         `).join('');
     }
 
-    function runMatrix() {
-        const code = document.getElementById('matrixInput').value;
-        alert("Matrix Code " + code + " triggered! (Add specific logic here)");
-    }
-
-    // Simple JSONP implementation
+    // JSONP Fetcher
     function fetchJsonp(url, callback) {
         const callbackName = 'jsonp_cb_' + Math.round(100000 * Math.random());
         window[callbackName] = function(data) {
@@ -129,6 +217,7 @@
         };
         const script = document.createElement('script');
         script.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'callback=' + callbackName;
+        script.onerror = () => { console.error("JSONP Error"); delete window[callbackName]; };
         document.body.appendChild(script);
     }
   //]]>

@@ -7,169 +7,97 @@
     <title>Website Builder Admin</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-      body { background-color: #f0f2f5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-      .builder-container { max-width: 900px; margin: 40px auto; }
-      .card { border: none; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden; }
-      .card-header { background: white; border-bottom: 1px solid #eee; padding: 20px 30px; }
-      .card-body { padding: 30px; }
-      .preview-box { background: #fff; border: 2px dashed #ddd; border-radius: 8px; padding: 20px; margin-top: 10px; min-height: 100px; display: flex; align-items: center; justify-content: center; flex-direction: column; color: #888; transition: all 0.3s; }
-      .preview-box.active { border-color: #0d6efd; background-color: #f8fbff; color: #0d6efd; }
-      .form-label { font-weight: 600; color: #444; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px; }
-      .btn-publish { padding: 12px 30px; font-weight: 600; font-size: 1.1rem; border-radius: 8px; }
+      body { background-color: #f0f2f5; font-family: sans-serif; padding: 20px; }
+      .card { border: none; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 800px; margin: 0 auto; }
+      .preview-box { background: #fff; border: 2px dashed #ddd; border-radius: 8px; padding: 15px; margin-top: 10px; min-height: 60px; }
     </style>
   </head>
   <body>
-    <div class="builder-container">
-      <div class="text-center mb-5">
-        <h1 class="fw-bold display-5">🛠️ Website Builder</h1>
-        <p class="lead text-muted">Configure your Blogger site instantly.</p>
-      </div>
-
-      <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-          <h5 class="m-0">Configuration</h5>
-          <span class="badge bg-success bg-opacity-10 text-success">v2.0 CMS</span>
+    <div class="card p-4">
+      <h2 class="text-center mb-4">🛠️ Website Builder Admin</h2>
+      
+      <form id="builderForm">
+        <!-- 1. Identity -->
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label class="form-label">Website Title</label>
+            <input type="text" class="form-control" id="siteTitle" placeholder="My Awesome Site">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Primary Color</label>
+            <input type="color" class="form-control form-control-color w-100" id="siteColor" value="#0d6efd">
+          </div>
         </div>
-        <div class="card-body">
-          <form id="builderForm">
-            
-            <!-- Site Identity -->
-            <div class="row mb-4">
-              <div class="col-md-6">
-                <label class="form-label">Website Title</label>
-                <input type="text" class="form-control form-control-lg" id="siteTitle" placeholder="e.g., Modern Living">
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">Primary Brand Color</label>
-                <input type="color" class="form-control form-control-color w-100" id="siteColor" value="#2c3e50" style="height: 48px;">
-              </div>
-            </div>
 
-            <!-- Website Type Selection -->
-            <div class="mb-4">
-              <label class="form-label">Select Website Category</label>
-              <select class="form-select form-select-lg" id="websiteType" onchange="updatePreview()">
-                <option value="" disabled selected>Choose a category...</option>
-                <!-- Populated by JS -->
-              </select>
-              <div id="subcatPreview" class="preview-box mt-3">
-                <small>Select a category above to see available subcategories</small>
-              </div>
-            </div>
-
-            <!-- Matrix Code Info -->
-            <div class="alert alert-info d-flex align-items-center" role="alert">
-              <div style="font-size: 1.5rem; margin-right: 15px;">🔢</div>
-              <div>
-                <strong>Matrix Navigation Enabled</strong>
-                <div class="small">Your visitors can type codes (e.g., <strong>1-2</strong>) to jump to specific subcategories instantly.</div>
-              </div>
-            </div>
-
-            <!-- Actions -->
-            <div class="d-grid gap-2 mt-5">
-              <button type="button" class="btn btn-primary btn-publish" onclick="saveConfig()">
-                Publish Changes to Live Site
-              </button>
-            </div>
-            <div id="status" class="mt-3 text-center"></div>
-
-          </form>
+        <!-- 2. Category -->
+        <div class="mb-3">
+          <label class="form-label">Select Website Category</label>
+          <select class="form-select" id="websiteType" onchange="updatePreview()">
+            <option value="" disabled selected>Loading categories...</option>
+          </select>
+          <div id="subcatPreview" class="preview-box text-muted text-center small mt-2">
+            Select a category to see Matrix codes...
+          </div>
         </div>
-      </div>
+
+        <!-- 3. Publish -->
+        <div class="d-grid">
+          <button type="button" class="btn btn-primary btn-lg" onclick="saveConfig()">
+            Publish Changes
+          </button>
+        </div>
+        <div id="status" class="mt-3 text-center"></div>
+      </form>
     </div>
 
     <script>
-      // Configuration Data
-      const types = [
-        { name: "Home Improvement", sub: ["DIY Projects", "Renovation Tips", "Interior Design", "Gardening"], color: "#e67e22" },
-        { name: "Real Estate Investment", sub: ["Property Management", "Landlord Resources", "Market Analysis", "Rentals"], color: "#2c3e50" },
-        { name: "Insurance", sub: ["Policy Comparisons", "Claims Advice", "Types", "Risk Management"], color: "#2980b9" },
-        { name: "Self-Improvement", sub: ["Productivity", "Motivation", "Goals", "Personal Dev"], color: "#16a085" },
-        { name: "Cryptocurrency", sub: ["Blockchain", "Trading", "News", "Strategies"], color: "#f39c12" },
-        { name: "Hobbies and Crafts", sub: ["Tutorials", "Communities", "Supplies", "Projects"], color: "#d35400" },
-        { name: "Events and Conferences", sub: ["Listings", "Planning", "Reviews", "Networking"], color: "#8e44ad" },
-        { name: "Dance", sub: ["Studios", "Tutorials", "Competitions", "Techniques"], color: "#e84393" },
-        { name: "Music", sub: ["Streaming", "Artists", "Theory", "Concerts"], color: "#0984e3" },
-        { name: "Philosophy", sub: ["Discussions", "Ethics", "Books", "History"], color: "#6c5ce7" },
-        { name: "Mythology", sub: ["Stories", "Culture", "Comparative", "Modern"], color: "#fdcb6e" },
-        { name: "Survival Skills", sub: ["Guides", "Wilderness", "Emergency", "Camping"], color: "#d63031" },
-        { name: "Fashion Design", sub: ["Portfolios", "Shows", "Trends", "Illustration"], color: "#e17055" },
-        { name: "Culinary Arts", sub: ["Schools", "Competitions", "Chefs", "Photography"], color: "#f1c40f" },
-        { name: "Film and Television", sub: ["Festivals", "Reviews", "Filmmaking", "Analysis"], color: "#2d3436" },
-        { name: "Spirituality", sub: ["Meditation", "Holistic", "Practices", "Community"], color: "#00b894" },
-        { name: "Digital Marketing", sub: ["SEO", "Social Media", "Content", "Email"], color: "#0984e3" },
-        { name: "Women’s Interests", sub: ["Empowerment", "Leadership", "Health", "Fashion"], color: "#e84393" },
-        { name: "Men’s Interests", sub: ["Grooming", "Fitness", "Fatherhood", "Fashion"], color: "#34495e" },
-        { name: "Aging and Senior Care", sub: ["Elder Care", "Retirement", "Health", "Activities"], color: "#74b9ff" },
-        { name: "Travel Hacking", sub: ["Deals", "Flyer Tips", "Budget", "Rewards"], color: "#00cec9" },
-        { name: "Food and Beverage", sub: ["Reviews", "Blogging", "Specialty", "Pairings"], color: "#d63031" },
-        { name: "Urban Exploration", sub: ["Abandoned", "Guides", "Photography", "History"], color: "#636e72" },
-        { name: "Alternative Energy", sub: ["Solar/Wind", "Sustainable Living", "Reviews", "Policy"], color: "#f1c40f" },
-        { name: "Sustainability", sub: ["Eco-Products", "Practices", "Green Living", "Activism"], color: "#27ae60" }
-      ];
+      // Fetch categories from Code.gs on load
+      google.script.run.withSuccessHandler(populateTypes).getWebsiteTypes();
 
-      // Initialize
-      const select = document.getElementById('websiteType');
-      types.forEach((t, index) => {
-        const opt = document.createElement('option');
-        opt.value = t.name;
-        opt.text = `[${index + 1}] ${t.name}`;
-        select.appendChild(opt);
-      });
+      let allTypes = [];
 
-      // Update Preview
-      function updatePreview() {
-        const typeName = select.value;
-        const config = types.find(t => t.name === typeName);
-        const previewBox = document.getElementById('subcatPreview');
+      function populateTypes(data) {
+        allTypes = data.website_types;
+        const select = document.getElementById('websiteType');
+        select.innerHTML = '<option value="" disabled selected>Choose a category...</option>';
         
+        allTypes.forEach(t => {
+          const opt = document.createElement('option');
+          opt.value = t.name;
+          opt.textContent = t.name;
+          select.appendChild(opt);
+        });
+      }
+
+      function updatePreview() {
+        const typeName = document.getElementById('websiteType').value;
+        const config = allTypes.find(t => t.name === typeName);
         if (config) {
-          previewBox.innerHTML = `
-            <strong style="color:${config.color}">${config.name}</strong>
-            <div class="mt-2">
-              ${config.sub.map((s, i) => `<span class="badge bg-secondary me-1 mb-1">[${i+1}] ${s}</span>`).join('')}
-            </div>
-          `;
-          previewBox.classList.add('active');
-          document.getElementById('siteColor').value = config.color;
+          document.getElementById('subcatPreview').innerHTML = config.subcategories.map((sub, i) => 
+            `<span class="badge bg-secondary me-1">[${i+1}] ${sub}</span>`
+          ).join(' ');
+          document.getElementById('siteColor').value = config.color || '#000000';
         }
       }
 
-      // Save to Google Sheets
       function saveConfig() {
-        const btn = document.querySelector('.btn-publish');
-        const status = document.getElementById('status');
+        const btn = document.querySelector('button');
+        btn.disabled = true;
+        btn.innerText = "Publishing...";
         
         const config = {
           type: document.getElementById('websiteType').value,
-          title: document.getElementById('siteTitle').value || "My Website",
+          title: document.getElementById('siteTitle').value,
           color: document.getElementById('siteColor').value
         };
 
-        if (!config.type) {
-          alert("Please select a website type first.");
-          return;
-        }
+        if(!config.type) { alert("Select a category"); btn.disabled=false; return; }
 
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Publishing...';
-        status.innerHTML = '';
-
-        google.script.run
-          .withSuccessHandler(function() {
-             status.innerHTML = '<div class="alert alert-success">✅ <strong>Success!</strong> Your Blogger site has been updated. Refresh it to see changes.</div>';
-             btn.innerText = "Published Successfully";
-             btn.classList.remove('btn-primary');
-             btn.classList.add('btn-success');
-             setTimeout(() => { btn.disabled = false; btn.innerText = "Publish Changes to Live Site"; btn.classList.add('btn-primary'); btn.classList.remove('btn-success'); }, 3000);
-          })
-          .withFailureHandler(function(err) {
-             status.innerHTML = '<div class="alert alert-danger">❌ Error: ' + err + '</div>';
-             btn.disabled = false;
-             btn.innerText = "Try Again";
-          })
-          .saveConfigToSheet(config);
+        google.script.run.withSuccessHandler(() => {
+           document.getElementById('status').innerHTML = '<div class="alert alert-success">✅ Saved! Refresh your Blogger site.</div>';
+           btn.disabled = false; 
+           btn.innerText = "Publish Changes";
+        }).saveConfigToSheet(config);
       }
     </script>
   </body>
