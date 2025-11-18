@@ -1,40 +1,37 @@
 /**
  * CONFIGURATION
  */
-const SPREADSHEET_ID = '1JEqIVnhjDaz7otgNAikpQj7Trw1SRG_0-iSfYMLQwtA';
+// PASTE YOUR SHEET ID HERE:
+const SPREADSHEET_ID = '1JEqIVnhjDaz7otgNAikpQj7Trw1SRG_0-iSfYMLQwtA'; 
 const SHEET_NAME = 'Data';
-const BLOG_FEED_URL = 'https://multipurpose-website-builder.blogspot.com/feeds/posts/default?alt=json&max-results=50';
+// PASTE YOUR BLOG URL HERE (e.g. https://yourblog.blogspot.com):
+const BLOG_URL_BASE = 'https://multipurpose-website-builder.blogspot.com'; 
+const BLOG_FEED_URL = BLOG_URL_BASE + '/feeds/posts/default?alt=json&max-results=50';
 
 /**
  * HELPER FUNCTION - Creates JSONP response
  */
 function createJsonpResponse(data, callback) {
-  // Convert to string once here.
-  const jsonString = JSON.stringify(data);
+  // Ensure data is stringified exactly once
+  const jsonString = (typeof data === 'string') ? data : JSON.stringify(data);
   const jsonpData = callback + '(' + jsonString + ')';
   const output = ContentService.createTextOutput(jsonpData);
   output.setMimeType(ContentService.MimeType.JAVASCRIPT);
   return output;
 }
 
-/**
- * MAIN GET REQUEST HANDLER
- */
 function doGet(e) {
   const action = e.parameter.action;
   const callback = e.parameter.callback;
   const websiteType = e.parameter.websiteType;
 
   if (!callback) {
-    return ContentService.createTextOutput("Error: 'callback' parameter is missing.")
-      .setMimeType(ContentService.MimeType.TEXT);
+    return ContentService.createTextOutput("Error: 'callback' missing").setMimeType(ContentService.MimeType.TEXT);
   }
 
   if (action === 'getWebsiteTypes') {
     try {
-      const websiteTypes = getWebsiteTypes();
-      // websiteTypes is an OBJECT now
-      return createJsonpResponse(websiteTypes, callback);
+      return createJsonpResponse(getWebsiteTypes(), callback);
     } catch (error) {
       return createJsonpResponse({ error: error.message }, callback);
     }
@@ -43,7 +40,6 @@ function doGet(e) {
     try {
       const typeToFetch = websiteType || 'Home Improvement';
       const data = getData(typeToFetch);
-      // data is an ARRAY of objects now
       return createJsonpResponse(data, callback);
     } catch (error) {
       return createJsonpResponse({ error: error.message }, callback);
@@ -57,16 +53,11 @@ function doGet(e) {
       return createJsonpResponse({ status: 'error', message: error.message }, callback);
     }
   }
-  else {
-    return createJsonpResponse({ error: 'Invalid action' }, callback);
-  }
+  return createJsonpResponse({ error: 'Invalid action' }, callback);
 }
 
-/**
- * Get website types from JSON
- * FIX: Return Object, do not stringify
- */
 function getWebsiteTypes() {
+  // Returns object directly
   return {
     "website_types": [
       { "name": "Home Improvement", "subcategories": ["DIY Projects", "Renovation Tips", "Interior Design Ideas", "Gardening"], "icon": "tools", "color": "#e67e22" },
@@ -98,37 +89,24 @@ function getWebsiteTypes() {
   };
 }
 
-/**
- * Save data to sheet
- */
 function saveDataToSheet(data) {
   try {
     const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(SHEET_NAME);
     if (sheet.getLastRow() === 0) {
-      const headers = ["Timestamp", "Website Type", "Type", "Name", "Email", "Phone", "Message"];
-      sheet.appendRow(headers);
+      sheet.appendRow(["Timestamp", "Website Type", "Type", "Name", "Email", "Phone", "Message"]);
     }
-    const timestamp = new Date();
-    const row = [timestamp, data.websiteType, data.type, data.name, data.email, data.phone, data.message];
-    sheet.appendRow(row);
+    sheet.appendRow([new Date(), data.websiteType, data.type, data.name, data.email, data.phone, data.message]);
     return { status: 'success' };
   } catch (error) {
     return { status: 'error', message: error.message };
   }
 }
 
-/**
- * Get data from blog feed
- * FIX: Return Array, do not stringify
- */
 function getData(websiteType) {
   const response = UrlFetchApp.fetch(BLOG_FEED_URL, { muteHttpExceptions: true });
-  const responseCode = response.getResponseCode();
-  const data = response.getContentText();
+  if (response.getResponseCode() !== 200) throw new Error('Blogger API failed');
   
-  if (responseCode !== 200) throw new Error('Blogger API failed');
-  
-  const bloggerJson = JSON.parse(data);
+  const bloggerJson = JSON.parse(response.getContentText());
   const posts = bloggerJson.feed.entry || [];
   return processGenericData(posts, websiteType);
 }
@@ -139,17 +117,26 @@ function processGenericData(posts, websiteType) {
     const title = post.title.$t;
     let content = post.content ? post.content.$t : '';
     let imageUrl = 'https://placehold.co/600x400/fe7301/white?text=No+Image';
+    
     if (content) {
       const match = content.match(/<img[^>]+src="([^"]+)"/);
       if (match && match[1]) imageUrl = match[1];
     }
+    
+    // Extract labels to return for filtering
+    let labels = [];
+    if (post.category) {
+      labels = post.category.map(c => c.term);
+    }
+
     postsArray.push({
       id: post.id.$t.split('.post-')[1],
       title: title,
       content: content,
       excerpt: content.replace(/<[^>]+>/g, ' ').trim().substring(0, 150) + '...',
       imageUrl: imageUrl,
-      publishedDate: new Date(post.published.$t).toLocaleDateString()
+      publishedDate: new Date(post.published.$t).toLocaleDateString(),
+      labels: labels // Pass labels to frontend for filtering
     });
   });
   return postsArray;

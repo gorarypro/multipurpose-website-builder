@@ -18,10 +18,6 @@
 
 <body>
 
-  <!-- ================================================================== -->
-  <!-- APP HTML - Moved OUTSIDE of <b:widget> to ensure rendering -->
-  <!-- ================================================================== -->
-
   <!-- Matrix Code Input -->
   <div class='container mt-4'>
      <div class='input-group mb-3' style='max-width: 400px; margin: 0 auto;'>
@@ -37,19 +33,17 @@
       <div>
         <label class='selector-label'>Website Type:</label>
         <select class='selector-select' id='websiteTypeSelector'>
-          <!-- XML strict: attributes must have values -->
-          <option value="" disabled="disabled" selected="selected">Loading categories...</option>
+           <option value="" disabled="disabled" selected="selected">Loading categories...</option>
         </select>
       </div>
     </div>
   </div>
 
   <!-- Subcategory Display -->
-  <div class='container mb-4' id='subcategoryContainer'></div>
+  <div class='container mb-4 text-center' id='subcategoryContainer'></div>
 
   <!-- Loading Container -->
   <div class='loading-container' id='loadingContainer' style='display:flex;'>
-    <!-- Use div instead of self-closing for non-void elements to be safe -->
     <div class='loading-spinner'></div>
     <div class='loading-text'>Loading content...</div>
   </div>
@@ -58,10 +52,6 @@
   <section class='container' id='mainContent' style='display:none;'>
     <!-- Content will be loaded here dynamically -->
   </section>
-
-  <!-- ================================================================== -->
-  <!-- END APP HTML -->
-  <!-- ================================================================== -->
 
   <!-- Required Blogger Widget (Left Empty to avoid conflicts) -->
   <b:section class='main' id='main' maxwidgets='1' showaddelement='no'>
@@ -75,19 +65,20 @@
     </b:widget>
   </b:section>
 
-  <script src='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js'></script>
+  <script src='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js'/>
   <script>
   //<![CDATA[
     // Configuration
     const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxBOuXmYcOpeijxpBMwEV5clzoUg1zYG6hwQ93AFj5FRjXE3rHPR5fdauhInRh4uB00BA/exec';
     let currentWebsiteType = '';
+    let currentSubFilter = ''; // Store the active subcategory filter
     let websiteTypesConfig = [];
+    let allPostsData = []; // Cache fetched posts
 
     // Initialize
     document.addEventListener('DOMContentLoaded', function() {
       fetchWebsiteTypes();
       
-      // Allow pressing Enter in matrix input
       const matrixInput = document.getElementById('matrixCodeInput');
       if (matrixInput) {
         matrixInput.addEventListener('keypress', function (e) {
@@ -107,15 +98,17 @@
        let catIndex = -1;
        let subIndex = -1;
        
+       // Parse logic: "12" -> Cat 1, Sub 2. "1-12" -> Cat 1, Sub 12.
        if (cleanInput.match(/[\-\.\s]/)) {
            const parts = cleanInput.split(/[\-\.\s]+/);
-           catIndex = parseInt(parts[0]) - 1;
+           catIndex = parseInt(parts[0]) - 1; 
            if(parts[1]) subIndex = parseInt(parts[1]) - 1;
        } else {
            if (cleanInput.length > 0) {
               catIndex = parseInt(cleanInput.charAt(0)) - 1;
               if (cleanInput.length > 1) {
-                 subIndex = parseInt(cleanInput.charAt(1)) - 1;
+                 // If length is 2, e.g. "12", it is Cat 1, Sub 2
+                 subIndex = parseInt(cleanInput.substring(1)) - 1;
               }
            }
        }
@@ -126,22 +119,22 @@
            selector.value = typeName;
            
            currentWebsiteType = typeName;
-           updateSubcategories(currentWebsiteType);
-           fetchData();
            
+           // Determine Subcategory Name for filtering
+           currentSubFilter = '';
            if(subIndex > -1 && websiteTypesConfig[catIndex].subcategories[subIndex]) {
-               setTimeout(() => {
-                  const badges = document.querySelectorAll('#subcategoryContainer .badge');
-                  if(badges[subIndex]) {
-                      badges[subIndex].classList.remove('bg-secondary');
-                      badges[subIndex].classList.add('bg-primary');
-                  }
-               }, 100);
+               currentSubFilter = websiteTypesConfig[catIndex].subcategories[subIndex];
            }
+
+           // Update UI
+           updateSubcategories(currentWebsiteType, subIndex);
+           
+           // Fetch Data (which will then filter based on currentSubFilter)
+           fetchData();
            
            document.getElementById('matrixCodeInput').value = '';
        } else {
-           alert('Invalid Matrix Code');
+           alert('Invalid Matrix Code. Category not found.');
        }
     }
 
@@ -175,21 +168,24 @@
           selector.appendChild(option);
         });
         
-        // Set default and fetch
+        // Set default
         currentWebsiteType = websiteTypesConfig[0].name;
         updateSubcategories(currentWebsiteType);
         fetchData();
       }
     }
     
-    function updateSubcategories(typeName) {
+    function updateSubcategories(typeName, activeIndex = -1) {
        const config = websiteTypesConfig.find(t => t.name === typeName);
        const container = document.getElementById('subcategoryContainer');
        if (container) {
          if(config && config.subcategories) {
-           container.innerHTML = config.subcategories.map((sub, idx) => 
-             `<span class="badge bg-secondary me-1 mb-1">[${idx + 1}] ${sub}</span>`
-           ).join('');
+           container.innerHTML = config.subcategories.map((sub, idx) => {
+             // Highlight logic
+             const isActive = (idx === activeIndex);
+             const bgClass = isActive ? 'bg-primary' : 'bg-secondary';
+             return `<span class="badge ${bgClass} me-1 mb-1" style="font-size:0.9rem;">[${idx + 1}] ${sub}</span>`;
+           }).join('');
          } else {
            container.innerHTML = '';
          }
@@ -219,6 +215,8 @@
           try { data = JSON.parse(data); } catch (e) { console.error(e); return; }
       }
 
+      allPostsData = data; // Store for local filtering if needed
+      
       const loadingEl = document.getElementById('loadingContainer');
       const contentEl = document.getElementById('mainContent');
       
@@ -230,17 +228,47 @@
 
     function generateGenericHTML(posts) {
       let html = '<div class="blog-container">';
-      if (Array.isArray(posts)) {
-        posts.forEach(function(post) {
+      
+      // FILTERING LOGIC:
+      // If currentSubFilter is set (via Matrix Code), filter the posts.
+      // We assume posts have labels/categories matching the subcategory name.
+      // If no filter, show all.
+      
+      let filteredPosts = posts;
+      if (currentSubFilter && Array.isArray(posts)) {
+          filteredPosts = posts.filter(post => {
+              // Check if any label matches the subcategory
+              // This relies on Code.gs returning 'labels' array in the post object
+              if (post.labels && Array.isArray(post.labels)) {
+                  return post.labels.includes(currentSubFilter);
+              }
+              return false; // No labels, or no match
+          });
+          
+          // UI Feedback for filtering
+          html = `<div class="alert alert-info">Showing results for: <strong>${currentSubFilter}</strong></div>` + html;
+      }
+
+      if (Array.isArray(filteredPosts) && filteredPosts.length > 0) {
+        filteredPosts.forEach(function(post) {
           html += '<article class="blog-post">';
           if(post.imageUrl) html += '<img src="' + post.imageUrl + '" style="max-height:200px; width:100%; object-fit:cover; border-radius:4px;" />';
           html += '<h3 class="mt-2">' + post.title + '</h3>';
           html += '<p>' + post.excerpt + '</p>';
           html += '<small class="text-muted">' + post.publishedDate + '</small>';
+          // Show labels for clarity
+          if(post.labels && post.labels.length > 0) {
+              html += '<div class="mt-2">';
+              post.labels.forEach(l => html += `<span class="badge bg-light text-dark border me-1">${l}</span>`);
+              html += '</div>';
+          }
           html += '</article>';
         });
       } else {
-        html += '<p>No content found.</p>';
+        html += '<p class="text-muted p-3">No content found.</p>';
+        if (currentSubFilter) {
+            html += `<p class="small text-muted ms-3">Tip: Ensure your Blogger posts have the label "<strong>${currentSubFilter}</strong>".</p>`;
+        }
       }
       html += '</div>';
       
@@ -253,6 +281,7 @@
     if (selectorEl) {
       selectorEl.addEventListener('change', function() {
         currentWebsiteType = this.value;
+        currentSubFilter = ''; // Clear subcategory filter on main category change
         updateSubcategories(currentWebsiteType);
         fetchData();
       });
