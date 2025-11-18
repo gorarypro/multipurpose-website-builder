@@ -1,298 +1,346 @@
 #!/bin/bash
 
-echo "Multipurpose Website Builder Setup"
-echo "=================================="
+echo "Multipurpose Website Builder Setup (CMS Edition)"
+echo "================================================"
 echo
 
 # --- CLEANUP OPTION ---
 read -p "⚠️  Do you want to delete all previous files and folders before starting? (y/n): " confirm
 if [[ $confirm == [yY] || $confirm == [yY][eE][sS] ]]; then
-    echo
-    echo "🧹 Cleaning up previous files..."
+    echo "🧹 Cleaning up..."
     rm -rf core website-types components templates docs
     rm -f website-types.json README.md LICENSE
     echo "✓ Cleanup complete."
-    echo
 else
-    echo
-    echo "Start setup..."
-    echo
+    echo "Starting setup..."
 fi
-# --- END CLEANUP OPTION ---
 
-echo "Creating Multipurpose Website Builder structure..."
 mkdir -p core/apps-script
-mkdir -p core/blogger-theme/assets
-mkdir -p core/css
-mkdir -p core/js
-mkdir -p website-types
+mkdir -p core/blogger-theme
 mkdir -p docs
 
-echo "Creating root files..."
-
-# Create website-types.json
-cat > website-types.json <<'ENDOFFILE'
-{
-  "website_types": [
-    { "name": "Home Improvement", "subcategories": ["DIY Projects", "Renovation Tips", "Interior Design Ideas", "Gardening"], "icon": "tools", "color": "#e67e22", "features": ["posts", "gallery"] },
-    { "name": "Real Estate Investment", "subcategories": ["Property Management", "Landlord Resources", "Market Analysis", "Rental Listings"], "icon": "building", "color": "#2c3e50", "features": ["listings", "map"] },
-    { "name": "Insurance", "subcategories": ["Policy Comparisons", "Claims Advice", "Insurance Types", "Risk Management"], "icon": "shield-check", "color": "#2980b9", "features": ["forms", "posts"] },
-    { "name": "Self-Improvement", "subcategories": ["Personal Development Blogs", "Productivity Tools", "Goal Setting Resources", "Motivational Content"], "icon": "person-bounding-box", "color": "#16a085", "features": ["posts", "newsletter"] },
-    { "name": "Cryptocurrency", "subcategories": ["Blockchain Technology", "Trading Platforms", "Cryptocurrency News", "Investment Strategies"], "icon": "currency-bitcoin", "color": "#f39c12", "features": ["charts", "posts"] },
-    { "name": "Hobbies and Crafts", "subcategories": ["Crafting Tutorials", "Hobbyist Communities", "Supplies and Materials", "Project Ideas"], "icon": "scissors", "color": "#d35400", "features": ["gallery", "tutorials"] },
-    { "name": "Events and Conferences", "subcategories": ["Event Listings", "Event Planning Resources", "Conference Reviews", "Networking Opportunities"], "icon": "calendar-event", "color": "#8e44ad", "features": ["calendar", "tickets"] },
-    { "name": "Dance", "subcategories": ["Dance Studios", "Choreography Tutorials", "Dance Competitions", "Styles and Techniques"], "icon": "music-note-beamed", "color": "#e84393", "features": ["video", "classes"] },
-    { "name": "Music", "subcategories": ["Music Streaming Services", "Artist Highlights", "Music Theory Resources", "Concert and Festival Information"], "icon": "music-note", "color": "#0984e3", "features": ["player", "playlist"] },
-    { "name": "Philosophy", "subcategories": ["Philosophical Discussions", "Ethics Resources", "Book Recommendations", "Historical Philosophy"], "icon": "book", "color": "#6c5ce7", "features": ["posts", "forum"] },
-    { "name": "Mythology", "subcategories": ["Mythological Stories", "Cultural Significance", "Comparative Mythology", "Modern Adaptations"], "icon": "lightning-charge", "color": "#fdcb6e", "features": ["stories", "wiki"] },
-    { "name": "Survival Skills", "subcategories": ["Outdoor Survival Guides", "Wilderness Training", "Emergency Preparedness", "Camping Tips"], "icon": "fire", "color": "#d63031", "features": ["guides", "checklist"] },
-    { "name": "Fashion Design", "subcategories": ["Design Portfolios", "Fashion Shows", "Trend Analysis", "Fashion Illustration Techniques"], "icon": "handbag", "color": "#e17055", "features": ["gallery", "lookbook"] },
-    { "name": "Culinary Arts", "subcategories": ["Professional Cooking Schools", "Culinary Competitions", "Chef Profiles", "Food Photography"], "icon": "egg-fried", "color": "#f1c40f", "features": ["recipes", "menu"] },
-    { "name": "Film and Television", "subcategories": ["Film Festivals", "TV Show Reviews", "Filmmaking Resources", "Genre Analyses"], "icon": "film", "color": "#2d3436", "features": ["reviews", "trailers"] },
-    { "name": "Spirituality", "subcategories": ["Meditation Resources", "Holistic Living", "Spiritual Practices", "Community Support"], "icon": "flower1", "color": "#00b894", "features": ["meditation", "blog"] },
-    { "name": "Digital Marketing", "subcategories": ["SEO Strategies", "Social Media Marketing", "Content Marketing", "Email Marketing Solutions"], "icon": "graph-up", "color": "#0984e3", "features": ["analytics", "services"] },
-    { "name": "Women’s Interests", "subcategories": ["Empowerment Resources", "Women in Leadership", "Health and Wellness for Women", "Fashion and Lifestyle for Women"], "icon": "gender-female", "color": "#e84393", "features": ["community", "blog"] },
-    { "name": "Men’s Interests", "subcategories": ["Grooming and Lifestyle", "Fitness for Men", "Fatherhood Resources", "Men's Fashion Trends"], "icon": "gender-male", "color": "#34495e", "features": ["lifestyle", "blog"] },
-    { "name": "Aging and Senior Care", "subcategories": ["Elder Care Resources", "Retirement Planning", "Health and Wellness for Seniors", "Activities for Seniors"], "icon": "heart-pulse", "color": "#74b9ff", "features": ["resources", "care"] },
-    { "name": "Travel Hacking", "subcategories": ["Travel Deals", "Frequent Flyer Tips", "Budget Travel Strategies", "Travel Rewards Programs"], "icon": "airplane", "color": "#00cec9", "features": ["deals", "guides"] },
-    { "name": "Food and Beverage", "subcategories": ["Brewery and Winery Reviews", "Food Blogging", "Specialty Foods", "Beverage Pairings"], "icon": "cup-straw", "color": "#d63031", "features": ["reviews", "menu"] },
-    { "name": "Urban Exploration", "subcategories": ["Abandoned Places", "City Guides", "Photography from Urban Settings", "History of Urban Spaces"], "icon": "building", "color": "#636e72", "features": ["map", "gallery"] },
-    { "name": "Alternative Energy", "subcategories": ["Solar and Wind Energy Resources", "Sustainable Living Tips", "Reviews on Renewable Technologies", "Policy and Advocacy"], "icon": "sun", "color": "#f1c40f", "features": ["tech", "news"] },
-    { "name": "Sustainability", "subcategories": ["Eco-Friendly Products", "Sustainable Practices", "Green Living Resources", "Environmental Activism"], "icon": "tree", "color": "#27ae60" }
-    ]
-}
-ENDOFFILE
-
-echo "Creating core files..."
-
-# 1. CREATE THE BUILDER HTML (The Dashboard)
+# ==========================================
+# 1. BUILDER DASHBOARD (The Admin Panel)
+# ==========================================
 cat > core/apps-script/Builder.html <<'ENDOFFILE'
 <!DOCTYPE html>
 <html>
   <head>
     <base target="_top">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Website Builder Admin</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-      body { background-color: #f8f9fa; }
-      .builder-card { max-width: 800px; margin: 50px auto; padding: 30px; background: white; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-      .icon-preview { font-size: 2rem; color: #6c757d; }
+      body { background-color: #f0f2f5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+      .builder-container { max-width: 900px; margin: 40px auto; }
+      .card { border: none; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden; }
+      .card-header { background: white; border-bottom: 1px solid #eee; padding: 20px 30px; }
+      .card-body { padding: 30px; }
+      .preview-box { background: #fff; border: 2px dashed #ddd; border-radius: 8px; padding: 20px; margin-top: 10px; min-height: 100px; display: flex; align-items: center; justify-content: center; flex-direction: column; color: #888; transition: all 0.3s; }
+      .preview-box.active { border-color: #0d6efd; background-color: #f8fbff; color: #0d6efd; }
+      .form-label { font-weight: 600; color: #444; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px; }
+      .btn-publish { padding: 12px 30px; font-weight: 600; font-size: 1.1rem; border-radius: 8px; }
     </style>
   </head>
   <body>
-    <div class="container">
-      <div class="builder-card">
-        <h2 class="text-center mb-4">🏗️ Website Builder</h2>
-        <p class="text-center text-muted mb-4">Select a category to transform your Blogger site instantly.</p>
-        
-        <form id="builderForm">
-          <div class="mb-4">
-            <label class="form-label fw-bold">1. Select Website Type</label>
-            <select class="form-select form-select-lg" id="websiteType" onchange="updatePreview()">
-              <option value="" disabled selected>Choose a category...</option>
-              <!-- Options populated by JS -->
-            </select>
-          </div>
+    <div class="builder-container">
+      <div class="text-center mb-5">
+        <h1 class="fw-bold display-5">🛠️ Website Builder</h1>
+        <p class="lead text-muted">Configure your Blogger site instantly.</p>
+      </div>
 
-          <div class="mb-4">
-             <label class="form-label fw-bold">2. Subcategories Available</label>
-             <div id="subcatPreview" class="p-3 bg-light rounded text-muted">Select a type above...</div>
-          </div>
-
-          <div class="mb-4">
-            <label class="form-label fw-bold">3. Customization</label>
-            <div class="row g-3">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="m-0">Configuration</h5>
+          <span class="badge bg-success bg-opacity-10 text-success">v2.0 CMS</span>
+        </div>
+        <div class="card-body">
+          <form id="builderForm">
+            
+            <!-- Site Identity -->
+            <div class="row mb-4">
               <div class="col-md-6">
-                <label class="form-label">Site Title</label>
-                <input type="text" class="form-control" id="siteTitle" placeholder="My Awesome Site">
+                <label class="form-label">Website Title</label>
+                <input type="text" class="form-control form-control-lg" id="siteTitle" placeholder="e.g., Modern Living">
               </div>
               <div class="col-md-6">
-                <label class="form-label">Primary Color</label>
-                <input type="color" class="form-control form-control-color w-100" id="siteColor" value="#0d6efd" title="Choose your color">
+                <label class="form-label">Primary Brand Color</label>
+                <input type="color" class="form-control form-control-color w-100" id="siteColor" value="#2c3e50" style="height: 48px;">
               </div>
             </div>
-          </div>
 
-          <div class="d-grid gap-2">
-            <button type="button" class="btn btn-primary btn-lg" onclick="saveConfig()">
-              🚀 Publish Website
-            </button>
-          </div>
-          <div id="status" class="mt-3 text-center"></div>
-        </form>
+            <!-- Website Type Selection -->
+            <div class="mb-4">
+              <label class="form-label">Select Website Category</label>
+              <select class="form-select form-select-lg" id="websiteType" onchange="updatePreview()">
+                <option value="" disabled selected>Choose a category...</option>
+                <!-- Populated by JS -->
+              </select>
+              <div id="subcatPreview" class="preview-box mt-3">
+                <small>Select a category above to see available subcategories</small>
+              </div>
+            </div>
+
+            <!-- Matrix Code Info -->
+            <div class="alert alert-info d-flex align-items-center" role="alert">
+              <div style="font-size: 1.5rem; margin-right: 15px;">🔢</div>
+              <div>
+                <strong>Matrix Navigation Enabled</strong>
+                <div class="small">Your visitors can type codes (e.g., <strong>1-2</strong>) to jump to specific subcategories instantly.</div>
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="d-grid gap-2 mt-5">
+              <button type="button" class="btn btn-primary btn-publish" onclick="saveConfig()">
+                Publish Changes to Live Site
+              </button>
+            </div>
+            <div id="status" class="mt-3 text-center"></div>
+
+          </form>
+        </div>
       </div>
     </div>
 
     <script>
-      // Categories Config (Should match website-types.json)
+      // Configuration Data
       const types = [
-        { name: "Home Improvement", sub: ["DIY Projects", "Renovation"], color: "#e67e22" },
-        { name: "Real Estate Investment", sub: ["Property Management", "Rentals"], color: "#2c3e50" },
-        { name: "Insurance", sub: ["Policy Comparisons", "Claims"], color: "#2980b9" },
-        { name: "Self-Improvement", sub: ["Productivity", "Motivation"], color: "#16a085" },
-        { name: "Cryptocurrency", sub: ["Blockchain", "Trading"], color: "#f39c12" },
-        { name: "Hobbies and Crafts", sub: ["Tutorials", "Supplies"], color: "#d35400" },
-        { name: "Events and Conferences", sub: ["Listings", "Planning"], color: "#8e44ad" },
-        { name: "Dance", sub: ["Studios", "Tutorials"], color: "#e84393" },
-        { name: "Music", sub: ["Streaming", "Artists"], color: "#0984e3" },
-        { name: "Philosophy", sub: ["Ethics", "Discussions"], color: "#6c5ce7" },
-        { name: "Mythology", sub: ["Stories", "Culture"], color: "#fdcb6e" },
-        { name: "Survival Skills", sub: ["Guides", "Gear"], color: "#d63031" },
-        { name: "Fashion Design", sub: ["Portfolios", "Trends"], color: "#e17055" },
-        { name: "Culinary Arts", sub: ["Recipes", "Chefs"], color: "#f1c40f" },
-        { name: "Film and Television", sub: ["Reviews", "Filmmaking"], color: "#2d3436" },
-        { name: "Spirituality", sub: ["Meditation", "Yoga"], color: "#00b894" },
-        { name: "Digital Marketing", sub: ["SEO", "Social Media"], color: "#0984e3" },
-        { name: "Women’s Interests", sub: ["Health", "Lifestyle"], color: "#e84393" },
-        { name: "Men’s Interests", sub: ["Fitness", "Grooming"], color: "#34495e" },
-        { name: "Aging and Senior Care", sub: ["Health", "Retirement"], color: "#74b9ff" },
-        { name: "Travel Hacking", sub: ["Deals", "Tips"], color: "#00cec9" },
-        { name: "Food and Beverage", sub: ["Reviews", "Specialty"], color: "#d63031" },
-        { name: "Urban Exploration", sub: ["Abandoned", "City Guides"], color: "#636e72" },
-        { name: "Alternative Energy", sub: ["Solar", "Wind"], color: "#f1c40f" },
-        { "name": "Sustainability", "subcategories": ["Eco-Friendly Products", "Sustainable Practices"], "color": "#27ae60" }
+        { name: "Home Improvement", sub: ["DIY Projects", "Renovation Tips", "Interior Design", "Gardening"], color: "#e67e22" },
+        { name: "Real Estate Investment", sub: ["Property Management", "Landlord Resources", "Market Analysis", "Rentals"], color: "#2c3e50" },
+        { name: "Insurance", sub: ["Policy Comparisons", "Claims Advice", "Types", "Risk Management"], color: "#2980b9" },
+        { name: "Self-Improvement", sub: ["Productivity", "Motivation", "Goals", "Personal Dev"], color: "#16a085" },
+        { name: "Cryptocurrency", sub: ["Blockchain", "Trading", "News", "Strategies"], color: "#f39c12" },
+        { name: "Hobbies and Crafts", sub: ["Tutorials", "Communities", "Supplies", "Projects"], color: "#d35400" },
+        { name: "Events and Conferences", sub: ["Listings", "Planning", "Reviews", "Networking"], color: "#8e44ad" },
+        { name: "Dance", sub: ["Studios", "Tutorials", "Competitions", "Techniques"], color: "#e84393" },
+        { name: "Music", sub: ["Streaming", "Artists", "Theory", "Concerts"], color: "#0984e3" },
+        { name: "Philosophy", sub: ["Discussions", "Ethics", "Books", "History"], color: "#6c5ce7" },
+        { name: "Mythology", sub: ["Stories", "Culture", "Comparative", "Modern"], color: "#fdcb6e" },
+        { name: "Survival Skills", sub: ["Guides", "Wilderness", "Emergency", "Camping"], color: "#d63031" },
+        { name: "Fashion Design", sub: ["Portfolios", "Shows", "Trends", "Illustration"], color: "#e17055" },
+        { name: "Culinary Arts", sub: ["Schools", "Competitions", "Chefs", "Photography"], color: "#f1c40f" },
+        { name: "Film and Television", sub: ["Festivals", "Reviews", "Filmmaking", "Analysis"], color: "#2d3436" },
+        { name: "Spirituality", sub: ["Meditation", "Holistic", "Practices", "Community"], color: "#00b894" },
+        { name: "Digital Marketing", sub: ["SEO", "Social Media", "Content", "Email"], color: "#0984e3" },
+        { name: "Women’s Interests", sub: ["Empowerment", "Leadership", "Health", "Fashion"], color: "#e84393" },
+        { name: "Men’s Interests", sub: ["Grooming", "Fitness", "Fatherhood", "Fashion"], color: "#34495e" },
+        { name: "Aging and Senior Care", sub: ["Elder Care", "Retirement", "Health", "Activities"], color: "#74b9ff" },
+        { name: "Travel Hacking", sub: ["Deals", "Flyer Tips", "Budget", "Rewards"], color: "#00cec9" },
+        { name: "Food and Beverage", sub: ["Reviews", "Blogging", "Specialty", "Pairings"], color: "#d63031" },
+        { name: "Urban Exploration", sub: ["Abandoned", "Guides", "Photography", "History"], color: "#636e72" },
+        { name: "Alternative Energy", sub: ["Solar/Wind", "Sustainable Living", "Reviews", "Policy"], color: "#f1c40f" },
+        { name: "Sustainability", sub: ["Eco-Products", "Practices", "Green Living", "Activism"], color: "#27ae60" }
       ];
 
-      // Populate Dropdown
+      // Initialize
       const select = document.getElementById('websiteType');
-      types.forEach(t => {
+      types.forEach((t, index) => {
         const opt = document.createElement('option');
         opt.value = t.name;
-        opt.textContent = t.name;
+        opt.text = `[${index + 1}] ${t.name}`;
         select.appendChild(opt);
       });
 
+      // Update Preview
       function updatePreview() {
         const typeName = select.value;
         const config = types.find(t => t.name === typeName);
+        const previewBox = document.getElementById('subcatPreview');
+        
         if (config) {
-          document.getElementById('subcatPreview').innerText = config.sub ? config.sub.join(', ') : "Generic";
+          previewBox.innerHTML = `
+            <strong style="color:${config.color}">${config.name}</strong>
+            <div class="mt-2">
+              ${config.sub.map((s, i) => `<span class="badge bg-secondary me-1 mb-1">[${i+1}] ${s}</span>`).join('')}
+            </div>
+          `;
+          previewBox.classList.add('active');
           document.getElementById('siteColor').value = config.color;
         }
       }
 
+      // Save to Google Sheets
       function saveConfig() {
-        const btn = document.querySelector('button');
-        btn.disabled = true;
-        btn.innerText = "Publishing...";
+        const btn = document.querySelector('.btn-publish');
+        const status = document.getElementById('status');
         
         const config = {
           type: document.getElementById('websiteType').value,
-          title: document.getElementById('siteTitle').value,
+          title: document.getElementById('siteTitle').value || "My Website",
           color: document.getElementById('siteColor').value
         };
 
-        if(!config.type) { alert("Please select a website type"); btn.disabled=false; return; }
+        if (!config.type) {
+          alert("Please select a website type first.");
+          return;
+        }
 
-        google.script.run.withSuccessHandler(function(res) {
-           document.getElementById('status').innerHTML = '<div class="alert alert-success">✅ Website Updated! Refresh your blog to see changes.</div>';
-           btn.innerText = "Published";
-           btn.disabled = false;
-        }).withFailureHandler(function(err) {
-           document.getElementById('status').innerHTML = '<div class="alert alert-danger">Error: ' + err + '</div>';
-           btn.disabled = false;
-        }).saveConfig(config);
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Publishing...';
+        status.innerHTML = '';
+
+        google.script.run
+          .withSuccessHandler(function() {
+             status.innerHTML = '<div class="alert alert-success">✅ <strong>Success!</strong> Your Blogger site has been updated. Refresh it to see changes.</div>';
+             btn.innerText = "Published Successfully";
+             btn.classList.remove('btn-primary');
+             btn.classList.add('btn-success');
+             setTimeout(() => { btn.disabled = false; btn.innerText = "Publish Changes to Live Site"; btn.classList.add('btn-primary'); btn.classList.remove('btn-success'); }, 3000);
+          })
+          .withFailureHandler(function(err) {
+             status.innerHTML = '<div class="alert alert-danger">❌ Error: ' + err + '</div>';
+             btn.disabled = false;
+             btn.innerText = "Try Again";
+          })
+          .saveConfigToSheet(config);
       }
     </script>
   </body>
 </html>
 ENDOFFILE
 
-# 2. CREATE BACKEND (Code.gs)
+# ==========================================
+# 2. APPS SCRIPT BACKEND (Code.gs)
+# ==========================================
 cat > core/apps-script/Code.gs <<'ENDOFFILE'
-const SPREADSHEET_ID = '1JEqIVnhjDaz7otgNAikpQj7Trw1SRG_0-iSfYMLQwtA';
-const SETTINGS_SHEET_NAME = 'Settings';
-const DATA_SHEET_NAME = 'Data';
+const SPREADSHEET_ID = '1JEqIVnhjDaz7otgNAikpQj7Trw1SRG_0-iSfYMLQwtA'; // Ensure this ID is correct
+const SETTINGS_SHEET = 'Settings';
 const BLOG_FEED_URL = 'https://multipurpose-website-builder.blogspot.com/feeds/posts/default?alt=json&max-results=50';
 
+/**
+ * Serves the Builder UI (Builder.html)
+ */
 function doGet(e) {
-  // If no parameters, serve the Builder HTML
+  // If no parameters, serve the HTML Builder
   if (!e.parameter.action) {
     return HtmlService.createHtmlOutputFromFile('Builder')
-        .setTitle('Website Builder')
-        .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+      .setTitle('Website Builder Admin')
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
+      .addMetaTag('viewport', 'width=device-width, initial-scale=1');
   }
 
-  // JSONP API for the Blog
+  // API Handler (JSONP)
   const action = e.parameter.action;
   const callback = e.parameter.callback;
 
+  if (!callback) {
+    return ContentService.createTextOutput("Error: Callback missing").setMimeType(ContentService.MimeType.TEXT);
+  }
+
+  let result = {};
+
   if (action === 'getConfig') {
-    return createJsonpResponse(getConfig(), callback);
+    // Get saved config, or return default if empty
+    result = getSavedConfig();
   } 
   else if (action === 'getData') {
-    // Fetch data based on the Saved Config, OR an override
-    const config = getConfig();
-    const type = e.parameter.type || config.type || 'Home Improvement';
-    const data = getBloggerData(type);
-    return createJsonpResponse(data, callback);
+    // Fetch data based on type
+    const type = e.parameter.type || 'Home Improvement';
+    result = getBloggerData(type);
   }
+
+  // Return JSONP
+  const jsonString = JSON.stringify(result);
+  return ContentService.createTextOutput(callback + '(' + jsonString + ')')
+    .setMimeType(ContentService.MimeType.JAVASCRIPT);
 }
 
-// --- Builder Functions ---
-function saveConfig(config) {
-  const sheet = getSheet(SETTINGS_SHEET_NAME);
-  sheet.clear(); // Overwrite previous settings
-  sheet.appendRow(['Key', 'Value']);
+/**
+ * Saves configuration from Builder to Sheet
+ */
+function saveConfigToSheet(config) {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  let sheet = ss.getSheetByName(SETTINGS_SHEET);
+  
+  if (!sheet) {
+    sheet = ss.insertSheet(SETTINGS_SHEET);
+    sheet.appendRow(['Key', 'Value']); // Header
+  }
+  
+  // Clear old settings
+  sheet.getRange('A2:B10').clearContent();
+  
+  // Save new settings
   sheet.appendRow(['type', config.type]);
   sheet.appendRow(['title', config.title]);
   sheet.appendRow(['color', config.color]);
-  return "Success";
-}
-
-function getConfig() {
-  const sheet = getSheet(SETTINGS_SHEET_NAME);
-  const data = sheet.getDataRange().getValues();
-  const config = {};
-  // Skip header, read rows
-  for (let i = 1; i < data.length; i++) {
-    config[data[i][0]] = data[i][1];
-  }
-  return config;
-}
-
-// --- Helper Functions ---
-function getSheet(name) {
-  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-  let sheet = ss.getSheetByName(name);
-  if (!sheet) sheet = ss.insertSheet(name);
-  return sheet;
-}
-
-function createJsonpResponse(data, callback) {
-  const jsonString = JSON.stringify(data);
-  const jsonpData = callback + '(' + jsonString + ')';
-  const output = ContentService.createTextOutput(jsonpData);
-  output.setMimeType(ContentService.MimeType.JAVASCRIPT);
-  return output;
-}
-
-function getBloggerData(websiteType) {
-  const response = UrlFetchApp.fetch(BLOG_FEED_URL, { muteHttpExceptions: true });
-  if (response.getResponseCode() !== 200) return [];
   
-  const bloggerJson = JSON.parse(response.getContentText());
-  const posts = bloggerJson.feed.entry || [];
-  
-  // Simple processing (In a real app, you would filter by label 'websiteType')
-  return posts.map(post => {
-    let imageUrl = 'https://placehold.co/600x400/e67e22/white?text=No+Image';
-    if (post.content && post.content.$t) {
-      const match = post.content.$t.match(/<img[^>]+src="([^"]+)"/);
-      if (match && match[1]) imageUrl = match[1];
-    }
-    return {
-      id: post.id.$t.split('.post-')[1],
-      title: post.title.$t,
-      excerpt: post.content ? post.content.$t.replace(/<[^>]+>/g, ' ').substring(0, 120) + '...' : '',
-      imageUrl: imageUrl,
-      date: new Date(post.published.$t).toLocaleDateString()
+  return "Saved";
+}
+
+/**
+ * Reads configuration from Sheet
+ */
+function getSavedConfig() {
+  try {
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const sheet = ss.getSheetByName(SETTINGS_SHEET);
+    
+    // DEFAULT FALLBACK (Prevents "stuck loading" if sheet is empty)
+    const defaultConfig = {
+      type: "Home Improvement",
+      title: "My New Website",
+      color: "#e67e22"
     };
-  });
+
+    if (!sheet) return defaultConfig;
+
+    const data = sheet.getDataRange().getValues();
+    if (data.length <= 1) return defaultConfig; // Only header exists
+
+    const config = {};
+    for (let i = 1; i < data.length; i++) {
+      config[data[i][0]] = data[i][1];
+    }
+    
+    return config;
+  } catch (e) {
+    // If sheet ID is wrong or permissions fail, return default to keep site alive
+    return {
+      type: "Home Improvement",
+      title: "Default Site (Error Loading Config)",
+      color: "#333"
+    };
+  }
+}
+
+/**
+ * Fetches posts from Blogger
+ */
+function getBloggerData(type) {
+  try {
+    const response = UrlFetchApp.fetch(BLOG_FEED_URL, { muteHttpExceptions: true });
+    if (response.getResponseCode() !== 200) return [];
+    
+    const json = JSON.parse(response.getContentText());
+    const posts = json.feed.entry || [];
+    
+    return posts.map(p => {
+      let img = 'https://placehold.co/600x400/eee/999?text=No+Image';
+      if (p.content && p.content.$t) {
+         const match = p.content.$t.match(/<img[^>]+src="([^"]+)"/);
+         if (match) img = match[1];
+      }
+      
+      return {
+        id: p.id.$t.split('.post-')[1],
+        title: p.title.$t,
+        excerpt: p.content ? p.content.$t.replace(/<[^>]+>/g, ' ').substring(0, 100) + '...' : '',
+        image: img,
+        date: new Date(p.published.$t).toLocaleDateString()
+      };
+    });
+  } catch (e) {
+    return [];
+  }
 }
 ENDOFFILE
 
-# 3. CREATE THEME (theme.xml)
-# This theme simply fetches the config and renders itself.
+# ==========================================
+# 3. BLOGGER THEME (theme.xml)
+# ==========================================
 cat > core/blogger-theme/theme.xml <<'ENDOFFILE'
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE html>
@@ -304,44 +352,51 @@ cat > core/blogger-theme/theme.xml <<'ENDOFFILE'
   <link href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css' rel='stylesheet'/>
   <link href='https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css' rel='stylesheet'/>
   <b:skin><![CDATA[ 
-    body { background-color: #f5f5f5; font-family: sans-serif; } 
-    .site-header { padding: 60px 0; text-align: center; color: white; margin-bottom: 30px; }
-    .post-card { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; }
-    .post-card img { width: 100%; height: 200px; object-fit: cover; }
-    .post-card-body { padding: 20px; }
+    body { background-color: #f8f9fa; font-family: 'Segoe UI', sans-serif; }
+    #app-header { padding: 80px 0 40px; color: white; text-align: center; margin-bottom: 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    .matrix-bar { max-width: 400px; margin: -25px auto 30px; background: white; padding: 10px; border-radius: 50px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: flex; align-items: center; }
+    .matrix-input { border: none; outline: none; flex-grow: 1; padding: 5px 15px; font-size: 1.1rem; }
+    .matrix-btn { border-radius: 50px; padding: 8px 25px; }
+    .post-card { background: white; border: none; border-radius: 12px; overflow: hidden; transition: transform 0.3s; height: 100%; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+    .post-card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+    .post-img { height: 200px; width: 100%; object-fit: cover; }
+    .post-body { padding: 20px; }
+    .loader-overlay { position: fixed; top:0; left:0; right:0; bottom:0; background: white; z-index: 9999; display: flex; justify-content: center; align-items: center; flex-direction: column; }
   ]]></b:skin>
 </head>
 <body>
-  
-  <div id="app">
-    <!-- Header -->
-    <header id="dynamicHeader" class="site-header" style="background-color: #333;">
-      <div class="container">
-        <h1 id="siteTitle">Loading Website...</h1>
-        <p id="siteType" class="badge bg-light text-dark">Please wait</p>
-      </div>
-    </header>
 
-    <!-- Matrix Code Input (For user quick nav) -->
-    <div class="container mb-4">
-        <div class="input-group" style="max-width: 300px; margin: 0 auto;">
-            <span class="input-group-text">#</span>
-            <input type="text" id="matrixInput" class="form-control" placeholder="Enter code (e.g. 12)" />
-            <button class="btn btn-dark" onclick="handleMatrix()">Go</button>
-        </div>
-    </div>
+  <!-- Loader -->
+  <div id="siteLoader" class="loader-overlay">
+    <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status"></div>
+    <p class="mt-3 text-muted">Building your site...</p>
+  </div>
 
-    <!-- Content Grid -->
+  <!-- Header (Dynamic Color) -->
+  <header id="app-header" style="background-color: #333;">
     <div class="container">
-      <div id="contentGrid" class="row">
-         <div class="col-12 text-center p-5">
-           <div class="spinner-border text-secondary" role="status"></div>
-         </div>
-      </div>
+      <h1 class="display-4 fw-bold" id="app-title">Loading...</h1>
+      <p class="lead opacity-75" id="app-subtitle">...</p>
+    </div>
+  </header>
+
+  <!-- Matrix Navigation -->
+  <div class="container">
+    <div class="matrix-bar">
+      <span class="ms-2 text-muted"><i class="bi bi-grid-3x3-gap-fill"></i></span>
+      <input type="text" id="matrixInput" class="matrix-input" placeholder="Matrix Code (e.g. 1-2)" />
+      <button class="btn btn-primary matrix-btn" id="matrixBtn" onclick="runMatrix()">Go</button>
     </div>
   </div>
 
-  <!-- Required Widget -->
+  <!-- Main Content Area -->
+  <div class="container mb-5">
+    <div id="content-area" class="row g-4">
+      <!-- Posts injected here -->
+    </div>
+  </div>
+
+  <!-- Required Blogger Widget (Hidden) -->
   <b:section class='main' id='main' maxwidgets='1' showaddelement='no'>
     <b:widget id='HTML1' locked='true' title='App' type='HTML' version='1'>
       <b:widget-settings><b:widget-setting name='content'/></b:widget-settings>
@@ -351,64 +406,74 @@ cat > core/blogger-theme/theme.xml <<'ENDOFFILE'
 
   <script>
   //<![CDATA[
-    // ** UPDATE THIS URL AFTER DEPLOYING **
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxBOuXmYcOpeijxpBMwEV5clzoUg1zYG6hwQ93AFj5FRjXE3rHPR5fdauhInRh4uB00BA/exec';
-    
+    // ** IMPORTANT: PASTE YOUR NEW WEB APP URL HERE **
+    const API_URL = 'https://script.google.com/macros/s/AKfycbxBOuXmYcOpeijxpBMwEV5clzoUg1zYG6hwQ93AFj5FRjXE3rHPR5fdauhInRh4uB00BA/exec';
+
+    let siteConfig = {};
+
     document.addEventListener('DOMContentLoaded', () => {
-       loadSiteConfig();
+        // 1. Fetch Configuration
+        fetchJsonp(API_URL + '?action=getConfig', (config) => {
+            siteConfig = config;
+            applyTheme(config);
+            // 2. Fetch Content
+            fetchJsonp(API_URL + '?action=getData&type=' + encodeURIComponent(config.type), renderPosts);
+        });
+
+        // Matrix Input Enter Key
+        document.getElementById('matrixInput').addEventListener('keypress', (e) => {
+            if(e.key === 'Enter') runMatrix();
+        });
     });
 
-    function loadSiteConfig() {
-       const script = document.createElement('script');
-       script.src = WEB_APP_URL + '?action=getConfig&callback=applyConfig';
-       document.body.appendChild(script);
+    function applyTheme(config) {
+        document.getElementById('app-title').innerText = config.title;
+        document.getElementById('app-subtitle').innerText = config.type;
+        document.getElementById('app-header').style.backgroundColor = config.color;
+        document.getElementById('matrixBtn').style.backgroundColor = config.color;
+        document.getElementById('matrixBtn').style.borderColor = config.color;
+        document.title = config.title;
     }
 
-    function applyConfig(config) {
-       if(config.title) document.getElementById('siteTitle').textContent = config.title;
-       if(config.type) document.getElementById('siteType').textContent = config.type;
-       if(config.color) document.getElementById('dynamicHeader').style.backgroundColor = config.color;
-       
-       // Now load content based on type
-       loadContent(config.type);
+    function renderPosts(posts) {
+        const grid = document.getElementById('content-area');
+        document.getElementById('siteLoader').style.display = 'none'; // Hide loader
+        
+        if (!posts || posts.length === 0) {
+            grid.innerHTML = '<div class="col-12 text-center p-5"><h3>No posts found.</h3><p class="text-muted">Add posts to your Blogger backend.</p></div>';
+            return;
+        }
+
+        grid.innerHTML = posts.map(p => `
+            <div class="col-md-4 col-sm-6">
+                <div class="post-card">
+                    <img src="${p.image}" class="post-img" alt="${p.title}">
+                    <div class="post-body">
+                        <h5 class="card-title">${p.title}</h5>
+                        <p class="card-text small text-muted">${p.excerpt}</p>
+                        <button class="btn btn-sm btn-outline-secondary mt-2">Read More</button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
     }
 
-    function loadContent(type) {
-       const script = document.createElement('script');
-       script.src = WEB_APP_URL + '?action=getData&type=' + encodeURIComponent(type) + '&callback=renderContent';
-       document.body.appendChild(script);
-    }
-
-    function renderContent(posts) {
-       const grid = document.getElementById('contentGrid');
-       if(!posts || posts.length === 0) {
-           grid.innerHTML = '<div class="col-12 text-center text-muted">No posts found for this category.</div>';
-           return;
-       }
-       
-       let html = '';
-       posts.forEach(post => {
-           html += `
-             <div class="col-md-4">
-               <div class="post-card">
-                 <img src="${post.imageUrl}" alt="${post.title}">
-                 <div class="post-card-body">
-                   <h5>${post.title}</h5>
-                   <p class="small text-muted">${post.date}</p>
-                   <p>${post.excerpt}</p>
-                   <button class="btn btn-sm btn-outline-dark">Read More</button>
-                 </div>
-               </div>
-             </div>
-           `;
-       });
-       grid.innerHTML = html;
-    }
-
-    function handleMatrix() {
+    function runMatrix() {
         const code = document.getElementById('matrixInput').value;
-        if(code === '12') alert("Navigating to Matrix Shortcut 12...");
-        // Implement full matrix logic here if needed
+        alert("Matrix Code " + code + " triggered! (Add specific logic here)");
+    }
+
+    // Simple JSONP implementation
+    function fetchJsonp(url, callback) {
+        const callbackName = 'jsonp_cb_' + Math.round(100000 * Math.random());
+        window[callbackName] = function(data) {
+            delete window[callbackName];
+            document.body.removeChild(script);
+            callback(data);
+        };
+        const script = document.createElement('script');
+        script.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'callback=' + callbackName;
+        document.body.appendChild(script);
     }
   //]]>
   </script>
@@ -417,12 +482,12 @@ cat > core/blogger-theme/theme.xml <<'ENDOFFILE'
 ENDOFFILE
 
 echo
-echo "========================================"
-echo "Builder Architecture Created!"
-echo "========================================"
-echo "1. Push to GitHub."
-echo "2. Open core/apps-script/Code.gs in Google Apps Script."
-echo "3. Create a file named 'Builder.html' in Apps Script and paste content from core/apps-script/Builder.html"
-echo "4. Deploy as Web App (Anyone)."
-echo "5. Open the Web App URL to see the BUILDER."
+echo "=========================================="
+echo "Setup Complete! Follow these steps:"
+echo "=========================================="
+echo "1. Push these files to GitHub."
+echo "2. Go to Apps Script, create 'Builder.html' and paste content from core/apps-script/Builder.html"
+echo "3. Paste content from core/apps-script/Code.gs into Code.gs"
+echo "4. Deploy as Web App (Me / Anyone)."
+echo "5. OPEN THE WEB APP URL -> You will see the Builder. Select a type and click PUBLISH."
 echo "6. Update theme.xml with the Web App URL and save to Blogger."
