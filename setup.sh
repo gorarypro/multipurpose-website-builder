@@ -1,7 +1,7 @@
 #!/bin/bash
 
-echo "Multipurpose Website Builder Setup (Event Sushi Style CMS)"
-echo "========================================================"
+echo "Multipurpose Website Builder Setup (Generator Edition)"
+echo "===================================================="
 echo
 
 # --- CLEANUP ---
@@ -13,7 +13,208 @@ mkdir -p core/apps-script
 mkdir -p core/blogger-theme
 
 # ======================================================
-# 1. BUILDER DASHBOARD (Admin Panel)
+# 1. THEME TEMPLATE (The Blueprint)
+# ======================================================
+# This file is read by Code.gs, filled with your settings, and downloaded.
+cat > core/apps-script/ThemeTemplate.html <<'ENDOFFILE'
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html>
+<html b:css='false' b:responsive='true' xmlns='http://www.w3.org/1999/xhtml' xmlns:b='http://www.google.com/2005/gml/b' xmlns:data='http://www.google.com/2005/gml/data' xmlns:expr='http://www.google.com/2005/gml/expr'>
+<head>
+  <meta charset='UTF-8'/>
+  <meta content='width=device-width, initial-scale=1.0' name='viewport'/>
+  <title><data:blog.pageTitle/></title>
+  <link href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css' rel='stylesheet'/>
+  <link href='https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css' rel='stylesheet'/>
+  
+  <!-- DYNAMIC STYLES FROM BUILDER -->
+  <style>
+    :root {
+      --primary: {{SITE_COLOR}}; 
+      --secondary: #e3622f;
+      --dark: #4d200d;
+    }
+  </style>
+
+  <b:skin><![CDATA[ 
+    body { background-color: #f8f9fa; font-family: 'Segoe UI', sans-serif; }
+    #app-header { padding: 80px 0 40px; background-color: var(--primary); color: white; text-align: center; margin-bottom: 40px; transition: background 0.3s; }
+    .matrix-container { max-width: 400px; margin: -30px auto 30px; }
+    .matrix-input-group { background: white; padding: 8px; border-radius: 50px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: flex; align-items: center; }
+    .matrix-input { border: none; outline: none; flex-grow: 1; padding: 5px 15px; font-size: 1.1rem; }
+    .btn-go { border-radius: 50px; padding: 8px 25px; background: var(--primary); color: white; border: none; }
+    .post-card { background: white; border-radius: 12px; overflow: hidden; height: 100%; box-shadow: 0 2px 10px rgba(0,0,0,0.05); transition: transform 0.2s; }
+    .post-card:hover { transform: translateY(-5px); }
+    .post-img { height: 200px; width: 100%; object-fit: cover; }
+    .post-body { padding: 20px; }
+    .badge-sub { cursor: pointer; transition: 0.2s; }
+    .badge-sub:hover { opacity: 0.8; }
+    .loader-overlay { position: fixed; top:0; left:0; right:0; bottom:0; background: white; z-index: 9999; display: flex; justify-content: center; align-items: center; flex-direction: column; }
+    
+    /* Hides matrix if disabled */
+    .matrix-hidden { display: none !important; }
+  ]]></b:skin>
+</head>
+<body>
+
+  <!-- Loader -->
+  <div id="siteLoader" class="loader-overlay">
+    <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status"></div>
+    <p class="mt-3 text-muted">Building your site...</p>
+  </div>
+
+  <!-- Header -->
+  <header id="app-header">
+    <div class="container">
+      <h1 class="display-4 fw-bold" id="app-title">{{SITE_TITLE}}</h1>
+      <p class="lead opacity-75" id="app-subtitle">{{SITE_TYPE}}</p>
+    </div>
+  </header>
+
+  <!-- Matrix Navigation -->
+  <div class="container matrix-container {{MATRIX_CLASS}}" id="matrixContainer">
+    <div class="matrix-input-group">
+      <span class="ms-2 text-muted"><i class="bi bi-grid-3x3-gap-fill"></i></span>
+      <input type="text" id="matrixInput" class="matrix-input" placeholder="Matrix Code (e.g. 1-2)" />
+      <button class="btn-go" id="matrixBtn" onclick="runMatrix()">Go</button>
+    </div>
+  </div>
+
+  <!-- Subcategories Display -->
+  <div class="container text-center mb-4">
+     <div id="subcat-badges"></div>
+  </div>
+
+  <!-- Content -->
+  <div class="container mb-5">
+    <div id="content-area" class="row g-4"></div>
+  </div>
+
+  <!-- Required Widget -->
+  <b:section class='main' id='main' maxwidgets='1' showaddelement='no'>
+    <b:widget id='HTML1' locked='true' title='App' type='HTML' version='1'>
+      <b:widget-settings><b:widget-setting name='content'/></b:widget-settings>
+      <b:includable id='main'></b:includable>
+    </b:widget>
+  </b:section>
+
+  <script src='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js'></script>
+  <script>
+  //<![CDATA[
+    // ** AUTO-INJECTED URL **
+    const WEB_APP_URL = '{{WEB_APP_URL}}';
+
+    let siteConfig = {};
+    let allTypes = [];
+    let allPosts = [];
+    let currentTypeConfig = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Fallback Config if API fails
+        siteConfig = { title: "{{SITE_TITLE}}", type: "{{SITE_TYPE}}", color: "{{SITE_COLOR}}" };
+
+        const p1 = new Promise(r => fetchJsonp(WEB_APP_URL + '?action=getConfig', r));
+        const p2 = new Promise(r => fetchJsonp(WEB_APP_URL + '?action=getWebsiteTypes', r));
+        const p3 = new Promise(r => fetchJsonp(WEB_APP_URL + '?action=getData', r));
+
+        Promise.all([p1, p2, p3]).then(([configData, typesData, postsData]) => {
+            // Merge live config with baked-in defaults
+            if(configData && !configData.error) siteConfig = configData;
+            
+            allTypes = (typesData && typesData.website_types) ? typesData.website_types : [];
+            allPosts = postsData || [];
+
+            const typeName = siteConfig.type || "{{SITE_TYPE}}";
+            currentTypeConfig = allTypes.find(t => t.name === typeName);
+
+            applyTheme();
+            renderPosts(allPosts);
+            document.getElementById('siteLoader').style.display = 'none';
+        });
+
+        const input = document.getElementById('matrixInput');
+        if(input) input.addEventListener('keypress', (e) => { if(e.key === 'Enter') runMatrix(); });
+    });
+
+    function applyTheme() {
+        document.getElementById('app-title').innerText = siteConfig.title;
+        document.getElementById('app-subtitle').innerText = siteConfig.type;
+        const color = siteConfig.color || '{{SITE_COLOR}}';
+        document.documentElement.style.setProperty('--primary', color);
+        
+        if (currentTypeConfig && currentTypeConfig.subcategories) {
+            const html = currentTypeConfig.subcategories.map((sub, i) => 
+                `<span class="badge bg-secondary badge-sub me-1 mb-1" onclick="filterByMatrix(${i+1})">[${i+1}] ${sub}</span>`
+            ).join('');
+            document.getElementById('subcat-badges').innerHTML = html;
+        }
+    }
+
+    function runMatrix() {
+        const val = document.getElementById('matrixInput').value.trim();
+        const clean = val.replace(/[^0-9]/g, '');
+        let index = -1;
+        
+        if (clean.length >= 2) index = parseInt(clean.substring(1)) - 1;
+        else index = parseInt(clean) - 1;
+
+        if (index > -1) filterByMatrix(index + 1);
+        else alert("Please enter a valid number");
+    }
+
+    function filterByMatrix(index) {
+        if (!currentTypeConfig || !currentTypeConfig.subcategories) return;
+        const subName = currentTypeConfig.subcategories[index - 1];
+        if (!subName) { alert("Code " + index + " not found."); return; }
+
+        const filtered = allPosts.filter(p => {
+            if (!p.labels) return false;
+            return p.labels.some(l => l.toLowerCase() === subName.toLowerCase());
+        });
+
+        renderPosts(filtered);
+    }
+
+    function renderPosts(posts) {
+        const grid = document.getElementById('content-area');
+        if (!posts || posts.length === 0) {
+            grid.innerHTML = '<div class="col-12 text-center p-5"><h3>No posts found.</h3><p class="text-muted">Ensure Blogger posts have Labels.</p></div>';
+            return;
+        }
+        grid.innerHTML = posts.map(p => `
+            <div class="col-md-4 col-sm-6">
+                <div class="post-card">
+                    <img src="${p.image}" class="post-img" alt="${p.title}">
+                    <div class="post-body">
+                        <h5 class="card-title">${p.title}</h5>
+                        <p class="card-text small text-muted">${p.excerpt}</p>
+                        <div class="mt-2">${p.labels.map(l => `<span class="badge bg-light text-dark border me-1">${l}</span>`).join('')}</div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function fetchJsonp(url, callback) {
+        const callbackName = 'jsonp_cb_' + Math.round(100000 * Math.random());
+        window[callbackName] = function(data) {
+            delete window[callbackName];
+            document.body.removeChild(script);
+            callback(data);
+        };
+        const script = document.createElement('script');
+        script.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'callback=' + callbackName;
+        script.onerror = () => { delete window[callbackName]; callback(null); };
+        document.body.appendChild(script);
+    }
+  //]]>
+  </script>
+</body>
+</html>
+ENDOFFILE
+
+# ======================================================
+# 2. BUILDER DASHBOARD (Admin Panel)
 # ======================================================
 cat > core/apps-script/Builder.html <<'ENDOFFILE'
 <!DOCTYPE html>
@@ -26,18 +227,16 @@ cat > core/apps-script/Builder.html <<'ENDOFFILE'
     <style>
       body { background-color: #f0f2f5; font-family: sans-serif; padding: 20px; }
       .card { border: none; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 800px; margin: 0 auto; }
-      .preview-box { background: #fff; border: 2px dashed #ddd; border-radius: 8px; padding: 15px; margin-top: 10px; min-height: 60px; }
     </style>
   </head>
   <body>
     <div class="card p-4">
       <div class="text-center mb-4">
         <h2>🛠️ Website Builder Admin</h2>
-        <p class="text-muted">Configure your site</p>
+        <p class="text-muted">Configure and Download</p>
       </div>
       
       <form id="builderForm">
-        <!-- Identity -->
         <div class="row mb-3">
           <div class="col-md-6">
             <label class="form-label">Website Title</label>
@@ -49,15 +248,11 @@ cat > core/apps-script/Builder.html <<'ENDOFFILE'
           </div>
         </div>
 
-        <!-- Category -->
         <div class="mb-3">
           <label class="form-label">Select Category</label>
-          <select class="form-select" id="websiteType" onchange="updatePreview()">
+          <select class="form-select" id="websiteType">
             <option value="" disabled selected>Loading...</option>
           </select>
-          <div id="subcatPreview" class="preview-box text-muted text-center small mt-2">
-            Select a category to see Matrix codes...
-          </div>
         </div>
         
         <div class="mb-4 form-check form-switch">
@@ -65,11 +260,9 @@ cat > core/apps-script/Builder.html <<'ENDOFFILE'
             <label class="form-check-label" for="featMatrix">Enable Matrix Navigation</label>
         </div>
 
-        <!-- Actions -->
-        <div class="d-grid">
-          <button type="button" class="btn btn-success btn-lg" onclick="saveConfig()">
-            💾 Publish Changes
-          </button>
+        <div class="d-grid gap-2">
+          <button type="button" class="btn btn-success btn-lg" onclick="saveConfig()">💾 Save Settings</button>
+          <button type="button" class="btn btn-dark btn-lg" onclick="downloadTheme()">📥 Download Theme XML</button>
         </div>
         <div id="status" class="mt-3 text-center"></div>
       </form>
@@ -78,7 +271,6 @@ cat > core/apps-script/Builder.html <<'ENDOFFILE'
     <script>
       let allTypes = [];
 
-      // Load categories
       google.script.run.withSuccessHandler(data => {
         allTypes = data.website_types;
         const select = document.getElementById('websiteType');
@@ -90,28 +282,13 @@ cat > core/apps-script/Builder.html <<'ENDOFFILE'
           select.appendChild(opt);
         });
         
-        // Load saved config
         google.script.run.withSuccessHandler(config => {
            if(config.title) document.getElementById('siteTitle').value = config.title;
            if(config.color) document.getElementById('siteColor').value = config.color;
-           if(config.type) {
-              select.value = config.type;
-              updatePreview();
-           }
+           if(config.type) select.value = config.type;
         }).getSavedConfig();
         
       }).getWebsiteTypes();
-
-      function updatePreview() {
-        const typeName = document.getElementById('websiteType').value;
-        const config = allTypes.find(t => t.name === typeName);
-        if(config) {
-           document.getElementById('siteColor').value = config.color || '#000000';
-           document.getElementById('subcatPreview').innerHTML = config.subcategories.map((sub, i) => 
-            `<span class="badge bg-secondary me-1">[${i+1}] ${sub}</span>`
-           ).join(' ');
-        }
-      }
 
       function saveConfig() {
         const btn = document.querySelector('.btn-success');
@@ -125,13 +302,38 @@ cat > core/apps-script/Builder.html <<'ENDOFFILE'
           featMatrix: document.getElementById('featMatrix').checked.toString()
         };
 
-        if(!config.type) { alert("Select a category"); btn.disabled=false; return; }
-
         google.script.run.withSuccessHandler(() => {
-           document.getElementById('status').innerHTML = '<div class="alert alert-success">Settings Saved! Refresh your blog.</div>';
+           document.getElementById('status').innerHTML = '<div class="alert alert-success">Settings Saved!</div>';
            btn.disabled = false; 
-           btn.innerText = "💾 Publish Changes";
+           btn.innerText = "💾 Save Settings";
         }).saveConfigToSheet(config);
+      }
+
+      function downloadTheme() {
+        const btn = document.querySelector('.btn-dark');
+        btn.disabled = true;
+        btn.innerText = "Generating...";
+        
+        const config = {
+          type: document.getElementById('websiteType').value || "Home Improvement",
+          title: document.getElementById('siteTitle').value || "My Site",
+          color: document.getElementById('siteColor').value || "#333",
+          featMatrix: document.getElementById('featMatrix').checked.toString()
+        };
+
+        google.script.run.withSuccessHandler(xmlContent => {
+           const filename = "theme-" + config.type.replace(/\s+/g, '-').toLowerCase() + ".xml";
+           const element = document.createElement('a');
+           element.setAttribute('href', 'data:text/xml;charset=utf-8,' + encodeURIComponent(xmlContent));
+           element.setAttribute('download', filename);
+           element.style.display = 'none';
+           document.body.appendChild(element);
+           element.click();
+           document.body.removeChild(element);
+           
+           btn.disabled = false;
+           btn.innerText = "📥 Download Theme XML";
+        }).generateThemeXml(config);
       }
     </script>
   </body>
@@ -139,13 +341,11 @@ cat > core/apps-script/Builder.html <<'ENDOFFILE'
 ENDOFFILE
 
 # ======================================================
-# 2. FILE FOR: 'Code.gs' (Create this in Apps Script as SCRIPT)
+# 3. APPS SCRIPT BACKEND (Code.gs)
 # ======================================================
 cat > core/apps-script/Code.gs <<'ENDOFFILE'
-// CONFIGURATION
-const SPREADSHEET_ID = '1JEqIVnhjDaz7otgNAikpQj7Trw1SRG_0-iSfYMLQwtA'; // <-- Verify this ID
+const SPREADSHEET_ID = '1JEqIVnhjDaz7otgNAikpQj7Trw1SRG_0-iSfYMLQwtA'; 
 const SETTINGS_SHEET = 'Settings';
-// IMPORTANT: Change this to YOUR blog URL
 const BLOG_FEED_URL = 'https://eventsushi1.blogspot.com/feeds/posts/default?alt=json&max-results=50';
 
 function doGet(e) {
@@ -155,24 +355,16 @@ function doGet(e) {
       .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
       .addMetaTag('viewport', 'width=device-width, initial-scale=1');
   }
-
+  const action = e.parameter.action;
   const callback = e.parameter.callback;
   if (!callback) return ContentService.createTextOutput("Error");
-
-  let result = {};
-  const action = e.parameter.action;
-
-  try {
-    if (action === 'getConfig') result = getSavedConfig();
-    else if (action === 'getWebsiteTypes') result = getWebsiteTypes();
-    else if (action === 'getData') result = getBloggerData();
-    else result = { error: "Unknown action" };
-  } catch (err) {
-    result = { error: "Server Error: " + err.toString() };
-  }
   
-  return ContentService.createTextOutput(callback + '(' + JSON.stringify(result) + ')')
-    .setMimeType(ContentService.MimeType.JAVASCRIPT);
+  let result = {};
+  if (action === 'getConfig') result = getSavedConfig();
+  else if (action === 'getWebsiteTypes') result = getWebsiteTypes();
+  else if (action === 'getData') result = getBloggerData();
+  
+  return ContentService.createTextOutput(callback + '(' + JSON.stringify(result) + ')').setMimeType(ContentService.MimeType.JAVASCRIPT);
 }
 
 function getWebsiteTypes() {
@@ -188,6 +380,23 @@ function getWebsiteTypes() {
   };
 }
 
+// --- GENERATOR FUNCTION ---
+function generateThemeXml(uiConfig) {
+  let xml = HtmlService.createHtmlOutputFromFile('ThemeTemplate').getContent();
+  const url = ScriptApp.getService().getUrl();
+  
+  // Replace Placeholders with Actual Data
+  xml = xml.replace('{{WEB_APP_URL}}', url);
+  xml = xml.replace('{{SITE_TITLE}}', uiConfig.title);
+  xml = xml.replace('{{SITE_TYPE}}', uiConfig.type);
+  xml = xml.replace('{{SITE_COLOR}}', uiConfig.color);
+  
+  const matrixClass = (uiConfig.featMatrix === 'true') ? '' : 'matrix-hidden';
+  xml = xml.replace('{{MATRIX_CLASS}}', matrixClass);
+
+  return xml;
+}
+
 function saveConfigToSheet(config) {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   let sheet = ss.getSheetByName(SETTINGS_SHEET);
@@ -200,23 +409,19 @@ function saveConfigToSheet(config) {
 }
 
 function getSavedConfig() {
-  const defaultConfig = { type: "Home Improvement", title: "Event Sushi", color: "#fe7301", featMatrix: "true" };
   try {
     const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(SETTINGS_SHEET);
-    if (!sheet) return defaultConfig;
+    if (!sheet) return {};
     const data = sheet.getDataRange().getValues();
-    if (data.length < 2) return defaultConfig; 
     const config = {};
     for (let i = 1; i < data.length; i++) config[data[i][0]] = data[i][1];
-    return { ...defaultConfig, ...config };
-  } catch (e) { return defaultConfig; }
+    return config;
+  } catch (e) { return {}; }
 }
 
 function getBloggerData() {
   try {
     const response = UrlFetchApp.fetch(BLOG_FEED_URL, { muteHttpExceptions: true });
-    if (response.getResponseCode() !== 200) return []; 
-    
     const json = JSON.parse(response.getContentText());
     return (json.feed.entry || []).map(p => {
       let img = 'https://placehold.co/600x400/eee/999?text=No+Image';
@@ -224,11 +429,6 @@ function getBloggerData() {
          const match = p.content.$t.match(/<img[^>]+src="([^"]+)"/);
          if (match) img = match[1];
       }
-      
-      // Extract price from content or label? 
-      // For now, random price if not found, or extract from content if you put "Price: 50" in text.
-      let price = 0;
-      
       let labels = p.category ? p.category.map(c => c.term) : [];
       return {
         id: p.id.$t.split('.post-')[1],
@@ -236,8 +436,6 @@ function getBloggerData() {
         excerpt: p.content ? p.content.$t.replace(/<[^>]+>/g, ' ').substring(0, 100) + '...' : '',
         image: img,
         labels: labels,
-        price: price,
-        currency: 'DH',
         date: new Date(p.published.$t).toLocaleDateString()
       };
     });
@@ -245,275 +443,13 @@ function getBloggerData() {
 }
 ENDOFFILE
 
-# ==========================================
-# 3. THEME XML (For Blogger)
-# ==========================================
-# FIX: Embedded CSS directly to solve loading issues
-# FIX: Adapted HTML to use the provided "Event Sushi" structure
-cat > core/blogger-theme/theme.xml <<'ENDOFFILE'
-<?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE html>
-<html b:css='false' b:responsive='true' xmlns='http://www.w3.org/1999/xhtml' xmlns:b='http://www.google.com/2005/gml/b' xmlns:data='http://www.google.com/2005/gml/data' xmlns:expr='http://www.google.com/2005/gml/expr'>
-<head>
-  <meta charset='UTF-8'/>
-  <meta content='width=device-width, initial-scale=1.0' name='viewport'/>
-  <title><data:blog.pageTitle/></title>
-  
-  <link href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css' rel='stylesheet'/>
-  <link href='https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css' rel='stylesheet'/>
-  <link href='https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&amp;display=swap' rel='stylesheet'/>
-
-  <b:skin><![CDATA[ 
-    /* YOUR PROVIDED CSS */
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { height: 100%; width: 100%; overflow-x: hidden; }
-    body { font-family: 'Poppins', sans-serif; background-color: #f5f5f5; color: #333; line-height: 1.6; font-size: 16px; }
-    
-    .container { width: 100%; max-width: 100%; padding-left: 15px; padding-right: 15px; margin-left: auto; margin-right: auto; }
-    @media (min-width: 576px) { .container { max-width: 540px; } }
-    @media (min-width: 768px) { .container { max-width: 720px; } }
-    @media (min-width: 992px) { .container { max-width: 960px; } }
-    @media (min-width: 1200px) { .container { max-width: 1140px; } }
-    
-    img { max-width: 100%; height: auto; display: block; }
-
-    /* DYNAMIC VARS */
-    :root {
-       --primary: #fe7301; /* Will be overridden by JS */
-       --secondary: #e3622f;
-       --dark: #4d200d;
-       --whatsapp: #25D366;
-       --danger: #ff4757;
-    }
-
-    .navbar { background-color: rgba(88, 81, 83, 0.3); box-shadow: 0 2px 10px rgba(0,0,0,0.1); padding: 0.5rem 0; position: sticky; top: 0; z-index: 1030; }
-    .navbar-brand { color: var(--primary) !important; font-weight: 800; font-size: 1.5rem; }
-    .nav-link { color: white !important; font-weight: 500; transition: all 0.3s ease; }
-    .nav-icon { position: relative; cursor: pointer; font-size: 1.25rem; }
-    .icon-count { position: absolute; top: -8px; right: -8px; background-color: var(--primary); color: white; font-size: 0.7rem; font-weight: bold; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-
-    #hero { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; padding: 60px 15px; text-align: center; min-height: 70vh; display: flex; align-items: center; justify-content: center; flex-direction: column; }
-    #hero h1 { font-size: 2.5rem; font-weight: 700; margin-bottom: 1rem; }
-    #hero .btn { background-color: var(--dark); color: white; border-radius: 50px; padding: 0.75rem 2rem; }
-
-    /* Menu Cards */
-    .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; padding: 20px 0; }
-    .menu-card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.08); transition: all 0.3s ease; height: 100%; }
-    .menu-card:hover { transform: translateY(-5px); }
-    .card-img-container { position: relative; height: 200px; overflow: hidden; }
-    .card-img-container img { width: 100%; height: 100%; object-fit: cover; }
-    .card-body { padding: 1.25rem; }
-    .card-footer { background: transparent; border-top: 1px solid #f0f0f0; padding: 1rem 1.25rem; display: flex; justify-content: space-between; align-items: center; }
-    .price-tag { font-weight: 700; color: var(--primary); font-size: 1.25rem; }
-    .order-btn { background-color: var(--primary); color: white; border: none; padding: 0.5rem 1rem; border-radius: 50px; font-size: 0.9rem; font-weight: 600; cursor: pointer; }
-
-    /* Matrix & Filters */
-    .matrix-container { max-width: 400px; margin: -30px auto 30px; position: relative; z-index: 100; }
-    .matrix-input-group { background: white; padding: 8px; border-radius: 50px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: flex; align-items: center; }
-    .matrix-input { border: none; outline: none; flex-grow: 1; padding: 5px 15px; font-size: 1.1rem; }
-    .btn-go { border-radius: 50px; padding: 8px 25px; background: var(--primary); color: white; border: none; }
-    .badge-sub { cursor: pointer; font-size: 0.9rem; padding: 8px 12px; transition: 0.2s; }
-    .badge-sub.bg-primary { background-color: var(--primary) !important; }
-
-    .loader-overlay { position: fixed; top:0; left:0; right:0; bottom:0; background: white; z-index: 9999; display: flex; justify-content: center; align-items: center; flex-direction: column; }
-    
-    /* Floating Buttons */
-    .floating-btn { position: fixed; width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 1000; cursor: pointer; text-decoration: none; color: white; }
-    .floating-cart { bottom: 145px; right: 15px; background-color: var(--primary); }
-    .floating-wishlist { bottom: 80px; right: 15px; background-color: var(--danger); }
-    .floating-whatsapp { bottom: 15px; right: 15px; background-color: var(--whatsapp); }
-    .floating-btn i { font-size: 1.5rem; }
-  ]]></b:skin>
-</head>
-<body>
-
-  <!-- Loader -->
-  <div id="siteLoader" class="loader-overlay">
-    <div class="spinner-border text-warning" style="width: 3rem; height: 3rem;" role="status"></div>
-    <p class="mt-3 text-muted">Loading...</p>
-  </div>
-
-  <!-- Header -->
-  <header id="hero">
-    <div class="container">
-      <h1 id="app-title">Event Sushi</h1>
-      <p id="app-subtitle">Fresh. Authentic.</p>
-      <a class="btn" href="#menu">Explore Menu</a>
-    </div>
-  </header>
-
-  <!-- Matrix Navigation -->
-  <div class="container matrix-container" id="matrixContainer" style="display:none">
-    <div class="matrix-input-group">
-      <span class="ms-2 text-muted"><i class="bi bi-grid-3x3-gap-fill"></i></span>
-      <input type="text" id="matrixInput" class="matrix-input" placeholder="Matrix Code (e.g. 1 or 2)" />
-      <button class="btn-go" id="matrixBtn" onclick="runMatrix()">Go</button>
-    </div>
-  </div>
-
-  <!-- Subcategories -->
-  <div class="container text-center mb-4">
-     <div id="subcat-badges"></div>
-  </div>
-
-  <!-- Content -->
-  <div class="container mb-5" id="menu">
-    <h2 class="text-center mb-4" style="color: var(--dark);">Our Menu</h2>
-    <div id="content-area" class="menu-grid"></div>
-  </div>
-
-  <!-- Floating Buttons -->
-  <div class="floating-btn floating-cart"><i class="bi bi-cart3"></i></div>
-  <div class="floating-btn floating-wishlist"><i class="bi bi-heart-fill"></i></div>
-  <a class="floating-btn floating-whatsapp" href="#"><i class="bi bi-whatsapp"></i></a>
-
-  <!-- Required Widget -->
-  <b:section class='main' id='main' maxwidgets='1' showaddelement='no'>
-    <b:widget id='HTML1' locked='true' title='App' type='HTML' version='1'>
-      <b:widget-settings><b:widget-setting name='content'/></b:widget-settings>
-      <b:includable id='main'></b:includable>
-    </b:widget>
-  </b:section>
-
-  <script src='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js'></script>
-  <script>
-  //<![CDATA[
-    // ** PASTE NEW WEB APP URL HERE **
-    const API_URL = 'https://script.google.com/macros/s/AKfycbxBOuXmYcOpeijxpBMwEV5clzoUg1zYG6hwQ93AFj5FRjXE3rHPR5fdauhInRh4uB00BA/exec';
-
-    let siteConfig = {};
-    let allTypes = [];
-    let allPosts = [];
-    let currentTypeConfig = null;
-
-    document.addEventListener('DOMContentLoaded', () => {
-        
-        const p1 = new Promise(r => fetchJsonp(API_URL + '?action=getConfig', r));
-        const p2 = new Promise(r => fetchJsonp(API_URL + '?action=getWebsiteTypes', r));
-        const p3 = new Promise(r => fetchJsonp(API_URL + '?action=getData', r));
-
-        Promise.all([p1, p2, p3]).then(([configData, typesData, postsData]) => {
-            
-            siteConfig = configData || { title: "My Site", type: "Home Improvement", color: "#fe7301" };
-            allTypes = (typesData && typesData.website_types) ? typesData.website_types : [];
-            allPosts = postsData || [];
-
-            const typeName = siteConfig.type || "Home Improvement";
-            currentTypeConfig = allTypes.find(t => t.name === typeName);
-
-            applyTheme();
-            renderPosts(allPosts);
-
-            document.getElementById('siteLoader').style.display = 'none';
-        });
-
-        const input = document.getElementById('matrixInput');
-        if(input) input.addEventListener('keypress', (e) => { if(e.key === 'Enter') runMatrix(); });
-    });
-
-    function applyTheme() {
-        document.getElementById('app-title').innerText = siteConfig.title;
-        document.getElementById('app-subtitle').innerText = siteConfig.type;
-        
-        const color = siteConfig.color || '#fe7301';
-        document.documentElement.style.setProperty('--primary', color);
-        
-        if(siteConfig.featMatrix === 'true') {
-            document.getElementById('matrixContainer').style.display = 'block';
-        }
-        
-        if (currentTypeConfig && currentTypeConfig.subcategories) {
-            const html = currentTypeConfig.subcategories.map((sub, i) => 
-                `<span class="badge bg-secondary badge-sub me-1 mb-1" onclick="filterByMatrix(${i+1})">[${i+1}] ${sub}</span>`
-            ).join('');
-            document.getElementById('subcat-badges').innerHTML = html;
-        }
-    }
-
-    function runMatrix() {
-        const val = document.getElementById('matrixInput').value.trim();
-        const index = parseInt(val.replace(/[^0-9]/g, '')); // Simple parse
-        if (index && index > 0) {
-            filterByMatrix(index);
-        } else {
-            alert("Please enter a valid number");
-        }
-    }
-
-    function filterByMatrix(index) {
-        if (!currentTypeConfig || !currentTypeConfig.subcategories) return;
-        
-        // Logic: 1-based index from user -> 0-based array
-        const subName = currentTypeConfig.subcategories[index - 1];
-        
-        if (!subName) {
-            alert("Code " + index + " not found.");
-            return;
-        }
-
-        // Filter posts that have the subcategory name in their labels
-        const filtered = allPosts.filter(p => {
-            if (!p.labels) return false;
-            return p.labels.some(l => l.toLowerCase().includes(subName.toLowerCase()));
-        });
-
-        renderPosts(filtered);
-        
-        // Highlight Badge
-        const badges = document.querySelectorAll('.badge-sub');
-        badges.forEach(b => { b.classList.remove('bg-primary'); b.classList.add('bg-secondary'); });
-        if(badges[index-1]) { badges[index-1].classList.remove('bg-secondary'); badges[index-1].classList.add('bg-primary'); }
-
-        // Optional: Scroll to content
-        document.getElementById('menu').scrollIntoView({ behavior: 'smooth' });
-    }
-
-    function renderPosts(posts) {
-        const grid = document.getElementById('content-area');
-        if (!posts || posts.length === 0) {
-            grid.innerHTML = '<div class="col-12 text-center p-5"><h3>No posts found.</h3><p class="text-muted">Create posts in Blogger with labels matching the subcategories.</p></div>';
-            return;
-        }
-
-        grid.innerHTML = posts.map(p => `
-          <div class="menu-item">
-            <div class="menu-card">
-              <div class="card-img-container">
-                 <img src="${p.image}" alt="${p.title}">
-                 <span class="price-badge">NEW</span>
-              </div>
-              <div class="card-body">
-                 <h5 class="card-title">${p.title}</h5>
-                 <p class="card-text">${p.excerpt}</p>
-              </div>
-              <div class="card-footer">
-                 <div class="price-tag">Check Details</div>
-                 <button class="order-btn">View</button>
-              </div>
-            </div>
-          </div>
-        `).join('');
-    }
-
-    function fetchJsonp(url, callback) {
-        const callbackName = 'jsonp_cb_' + Math.round(100000 * Math.random());
-        window[callbackName] = function(data) {
-            delete window[callbackName];
-            document.body.removeChild(script);
-            callback(data);
-        };
-        const script = document.createElement('script');
-        script.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'callback=' + callbackName;
-        script.onerror = () => { console.error("JSONP Error"); delete window[callbackName]; callback({error: "Network Error"}); };
-        document.body.appendChild(script);
-    }
-  //]]>
-  </script>
-</body>
-</html>
-ENDOFFILE
-
 echo
-echo "======================================================"
-echo "Setup Complete! RE-DEPLOY Apps Script to finish."
-echo "======================================================"
+echo "=================================================================="
+echo " Setup Complete! "
+echo "=================================================================="
+echo "1. Push to GitHub."
+echo "2. In Apps Script: Create 3 files (Code.gs, Builder.html, ThemeTemplate.html)"
+echo "3. Paste the content from the 'core/apps-script' folder into them."
+echo "4. Deploy as Web App (Anyone)."
+echo "5. Open the Web App URL -> Customize -> Click 'Download Theme XML'."
+echo "6. Upload that XML file to Blogger."
