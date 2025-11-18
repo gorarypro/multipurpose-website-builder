@@ -7,13 +7,19 @@
   <title><data:blog.pageTitle/></title>
   <link href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css' rel='stylesheet'/>
   <link href='https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css' rel='stylesheet'/>
+  <!-- DYNAMIC CSS VARIABLES -->
+  <style id="dynamic-styles">
+    :root {
+      --primary-color: {{SITE_COLOR}};
+    }
+  </style>
   <b:skin><![CDATA[ 
     body { background-color: #f8f9fa; font-family: 'Segoe UI', sans-serif; }
-    #app-header { padding: 80px 0 40px; color: white; text-align: center; margin-bottom: 40px; transition: background 0.3s; }
+    #app-header { padding: 80px 0 40px; background-color: var(--primary-color, #333); color: white; text-align: center; margin-bottom: 40px; transition: background 0.3s; }
     .matrix-container { max-width: 400px; margin: -30px auto 30px; }
     .matrix-input-group { background: white; padding: 8px; border-radius: 50px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: flex; }
     .matrix-input { border: none; outline: none; flex-grow: 1; padding: 5px 15px; font-size: 1.1rem; }
-    .btn-go { border-radius: 50px; padding: 8px 25px; background: #333; color: white; border: none; }
+    .btn-go { border-radius: 50px; padding: 8px 25px; background: var(--primary-color, #333); color: white; border: none; }
     .post-card { background: white; border-radius: 12px; overflow: hidden; height: 100%; box-shadow: 0 2px 10px rgba(0,0,0,0.05); transition: transform 0.2s; }
     .post-card:hover { transform: translateY(-5px); }
     .post-img { height: 200px; width: 100%; object-fit: cover; }
@@ -21,6 +27,9 @@
     .badge-sub { cursor: pointer; transition: 0.2s; }
     .badge-sub:hover { opacity: 0.8; }
     .loader-overlay { position: fixed; top:0; left:0; right:0; bottom:0; background: white; z-index: 9999; display: flex; justify-content: center; align-items: center; flex-direction: column; }
+    
+    /* Feature Toggles CSS */
+    .feature-hidden { display: none !important; }
   ]]></b:skin>
 </head>
 <body>
@@ -32,15 +41,16 @@
   </div>
 
   <!-- Header -->
-  <header id="app-header" style="background-color: #333;">
+  <header id="app-header">
     <div class="container">
-      <h1 class="display-4 fw-bold" id="app-title">Loading...</h1>
-      <p class="lead opacity-75" id="app-subtitle">...</p>
+      <!-- Default Title injected from Builder -->
+      <h1 class="display-4 fw-bold" id="app-title">{{SITE_TITLE}}</h1>
+      <p class="lead opacity-75" id="app-subtitle">{{SITE_TYPE}}</p>
     </div>
   </header>
 
   <!-- Matrix Navigation -->
-  <div class="container matrix-container">
+  <div class="container matrix-container {{MATRIX_CLASS}}">
     <div class="matrix-input-group">
       <span class="ms-2 align-self-center text-muted"><i class="bi bi-grid-3x3-gap-fill"></i></span>
       <input type="text" id="matrixInput" class="matrix-input" placeholder="Matrix Code (e.g. 1 or 2)" />
@@ -69,8 +79,8 @@
   <script src='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js'></script>
   <script>
   //<![CDATA[
-    // ** IMPORTANT: PASTE YOUR NEW WEB APP URL HERE **
-    const API_URL = 'https://script.google.com/macros/s/AKfycbxBOuXmYcOpeijxpBMwEV5clzoUg1zYG6hwQ93AFj5FRjXE3rHPR5fdauhInRh4uB00BA/exec';
+    // ** AUTO-INJECTED URL FROM BUILDER **
+    const WEB_APP_URL = '{{WEB_APP_URL}}';
 
     let siteConfig = {};
     let allTypes = [];
@@ -79,43 +89,39 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         
-        // 1. Load everything in parallel
-        const p1 = new Promise(r => fetchJsonp(API_URL + '?action=getConfig', r));
-        const p2 = new Promise(r => fetchJsonp(API_URL + '?action=getWebsiteTypes', r));
-        const p3 = new Promise(r => fetchJsonp(API_URL + '?action=getData', r));
+        // Load Data
+        const p1 = new Promise(r => fetchJsonp(WEB_APP_URL + '?action=getConfig', r));
+        const p2 = new Promise(r => fetchJsonp(WEB_APP_URL + '?action=getWebsiteTypes', r));
+        const p3 = new Promise(r => fetchJsonp(WEB_APP_URL + '?action=getData', r));
 
         Promise.all([p1, p2, p3]).then(([configData, typesData, postsData]) => {
             
-            // Store data
-            siteConfig = configData || { title: "My Site", type: "Home Improvement", color: "#333" };
+            siteConfig = configData || { title: "{{SITE_TITLE}}", type: "{{SITE_TYPE}}", color: "{{SITE_COLOR}}" };
             allTypes = typesData.website_types || [];
             allPosts = postsData || [];
 
-            // Determine Current Type (from Config)
-            const typeName = siteConfig.type || "Home Improvement";
+            const typeName = siteConfig.type || "{{SITE_TYPE}}";
             currentTypeConfig = allTypes.find(t => t.name === typeName);
 
-            // Apply Theme
             applyTheme();
-            
-            // Initial Render
             renderPosts(allPosts);
 
             document.getElementById('siteLoader').style.display = 'none';
         });
 
-        // Input Enter Key
         const input = document.getElementById('matrixInput');
         if(input) input.addEventListener('keypress', (e) => { if(e.key === 'Enter') runMatrix(); });
     });
 
     function applyTheme() {
-        document.getElementById('app-title').innerText = siteConfig.title || "My Website";
-        document.getElementById('app-subtitle').innerText = siteConfig.type || "Welcome";
+        document.getElementById('app-title').innerText = siteConfig.title;
+        document.getElementById('app-subtitle').innerText = siteConfig.type;
         
         const color = siteConfig.color || '#333';
-        document.getElementById('app-header').style.backgroundColor = color;
-        document.getElementById('matrixBtn').style.backgroundColor = color;
+        document.documentElement.style.setProperty('--primary-color', color);
+        
+        // Feature Toggles
+        if(siteConfig.featMatrix === 'false') document.querySelector('.matrix-container').style.display = 'none';
         
         // Render Subcategory Badges
         if (currentTypeConfig && currentTypeConfig.subcategories) {
@@ -132,58 +138,39 @@
         if (index && index > 0) {
             filterByMatrix(index);
         } else {
-            alert("Please enter a valid number (e.g., 1, 2, 3)");
+            alert("Please enter a valid number");
         }
     }
 
     function filterByMatrix(index) {
         if (!currentTypeConfig || !currentTypeConfig.subcategories) return;
-        
         const subName = currentTypeConfig.subcategories[index - 1];
-        
-        if (!subName) {
-            alert("Code " + index + " not found for this category.");
-            return;
-        }
+        if (!subName) { alert("Code not found."); return; }
 
-        // Filter Logic
         const filtered = allPosts.filter(p => {
             if (!p.labels) return false;
-            // Check if post labels include the subcategory name (case insensitive)
             return p.labels.some(l => l.toLowerCase() === subName.toLowerCase());
         });
 
-        // Update UI
         renderPosts(filtered);
         
-        // Highlight Badge
         const badges = document.querySelectorAll('.badge-sub');
-        badges.forEach(b => {
-            b.classList.remove('bg-primary');
-            b.classList.add('bg-secondary');
-        });
-        if(badges[index-1]) {
-             badges[index-1].classList.remove('bg-secondary');
-             badges[index-1].classList.add('bg-primary');
-        }
+        badges.forEach(b => { b.classList.remove('bg-primary'); b.classList.add('bg-secondary'); });
+        if(badges[index-1]) { badges[index-1].classList.remove('bg-secondary'); badges[index-1].classList.add('bg-primary'); }
 
-        const subtitle = document.getElementById('app-subtitle');
-        subtitle.innerHTML = `Filtering: <strong>${subName}</strong> <a href="#" onclick="resetFilter(); return false;" class="text-white small">(Reset)</a>`;
+        document.getElementById('app-subtitle').innerHTML = `Filtering: <strong>${subName}</strong> <a href="#" onclick="resetFilter(); return false;" class="text-white small">(Reset)</a>`;
     }
     
     function resetFilter() {
         renderPosts(allPosts);
         document.getElementById('app-subtitle').innerText = siteConfig.type;
-        document.querySelectorAll('.badge-sub').forEach(b => {
-             b.classList.remove('bg-primary'); 
-             b.classList.add('bg-secondary'); 
-        });
+        document.querySelectorAll('.badge-sub').forEach(b => { b.classList.remove('bg-primary'); b.classList.add('bg-secondary'); });
     }
 
     function renderPosts(posts) {
         const grid = document.getElementById('content-area');
         if (!posts || posts.length === 0) {
-            grid.innerHTML = '<div class="col-12 text-center p-5"><h3>No results.</h3><p class="text-muted">Ensure your Blogger posts have the correct Labels.</p></div>';
+            grid.innerHTML = '<div class="col-12 text-center p-5"><h3>No results.</h3><p class="text-muted">Ensure posts have Labels matching: ' + (currentTypeConfig ? currentTypeConfig.subcategories.join(', ') : '') + '</p></div>';
             return;
         }
 
@@ -203,7 +190,6 @@
         `).join('');
     }
 
-    // JSONP Fetcher
     function fetchJsonp(url, callback) {
         const callbackName = 'jsonp_cb_' + Math.round(100000 * Math.random());
         window[callbackName] = function(data) {
