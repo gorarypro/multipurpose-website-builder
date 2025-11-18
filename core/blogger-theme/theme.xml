@@ -9,7 +9,7 @@
   <link href='https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css' rel='stylesheet'/>
   <b:skin><![CDATA[ 
     body { background-color: #f8f9fa; font-family: 'Segoe UI', sans-serif; }
-    #app-header { padding: 60px 0 40px; color: white; text-align: center; margin-bottom: 40px; transition: background 0.3s; }
+    #app-header { padding: 80px 0 40px; color: white; text-align: center; margin-bottom: 40px; transition: background 0.3s; }
     .matrix-container { max-width: 400px; margin: -30px auto 30px; }
     .matrix-input-group { background: white; padding: 8px; border-radius: 50px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: flex; }
     .matrix-input { border: none; outline: none; flex-grow: 1; padding: 5px 15px; font-size: 1.1rem; }
@@ -34,7 +34,7 @@
   <!-- Header -->
   <header id="app-header" style="background-color: #333;">
     <div class="container">
-      <h1 class="display-4 fw-bold" id="app-title">...</h1>
+      <h1 class="display-4 fw-bold" id="app-title">Loading...</h1>
       <p class="lead opacity-75" id="app-subtitle">...</p>
     </div>
   </header>
@@ -43,7 +43,6 @@
   <div class="container matrix-container">
     <div class="matrix-input-group">
       <span class="ms-2 align-self-center text-muted"><i class="bi bi-grid-3x3-gap-fill"></i></span>
-      <!-- FIX: Self-closing input -->
       <input type="text" id="matrixInput" class="matrix-input" placeholder="Matrix Code (e.g. 1 or 2)" />
       <button class="btn-go" id="matrixBtn" onclick="runMatrix()">Go</button>
     </div>
@@ -87,20 +86,19 @@
 
         Promise.all([p1, p2, p3]).then(([configData, typesData, postsData]) => {
             
-            // Store data
-            siteConfig = configData;
+            // Safe Defaults if API fails
+            siteConfig = configData || { title: "My Site", type: "Home Improvement", color: "#333" };
             allTypes = typesData.website_types || [];
             allPosts = postsData || [];
 
-            // Determine Current Type (from Config)
+            // Determine Current Type
             const typeName = siteConfig.type || "Home Improvement";
             currentTypeConfig = allTypes.find(t => t.name === typeName);
 
             // Apply Theme
             applyTheme();
             
-            // Initial Render (Show all posts matching main category logic if needed, or just all)
-            // For simplicity, we show all posts initially
+            // Initial Render
             renderPosts(allPosts);
 
             document.getElementById('siteLoader').style.display = 'none';
@@ -112,14 +110,14 @@
     });
 
     function applyTheme() {
-        document.getElementById('app-title').innerText = siteConfig.title;
-        document.getElementById('app-subtitle').innerText = siteConfig.type;
+        document.getElementById('app-title').innerText = siteConfig.title || "My Website";
+        document.getElementById('app-subtitle').innerText = siteConfig.type || "Welcome";
         
         const color = siteConfig.color || '#333';
         document.getElementById('app-header').style.backgroundColor = color;
         document.getElementById('matrixBtn').style.backgroundColor = color;
         
-        // Render Subcategory Badges with Matrix Numbers
+        // Render Subcategory Badges
         if (currentTypeConfig && currentTypeConfig.subcategories) {
             const html = currentTypeConfig.subcategories.map((sub, i) => 
                 `<span class="badge bg-secondary badge-sub me-1 mb-1" onclick="filterByMatrix(${i+1})">[${i+1}] ${sub}</span>`
@@ -141,7 +139,6 @@
     function filterByMatrix(index) {
         if (!currentTypeConfig || !currentTypeConfig.subcategories) return;
         
-        // Array is 0-indexed, Matrix is 1-indexed
         const subName = currentTypeConfig.subcategories[index - 1];
         
         if (!subName) {
@@ -152,7 +149,6 @@
         // Filter Logic
         const filtered = allPosts.filter(p => {
             if (!p.labels) return false;
-            // Check if post labels include the subcategory name (case insensitive)
             return p.labels.some(l => l.toLowerCase() === subName.toLowerCase());
         });
 
@@ -170,7 +166,6 @@
              badges[index-1].classList.add('bg-primary');
         }
 
-        // Show alert toast/message
         const subtitle = document.getElementById('app-subtitle');
         subtitle.innerHTML = `Filtering: <strong>${subName}</strong> <a href="#" onclick="resetFilter(); return false;" class="text-white small">(Reset)</a>`;
     }
@@ -187,7 +182,7 @@
     function renderPosts(posts) {
         const grid = document.getElementById('content-area');
         if (!posts || posts.length === 0) {
-            grid.innerHTML = '<div class="col-12 text-center p-5"><h3>No results.</h3><p class="text-muted">Ensure your Blogger posts have the correct Labels.</p></div>';
+            grid.innerHTML = '<div class="col-12 text-center p-5"><h3>No posts found.</h3><p class="text-muted">Posts must have Labels that match the category names.</p></div>';
             return;
         }
 
@@ -217,7 +212,7 @@
         };
         const script = document.createElement('script');
         script.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'callback=' + callbackName;
-        script.onerror = () => { console.error("JSONP Error"); delete window[callbackName]; };
+        script.onerror = () => { console.error("JSONP Error"); delete window[callbackName]; callback(null); };
         document.body.appendChild(script);
     }
   //]]>

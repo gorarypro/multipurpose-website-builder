@@ -1,6 +1,7 @@
 // CONFIGURATION
 const SPREADSHEET_ID = '1JEqIVnhjDaz7otgNAikpQj7Trw1SRG_0-iSfYMLQwtA'; // <-- YOUR SHEET ID
 const SETTINGS_SHEET = 'Settings';
+// CHANGE THIS TO YOUR BLOG URL
 const BLOG_FEED_URL = 'https://multipurpose-website-builder.blogspot.com/feeds/posts/default?alt=json&max-results=50';
 
 /**
@@ -25,7 +26,6 @@ function doGet(e) {
       result = getSavedConfig();
     } 
     else if (action === 'getWebsiteTypes') {
-      // Wrap in the expected structure "website_types"
       result = getWebsiteTypes(); 
     }
     else if (action === 'getData') {
@@ -42,7 +42,6 @@ function doGet(e) {
 
 /**
  * MASTER LIST OF CATEGORIES
- * This is the source of truth for the Builder AND the Theme Matrix Logic
  */
 function getWebsiteTypes() {
   return {
@@ -53,7 +52,6 @@ function getWebsiteTypes() {
       { "name": "Self-Improvement", "subcategories": ["Productivity", "Motivation", "Goals", "Personal Dev"], "color": "#16a085" },
       { "name": "Technology", "subcategories": ["Gadgets", "Software", "AI", "Coding"], "color": "#3498db" },
       { "name": "Food", "subcategories": ["Recipes", "Reviews", "Diet", "Baking"], "color": "#e74c3c" }
-      // Add more here...
     ]
   };
 }
@@ -73,22 +71,35 @@ function saveConfigToSheet(config) {
 }
 
 function getSavedConfig() {
+  // DEFAULT CONFIG (Used if Sheet is empty)
+  const defaultConfig = { 
+    type: "Home Improvement", 
+    title: "My New Website", 
+    color: "#333333" 
+  };
+
   try {
     const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(SETTINGS_SHEET);
-    if (!sheet) return { type: "Home Improvement", title: "Default Site", color: "#333" };
+    if (!sheet) return defaultConfig;
     
     const data = sheet.getDataRange().getValues();
+    if (data.length < 2) return defaultConfig; // No data rows
+
     const config = {};
     for (let i = 1; i < data.length; i++) config[data[i][0]] = data[i][1];
-    return config;
+    
+    // Merge with defaults to prevent undefined
+    return { ...defaultConfig, ...config };
   } catch (e) {
-    return { type: "Home Improvement", title: "Error Loading Config", color: "#e74c3c" };
+    return defaultConfig;
   }
 }
 
 function getBloggerData() {
   try {
     const response = UrlFetchApp.fetch(BLOG_FEED_URL, { muteHttpExceptions: true });
+    if (response.getResponseCode() !== 200) return [];
+    
     const json = JSON.parse(response.getContentText());
     return (json.feed.entry || []).map(p => {
       let img = 'https://placehold.co/600x400/eee/999?text=No+Image';

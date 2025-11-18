@@ -1,7 +1,7 @@
 #!/bin/bash
 
-echo "Multipurpose Website Builder Setup (Unified Edition)"
-echo "=================================================="
+echo "Multipurpose Website Builder Setup (Final Fix)"
+echo "============================================"
 echo
 
 # --- CLEANUP ---
@@ -39,7 +39,7 @@ cat > core/apps-script/Builder.html <<'ENDOFFILE'
         <div class="row mb-3">
           <div class="col-md-6">
             <label class="form-label">Website Title</label>
-            <input type="text" class="form-control" id="siteTitle" placeholder="My Awesome Site">
+            <input type="text" class="form-control" id="siteTitle" placeholder="My Awesome Site" value="My New Website">
           </div>
           <div class="col-md-6">
             <label class="form-label">Primary Color</label>
@@ -61,7 +61,7 @@ cat > core/apps-script/Builder.html <<'ENDOFFILE'
         <!-- 3. Publish -->
         <div class="d-grid">
           <button type="button" class="btn btn-primary btn-lg" onclick="saveConfig()">
-            Publish Changes
+            Publish Changes to Live Site
           </button>
         </div>
         <div id="status" class="mt-3 text-center"></div>
@@ -94,7 +94,7 @@ cat > core/apps-script/Builder.html <<'ENDOFFILE'
           document.getElementById('subcatPreview').innerHTML = config.subcategories.map((sub, i) => 
             `<span class="badge bg-secondary me-1">[${i+1}] ${sub}</span>`
           ).join(' ');
-          document.getElementById('siteColor').value = config.color || '#000000';
+          document.getElementById('siteColor').value = config.color || '#0d6efd';
         }
       }
 
@@ -129,6 +129,7 @@ cat > core/apps-script/Code.gs <<'ENDOFFILE'
 // CONFIGURATION
 const SPREADSHEET_ID = '1JEqIVnhjDaz7otgNAikpQj7Trw1SRG_0-iSfYMLQwtA'; // <-- YOUR SHEET ID
 const SETTINGS_SHEET = 'Settings';
+// CHANGE THIS TO YOUR BLOG URL
 const BLOG_FEED_URL = 'https://multipurpose-website-builder.blogspot.com/feeds/posts/default?alt=json&max-results=50';
 
 /**
@@ -153,7 +154,6 @@ function doGet(e) {
       result = getSavedConfig();
     } 
     else if (action === 'getWebsiteTypes') {
-      // Wrap in the expected structure "website_types"
       result = getWebsiteTypes(); 
     }
     else if (action === 'getData') {
@@ -170,7 +170,6 @@ function doGet(e) {
 
 /**
  * MASTER LIST OF CATEGORIES
- * This is the source of truth for the Builder AND the Theme Matrix Logic
  */
 function getWebsiteTypes() {
   return {
@@ -181,7 +180,6 @@ function getWebsiteTypes() {
       { "name": "Self-Improvement", "subcategories": ["Productivity", "Motivation", "Goals", "Personal Dev"], "color": "#16a085" },
       { "name": "Technology", "subcategories": ["Gadgets", "Software", "AI", "Coding"], "color": "#3498db" },
       { "name": "Food", "subcategories": ["Recipes", "Reviews", "Diet", "Baking"], "color": "#e74c3c" }
-      // Add more here...
     ]
   };
 }
@@ -201,22 +199,35 @@ function saveConfigToSheet(config) {
 }
 
 function getSavedConfig() {
+  // DEFAULT CONFIG (Used if Sheet is empty)
+  const defaultConfig = { 
+    type: "Home Improvement", 
+    title: "My New Website", 
+    color: "#333333" 
+  };
+
   try {
     const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(SETTINGS_SHEET);
-    if (!sheet) return { type: "Home Improvement", title: "Default Site", color: "#333" };
+    if (!sheet) return defaultConfig;
     
     const data = sheet.getDataRange().getValues();
+    if (data.length < 2) return defaultConfig; // No data rows
+
     const config = {};
     for (let i = 1; i < data.length; i++) config[data[i][0]] = data[i][1];
-    return config;
+    
+    // Merge with defaults to prevent undefined
+    return { ...defaultConfig, ...config };
   } catch (e) {
-    return { type: "Home Improvement", title: "Error Loading Config", color: "#e74c3c" };
+    return defaultConfig;
   }
 }
 
 function getBloggerData() {
   try {
     const response = UrlFetchApp.fetch(BLOG_FEED_URL, { muteHttpExceptions: true });
+    if (response.getResponseCode() !== 200) return [];
+    
     const json = JSON.parse(response.getContentText());
     return (json.feed.entry || []).map(p => {
       let img = 'https://placehold.co/600x400/eee/999?text=No+Image';
@@ -256,7 +267,7 @@ cat > core/blogger-theme/theme.xml <<'ENDOFFILE'
   <link href='https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css' rel='stylesheet'/>
   <b:skin><![CDATA[ 
     body { background-color: #f8f9fa; font-family: 'Segoe UI', sans-serif; }
-    #app-header { padding: 60px 0 40px; color: white; text-align: center; margin-bottom: 40px; transition: background 0.3s; }
+    #app-header { padding: 80px 0 40px; color: white; text-align: center; margin-bottom: 40px; transition: background 0.3s; }
     .matrix-container { max-width: 400px; margin: -30px auto 30px; }
     .matrix-input-group { background: white; padding: 8px; border-radius: 50px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: flex; }
     .matrix-input { border: none; outline: none; flex-grow: 1; padding: 5px 15px; font-size: 1.1rem; }
@@ -281,7 +292,7 @@ cat > core/blogger-theme/theme.xml <<'ENDOFFILE'
   <!-- Header -->
   <header id="app-header" style="background-color: #333;">
     <div class="container">
-      <h1 class="display-4 fw-bold" id="app-title">...</h1>
+      <h1 class="display-4 fw-bold" id="app-title">Loading...</h1>
       <p class="lead opacity-75" id="app-subtitle">...</p>
     </div>
   </header>
@@ -290,7 +301,6 @@ cat > core/blogger-theme/theme.xml <<'ENDOFFILE'
   <div class="container matrix-container">
     <div class="matrix-input-group">
       <span class="ms-2 align-self-center text-muted"><i class="bi bi-grid-3x3-gap-fill"></i></span>
-      <!-- FIX: Self-closing input -->
       <input type="text" id="matrixInput" class="matrix-input" placeholder="Matrix Code (e.g. 1 or 2)" />
       <button class="btn-go" id="matrixBtn" onclick="runMatrix()">Go</button>
     </div>
@@ -334,20 +344,19 @@ cat > core/blogger-theme/theme.xml <<'ENDOFFILE'
 
         Promise.all([p1, p2, p3]).then(([configData, typesData, postsData]) => {
             
-            // Store data
-            siteConfig = configData;
+            // Safe Defaults if API fails
+            siteConfig = configData || { title: "My Site", type: "Home Improvement", color: "#333" };
             allTypes = typesData.website_types || [];
             allPosts = postsData || [];
 
-            // Determine Current Type (from Config)
+            // Determine Current Type
             const typeName = siteConfig.type || "Home Improvement";
             currentTypeConfig = allTypes.find(t => t.name === typeName);
 
             // Apply Theme
             applyTheme();
             
-            // Initial Render (Show all posts matching main category logic if needed, or just all)
-            // For simplicity, we show all posts initially
+            // Initial Render
             renderPosts(allPosts);
 
             document.getElementById('siteLoader').style.display = 'none';
@@ -359,14 +368,14 @@ cat > core/blogger-theme/theme.xml <<'ENDOFFILE'
     });
 
     function applyTheme() {
-        document.getElementById('app-title').innerText = siteConfig.title;
-        document.getElementById('app-subtitle').innerText = siteConfig.type;
+        document.getElementById('app-title').innerText = siteConfig.title || "My Website";
+        document.getElementById('app-subtitle').innerText = siteConfig.type || "Welcome";
         
         const color = siteConfig.color || '#333';
         document.getElementById('app-header').style.backgroundColor = color;
         document.getElementById('matrixBtn').style.backgroundColor = color;
         
-        // Render Subcategory Badges with Matrix Numbers
+        // Render Subcategory Badges
         if (currentTypeConfig && currentTypeConfig.subcategories) {
             const html = currentTypeConfig.subcategories.map((sub, i) => 
                 `<span class="badge bg-secondary badge-sub me-1 mb-1" onclick="filterByMatrix(${i+1})">[${i+1}] ${sub}</span>`
@@ -388,7 +397,6 @@ cat > core/blogger-theme/theme.xml <<'ENDOFFILE'
     function filterByMatrix(index) {
         if (!currentTypeConfig || !currentTypeConfig.subcategories) return;
         
-        // Array is 0-indexed, Matrix is 1-indexed
         const subName = currentTypeConfig.subcategories[index - 1];
         
         if (!subName) {
@@ -399,7 +407,6 @@ cat > core/blogger-theme/theme.xml <<'ENDOFFILE'
         // Filter Logic
         const filtered = allPosts.filter(p => {
             if (!p.labels) return false;
-            // Check if post labels include the subcategory name (case insensitive)
             return p.labels.some(l => l.toLowerCase() === subName.toLowerCase());
         });
 
@@ -417,7 +424,6 @@ cat > core/blogger-theme/theme.xml <<'ENDOFFILE'
              badges[index-1].classList.add('bg-primary');
         }
 
-        // Show alert toast/message
         const subtitle = document.getElementById('app-subtitle');
         subtitle.innerHTML = `Filtering: <strong>${subName}</strong> <a href="#" onclick="resetFilter(); return false;" class="text-white small">(Reset)</a>`;
     }
@@ -434,7 +440,7 @@ cat > core/blogger-theme/theme.xml <<'ENDOFFILE'
     function renderPosts(posts) {
         const grid = document.getElementById('content-area');
         if (!posts || posts.length === 0) {
-            grid.innerHTML = '<div class="col-12 text-center p-5"><h3>No results.</h3><p class="text-muted">Ensure your Blogger posts have the correct Labels.</p></div>';
+            grid.innerHTML = '<div class="col-12 text-center p-5"><h3>No posts found.</h3><p class="text-muted">Posts must have Labels that match the category names.</p></div>';
             return;
         }
 
@@ -464,7 +470,7 @@ cat > core/blogger-theme/theme.xml <<'ENDOFFILE'
         };
         const script = document.createElement('script');
         script.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'callback=' + callbackName;
-        script.onerror = () => { console.error("JSONP Error"); delete window[callbackName]; };
+        script.onerror = () => { console.error("JSONP Error"); delete window[callbackName]; callback(null); };
         document.body.appendChild(script);
     }
   //]]>
@@ -474,6 +480,10 @@ cat > core/blogger-theme/theme.xml <<'ENDOFFILE'
 ENDOFFILE
 
 echo
-echo "======================================================="
-echo "Setup Complete! (Unified Builder + Matrix Navigation)"
-echo "======================================================="
+echo "========================================"
+echo "Setup Complete! (Unified CMS Edition)"
+echo "========================================"
+echo "1. Push to GitHub."
+echo "2. Deploy Apps Script (New deployment -> Anyone)."
+echo "3. OPEN THE BUILDER URL and click 'Publish'."
+echo "4. Update theme.xml with the new URL."
