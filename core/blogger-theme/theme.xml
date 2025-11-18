@@ -41,7 +41,8 @@
             <div>
               <label class='selector-label'>Website Type:</label>
               <select class='selector-select' id='websiteTypeSelector'>
-                <option value="" disabled selected>Loading categories...</option>
+                <!-- FIX: Added explicit disabled='disabled' and selected='selected' -->
+                <option value="" disabled='disabled' selected='selected'>Loading categories...</option>
               </select>
             </div>
           </div>

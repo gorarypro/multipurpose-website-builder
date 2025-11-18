@@ -1,5 +1,27 @@
 #!/bin/bash
 
+echo "Multipurpose Website Builder Setup"
+echo "=================================="
+echo
+
+# --- CLEANUP OPTION ---
+read -p "⚠️  Do you want to delete all previous files and folders before starting? (y/n): " confirm
+if [[ $confirm == [yY] || $confirm == [yY][eE][sS] ]]; then
+    echo
+    echo "🧹 Cleaning up previous files..."
+    # Remove specific directories created by this script
+    rm -rf core website-types components templates docs
+    # Remove specific files created by this script
+    rm -f website-types.json README.md LICENSE
+    echo "✓ Cleanup complete."
+    echo
+else
+    echo
+    echo "Start setup..."
+    echo
+fi
+# --- END CLEANUP OPTION ---
+
 echo "Creating Multipurpose Website Builder structure..."
 echo
 
@@ -249,6 +271,7 @@ ENDOFFILE
 # Create core/blogger-theme/theme.xml
 # FIX: JavaScript code is now wrapped in CDATA to prevent SAXParseExceptions
 # FIX: Input tag now self-closed <input ... />
+# FIX: Option tags explicitly include required attributes for XML compliance
 cat > core/blogger-theme/theme.xml <<'ENDOFFILE'
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE html>
@@ -293,7 +316,8 @@ cat > core/blogger-theme/theme.xml <<'ENDOFFILE'
             <div>
               <label class='selector-label'>Website Type:</label>
               <select class='selector-select' id='websiteTypeSelector'>
-                <option value="" disabled selected>Loading categories...</option>
+                <!-- FIX: Added explicit disabled='disabled' and selected='selected' -->
+                <option value="" disabled='disabled' selected='selected'>Loading categories...</option>
               </select>
             </div>
           </div>
