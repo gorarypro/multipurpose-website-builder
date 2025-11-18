@@ -18,50 +18,51 @@
 
 <body>
 
+  <!-- MOVED HTML OUTSIDE OF WIDGET TO PREVENT RENDERING ISSUES -->
+
+  <!-- Matrix Code Input -->
+  <div class='container mt-4'>
+     <div class='input-group mb-3' style='max-width: 400px; margin: 0 auto;'>
+       <span class='input-group-text bg-primary text-white'><i class="bi bi-grid-3x3-gap-fill"></i></span>
+       <input type='text' class='form-control' id='matrixCodeInput' placeholder='Enter Matrix Code (e.g. 12 or 1-2)' />
+       <button class='btn btn-primary' type='button' onclick='applyMatrixCode()'>Go</button>
+     </div>
+  </div>
+
+  <!-- Website Type Selector -->
+  <div class='container website-type-selector'>
+    <div class='selector-group'>
+      <div>
+        <label class='selector-label'>Website Type:</label>
+        <select class='selector-select' id='websiteTypeSelector'>
+          <option value="" disabled='disabled' selected='selected'>Loading categories...</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Subcategory Display -->
+  <div class='container mb-4' id='subcategoryContainer'></div>
+
+  <!-- Loading Container -->
+  <div class='loading-container' id='loadingContainer' style='display:flex;'>
+    <div class='loading-spinner'/>
+    <div class='loading-text'>Loading content...</div>
+  </div>
+
+  <!-- Main Content -->
+  <section class='container' id='mainContent' style='display:none;'>
+    <!-- Content will be loaded here dynamically -->
+  </section>
+
+  <!-- REQUIRED BLOGGER SECTION (kept empty/minimal to satisfy parser) -->
   <b:section class='main' id='main' maxwidgets='1' showaddelement='no'>
-    <b:widget id='HTML1' locked='true' title='SPA Body' type='HTML' version='1'>
+    <b:widget id='HTML1' locked='true' title='Hidden Widget' type='HTML' version='1'>
       <b:widget-settings>
         <b:widget-setting name='content'/>
       </b:widget-settings>
       <b:includable id='main'>
-
-        <!-- Matrix Code Input -->
-        <div class='container mt-4'>
-           <div class='input-group mb-3' style='max-width: 400px; margin: 0 auto;'>
-             <span class='input-group-text bg-primary text-white'><i class="bi bi-grid-3x3-gap-fill"></i></span>
-             <!-- FIX: Input tag self-closed -->
-             <input type='text' class='form-control' id='matrixCodeInput' placeholder='Enter Matrix Code (e.g. 12 or 1-2)' />
-             <button class='btn btn-primary' type='button' onclick='applyMatrixCode()'>Go</button>
-           </div>
-        </div>
-
-        <!-- Website Type Selector -->
-        <div class='container website-type-selector'>
-          <div class='selector-group'>
-            <div>
-              <label class='selector-label'>Website Type:</label>
-              <select class='selector-select' id='websiteTypeSelector'>
-                <!-- FIX: Added explicit disabled='disabled' and selected='selected' -->
-                <option value="" disabled='disabled' selected='selected'>Loading categories...</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <!-- Subcategory Display -->
-        <div class='container mb-4' id='subcategoryContainer'></div>
-
-        <!-- Loading Container -->
-        <div class='loading-container' id='loadingContainer' style='display:flex;'>
-          <div class='loading-spinner'/>
-          <div class='loading-text'>Loading content...</div>
-        </div>
-
-        <!-- Main Content -->
-        <section class='container' id='mainContent' style='display:none;'>
-          <!-- Content will be loaded here dynamically -->
-        </section>
-
+        <!-- Empty -->
       </b:includable>
     </b:widget>
   </b:section>
@@ -79,30 +80,30 @@
       fetchWebsiteTypes();
       
       // Allow pressing Enter in matrix input
-      document.getElementById('matrixCodeInput').addEventListener('keypress', function (e) {
-        if (e.key === 'Enter') {
-          applyMatrixCode();
-        }
-      });
+      const matrixInput = document.getElementById('matrixCodeInput');
+      if (matrixInput) {
+        matrixInput.addEventListener('keypress', function (e) {
+          if (e.key === 'Enter') {
+            applyMatrixCode();
+          }
+        });
+      }
     });
     
     // --- MATRIX CODE LOGIC ---
     function applyMatrixCode() {
        const rawInput = document.getElementById('matrixCodeInput').value;
-       // Replace any separators with a standard separator or empty string
        let cleanInput = rawInput.replace(/[^0-9\-\.\s]/g, '');
        if(!cleanInput) return;
        
        let catIndex = -1;
        let subIndex = -1;
        
-       // Check for explicit separators
        if (cleanInput.match(/[\-\.\s]/)) {
            const parts = cleanInput.split(/[\-\.\s]+/);
-           catIndex = parseInt(parts[0]) - 1; // 1-based to 0-based
+           catIndex = parseInt(parts[0]) - 1;
            if(parts[1]) subIndex = parseInt(parts[1]) - 1;
        } else {
-           // Continuous string logic
            if (cleanInput.length > 0) {
               catIndex = parseInt(cleanInput.charAt(0)) - 1;
               if (cleanInput.length > 1) {
@@ -111,20 +112,15 @@
            }
        }
        
-       // Validate and Switch
        if (websiteTypesConfig[catIndex]) {
            const typeName = websiteTypesConfig[catIndex].name;
-           
-           // Update Dropdown
            const selector = document.getElementById('websiteTypeSelector');
            selector.value = typeName;
            
-           // Trigger change
            currentWebsiteType = typeName;
            updateSubcategories(currentWebsiteType);
            fetchData();
            
-           // Handle Subcategory highlighting (optional visual feedback)
            if(subIndex > -1 && websiteTypesConfig[catIndex].subcategories[subIndex]) {
                setTimeout(() => {
                   const badges = document.querySelectorAll('#subcategoryContainer .badge');
@@ -152,37 +148,44 @@
     function handleWebsiteTypes(data) {
       websiteTypesConfig = data.website_types;
       const selector = document.getElementById('websiteTypeSelector');
-      selector.innerHTML = ''; 
       
-      websiteTypesConfig.forEach((type, index) => {
-        const option = document.createElement('option');
-        option.value = type.name;
-        option.textContent = `[${index + 1}] ${type.name}`;
-        selector.appendChild(option);
-      });
-      
-      // Set default and fetch
-      currentWebsiteType = websiteTypesConfig[0].name;
-      updateSubcategories(currentWebsiteType);
-      fetchData();
+      if (selector) {
+        selector.innerHTML = ''; 
+        websiteTypesConfig.forEach((type, index) => {
+          const option = document.createElement('option');
+          option.value = type.name;
+          option.textContent = `[${index + 1}] ${type.name}`;
+          selector.appendChild(option);
+        });
+        
+        // Set default and fetch
+        currentWebsiteType = websiteTypesConfig[0].name;
+        updateSubcategories(currentWebsiteType);
+        fetchData();
+      }
     }
     
     function updateSubcategories(typeName) {
        const config = websiteTypesConfig.find(t => t.name === typeName);
        const container = document.getElementById('subcategoryContainer');
-       if(config && config.subcategories) {
-         container.innerHTML = config.subcategories.map((sub, idx) => 
-           `<span class="badge bg-secondary me-1 mb-1">[${idx + 1}] ${sub}</span>`
-         ).join('');
-       } else {
-         container.innerHTML = '';
+       if (container) {
+         if(config && config.subcategories) {
+           container.innerHTML = config.subcategories.map((sub, idx) => 
+             `<span class="badge bg-secondary me-1 mb-1">[${idx + 1}] ${sub}</span>`
+           ).join('');
+         } else {
+           container.innerHTML = '';
+         }
        }
     }
 
     // Fetch data for current website type
     function fetchData() {
-      document.getElementById('loadingContainer').style.display = 'flex';
-      document.getElementById('mainContent').style.display = 'none';
+      const loadingEl = document.getElementById('loadingContainer');
+      const contentEl = document.getElementById('mainContent');
+      
+      if(loadingEl) loadingEl.style.display = 'flex';
+      if(contentEl) contentEl.style.display = 'none';
       
       const oldScript = document.getElementById('jsonp-data-script');
       if (oldScript) oldScript.remove();
@@ -195,8 +198,12 @@
 
     // Handle data response
     function handleDataResponse(data) {
-      document.getElementById('loadingContainer').style.display = 'none';
-      document.getElementById('mainContent').style.display = 'block';
+      const loadingEl = document.getElementById('loadingContainer');
+      const contentEl = document.getElementById('mainContent');
+      
+      if(loadingEl) loadingEl.style.display = 'none';
+      if(contentEl) contentEl.style.display = 'block';
+      
       generateGenericHTML(data);
     }
 
@@ -204,22 +211,27 @@
       let html = '<div class="blog-container">';
       posts.forEach(function(post) {
         html += '<article class="blog-post">';
-        if(post.imageUrl) html += '<img src="' + post.imageUrl + '" style="max-height:200px; width:100%; object-fit:cover; border-radius:4px;">';
+        if(post.imageUrl) html += '<img src="' + post.imageUrl + '" style="max-height:200px; width:100%; object-fit:cover; border-radius:4px;" />';
         html += '<h3 class="mt-2">' + post.title + '</h3>';
         html += '<p>' + post.excerpt + '</p>';
         html += '<small class="text-muted">' + post.publishedDate + '</small>';
         html += '</article>';
       });
       html += '</div>';
-      document.getElementById('mainContent').innerHTML = html;
+      
+      const contentEl = document.getElementById('mainContent');
+      if (contentEl) contentEl.innerHTML = html;
     }
 
     // Website type selector change
-    document.getElementById('websiteTypeSelector').addEventListener('change', function() {
-      currentWebsiteType = this.value;
-      updateSubcategories(currentWebsiteType);
-      fetchData();
-    });
+    const selectorEl = document.getElementById('websiteTypeSelector');
+    if (selectorEl) {
+      selectorEl.addEventListener('change', function() {
+        currentWebsiteType = this.value;
+        updateSubcategories(currentWebsiteType);
+        fetchData();
+      });
+    }
   //]]>
   </script>
   <style>
