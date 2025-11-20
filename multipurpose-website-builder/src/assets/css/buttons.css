@@ -1,0 +1,11 @@
+.btn-pill {
+  border-radius: 999px;
+}
+.btn-soft-primary {
+  background-color: rgba(13,110,253,.08);
+  color: #0d6efd;
+  border-color: transparent;
+}
+.btn-soft-primary:hover {
+  background-color: rgba(13,110,253,.16);
+}

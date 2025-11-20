@@ -1,0 +1,9 @@
+/* Simple RTL adjustments */
+[dir="rtl"] body {
+  direction: rtl;
+  text-align: right;
+}
+[dir="rtl"] .navbar .navbar-nav {
+  margin-left: 0;
+  margin-right: auto;
+}

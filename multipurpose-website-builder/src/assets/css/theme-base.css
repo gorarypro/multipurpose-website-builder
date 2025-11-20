@@ -1,0 +1,12 @@
+/* Core theme styles */
+body.theme-body {
+  background-color: #ffffff;
+  color: #212529;
+}
+.product-card {
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.product-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 .5rem 1rem rgba(0,0,0,.08);
+}

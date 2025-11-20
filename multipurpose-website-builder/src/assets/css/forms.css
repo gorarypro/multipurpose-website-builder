@@ -1,0 +1,6 @@
+.form-control.is-invalid {
+  border-color: #dc3545;
+}
+.form-control.is-valid {
+  border-color: #28a745;
+}

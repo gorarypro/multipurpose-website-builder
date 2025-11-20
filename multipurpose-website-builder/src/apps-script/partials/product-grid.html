@@ -1,0 +1,23 @@
+<section id="products" class="py-5">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2 class="h3 mb-0">{{TEXT_PRODUCTS}}</h2>
+      <div class="d-flex gap-2">
+        <select id="productFilter" class="form-select form-select-sm" style="width:auto;">
+          <option value="all">{{TEXT_ALL}}</option>
+        </select>
+        <select id="productSort" class="form-select form-select-sm" style="width:auto;">
+          <option value="latest">{{TEXT_SORT_LATEST}}</option>
+          <option value="price-asc">{{TEXT_SORT_PRICE_ASC}}</option>
+          <option value="price-desc">{{TEXT_SORT_PRICE_DESC}}</option>
+        </select>
+      </div>
+    </div>
+    <div id="productGrid" class="row g-4">
+      <!-- JS will inject product cards -->
+    </div>
+    <div id="productsEmpty" class="text-center text-muted mt-4 d-none">
+      {{TEXT_NO_PRODUCTS}}
+    </div>
+  </div>
+</section>

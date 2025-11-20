@@ -1,0 +1,23 @@
+<footer class="py-4 border-top bg-white">
+  <div class="container">
+    <div class="row g-3 align-items-center">
+      <div class="col-md-6">
+        <div class="small text-muted">
+          © <span id="footerYear"></span> {{SITE_TITLE}} – {{TEXT_ALL_RIGHTS_RESERVED}}
+        </div>
+      </div>
+      <div class="col-md-6 text-md-end">
+        <a href="#hero" class="small text-decoration-none me-3">{{TEXT_BACK_TO_TOP}}</a>
+        <a href="{{PRIVACY_URL}}" class="small text-decoration-none me-2">{{TEXT_PRIVACY}}</a>
+        <a href="{{TERMS_URL}}" class="small text-decoration-none">{{TEXT_TERMS}}</a>
+      </div>
+    </div>
+  </div>
+</footer>
+<script>
+  (function() {
+    var y = new Date().getFullYear();
+    var el = document.getElementById('footerYear');
+    if (el) el.textContent = y;
+  })();
+</script>

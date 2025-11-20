@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html>
+<html b:version='2' expr:dir='data:blog.languageDirection'>
+  <head>
+    <?= include('head'); ?>
+  </head>
+  <body class='theme-body lang-<?= settings.default_language || "en" ?>'>
+
+    <!-- Navbar -->
+    <b:section id='navbar-section' class='<?= (settings.navbar_included === "yes") ? "" : "hide-comp" ?>'>
+      <?= include('navbar'); ?>
+    </b:section>
+
+    <!-- Hero -->
+    <b:section id='hero-section' class='<?= (settings.hero_included === "yes") ? "" : "hide-comp" ?>'>
+      <?= include('hero'); ?>
+    </b:section>
+
+    <!-- Products / Entries -->
+    <section id="products-section" class="<?= (settings.ecommerce_included === "yes") ? "" : "hide-comp" ?>">
+      <?= include('product-grid'); ?>
+    </section>
+
+    <!-- Cart & Wishlist -->
+    <section id="cart-section" class="<?= (settings.cart_included === "yes") ? "" : "hide-comp" ?>">
+      <?= include('cart'); ?>
+    </section>
+
+    <section id="wishlist-section" class="<?= (settings.wishlist_included === "yes") ? "" : "hide-comp" ?>">
+      <?= include('wishlist'); ?>
+    </section>
+
+    <!-- Popup -->
+    <section id="popup-section" class="<?= (settings.popup_included === "yes") ? "" : "hide-comp" ?>">
+      <?= include('popup'); ?>
+    </section>
+
+    <!-- Forms -->
+    <section id="contact-section">
+      <?= include('forms'); ?>
+    </section>
+
+    <!-- Testimonials -->
+    <section id="testimonials-section">
+      <?= include('testimonials'); ?>
+    </section>
+
+    <!-- Pricing -->
+    <section id="pricing-section">
+      <?= include('pricing'); ?>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+      <?= include('footer'); ?>
+    </footer>
+
+    <?= include('footer-scripts'); ?>
+  </body>
+</html>
