@@ -11,24 +11,23 @@
       .step { display: none; }
       .step.active { display: block; }
       .step-indicator { font-weight: 600; margin-bottom: 1rem; }
-      #themeXmlOutput {
-        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-        font-size: .8rem;
-      }
+      .step-title { display:flex; align-items:center; gap:.5rem; }
+      .step-title span.badge { font-size:.75rem; }
     </style>
   </head>
   <body>
     <div class="container">
-      <h1 class="mb-3">Multipurpose Website Builder</h1>
-      <p class="text-muted mb-4">
-        Configure your site step by step. Your configuration will be stored in Google Sheets.
-      </p>
+      <h1 class="mb-1">Multipurpose Website Builder</h1>
+      <p class="text-muted mb-4">Configure your site step by step. Your configuration is stored in Google Sheets.</p>
 
-      <div id="stepIndicator" class="step-indicator">Step 1 of 3</div>
+      <div id="stepIndicator" class="step-indicator">Step 1 of 4</div>
 
       <!-- Step 1: Branding -->
       <div class="step active" data-step="1">
-        <h4>Branding</h4>
+        <div class="step-title mb-3">
+          <h4 class="mb-0">Branding</h4>
+          <span class="badge bg-secondary">Step 1</span>
+        </div>
         <div class="mb-3">
           <label class="form-label">Site Title</label>
           <input type="text" class="form-control" id="siteTitle">
@@ -45,7 +44,10 @@
 
       <!-- Step 2: Language & Currency -->
       <div class="step" data-step="2">
-        <h4>Language &amp; Currency</h4>
+        <div class="step-title mb-3">
+          <h4 class="mb-0">Language &amp; Currency</h4>
+          <span class="badge bg-secondary">Step 2</span>
+        </div>
         <div class="mb-3">
           <label class="form-label">Language Mode</label>
           <select id="languageMode" class="form-select">
@@ -67,9 +69,12 @@
         </div>
       </div>
 
-      <!-- Step 3: Components & Ecommerce + Theme Name -->
+      <!-- Step 3: Components & Ecommerce -->
       <div class="step" data-step="3">
-        <h4>Components &amp; E-commerce</h4>
+        <div class="step-title mb-3">
+          <h4 class="mb-0">Components &amp; E-commerce</h4>
+          <span class="badge bg-secondary">Step 3</span>
+        </div>
 
         <div class="form-check form-switch mb-2">
           <input class="form-check-input" type="checkbox" id="navbarIncluded" checked>
@@ -98,42 +103,56 @@
             <label class="form-check-label" for="wishlistIncluded">Include Wishlist</label>
           </div>
         </div>
-
-        <hr class="my-4">
-
-        <h5>Theme Export</h5>
-        <div class="mb-3">
-          <label class="form-label">Theme Name</label>
-          <input type="text" class="form-control" id="themeName" placeholder="my-awesome-theme">
-          <div class="form-text">
-            Theme name must be unique. If it’s already used, you’ll be asked to choose another name.
-          </div>
-        </div>
-
       </div>
 
+      <!-- Step 4: Theme Export & GitHub -->
+      <div class="step" data-step="4">
+        <div class="step-title mb-3">
+          <h4 class="mb-0">Theme Export &amp; GitHub</h4>
+          <span class="badge bg-secondary">Step 4</span>
+        </div>
+
+        <p class="text-muted">
+          Choose a unique theme name. We’ll generate the Blogger theme XML and store it in the
+          <strong>Themes</strong> sheet. If GitHub integration is enabled in the <strong>Settings</strong> sheet,
+          you can also push the theme file to your repo.
+        </p>
+
+        <div class="mb-3">
+          <label class="form-label" for="themeName">Theme Name</label>
+          <input type="text" class="form-control" id="themeName" placeholder="My Awesome Theme">
+        </div>
+
+        <div class="form-check mb-3">
+          <input class="form-check-input" type="checkbox" id="pushGithub">
+          <label class="form-check-label" for="pushGithub">
+            Also push to GitHub (requires <code>github_*</code> settings)
+          </label>
+        </div>
+
+        <button class="btn btn-success" id="generateThemeBtn">
+          <i class="bi bi-cloud-arrow-down"></i>
+          Generate &amp; Save Theme
+        </button>
+
+        <div class="small text-muted mt-2" id="themeStatus"></div>
+      </div>
+
+      <!-- Navigation -->
       <div class="d-flex justify-content-between mt-4">
         <button class="btn btn-outline-secondary" id="prevBtn" disabled>Previous</button>
-        <div class="d-flex gap-2">
-          <button class="btn btn-secondary" id="saveBtn">Save</button>
-          <button class="btn btn-outline-primary" id="generateBtn" type="button">
-            <i class="bi bi-file-code me-1"></i> Generate Theme XML
-          </button>
+        <div>
+          <button class="btn btn-secondary me-2" id="saveBtn">Save Settings</button>
           <button class="btn btn-primary" id="nextBtn">Next</button>
         </div>
       </div>
 
       <div id="status" class="mt-3 text-muted"></div>
-
-      <div class="mt-4">
-        <label for="themeXmlOutput" class="form-label">Generated theme.xml (copy &amp; paste into Blogger):</label>
-        <textarea id="themeXmlOutput" class="form-control" rows="12" readonly></textarea>
-      </div>
     </div>
 
     <script>
       let currentStep = 1;
-      const maxStep = 3;
+      const maxStep = 4;
       const state = {};
 
       function showStep(step) {
@@ -161,11 +180,15 @@
 
       function saveSettings() {
         collectState();
-        document.getElementById('status').textContent = 'Saving...';
+        document.getElementById('status').textContent = 'Saving settings...';
 
         google.script.run
           .withSuccessHandler(function(res) {
-            document.getElementById('status').textContent = 'Saved.';
+            if (res && res.status === 'ok') {
+              document.getElementById('status').textContent = 'Settings saved.';
+            } else {
+              document.getElementById('status').textContent = 'Error saving settings.';
+            }
           })
           .withFailureHandler(function(err) {
             document.getElementById('status').textContent = 'Error: ' + err.message;
@@ -173,42 +196,54 @@
           .saveSettings(JSON.stringify(state));
       }
 
-      function generateThemeXml() {
-        const themeNameInput = document.getElementById('themeName');
-        const name = (themeNameInput.value || '').trim();
-        if (!name) {
-          alert('Please enter a theme name.');
-          themeNameInput.focus();
+      function generateThemeAndSave() {
+        const nameInput = document.getElementById('themeName');
+        const pushGithub = document.getElementById('pushGithub').checked;
+        const statusEl = document.getElementById('themeStatus');
+        const themeName = nameInput.value.trim();
+
+        if (!themeName) {
+          statusEl.textContent = 'Please enter a theme name.';
+          statusEl.classList.remove('text-success');
+          statusEl.classList.add('text-danger');
           return;
         }
 
-        // Save latest settings before generation
-        collectState();
-
-        document.getElementById('status').textContent =
-          'Generating theme "' + name + '" (checking name availability)...';
+        statusEl.textContent = 'Generating theme...';
+        statusEl.classList.remove('text-danger', 'text-success');
 
         google.script.run
           .withSuccessHandler(function(res) {
-            if (!res || res.status !== 'ok') {
-              if (res && res.code === 'NAME_TAKEN') {
-                alert('This theme name is already used. Please choose another name.');
-                document.getElementById('status').textContent = 'Theme name already used.';
-              } else {
-                alert('Error generating theme.');
-                document.getElementById('status').textContent = 'Error generating theme.';
-              }
+            if (!res) {
+              statusEl.textContent = 'Unknown error.';
+              statusEl.classList.add('text-danger');
               return;
             }
-            document.getElementById('themeXmlOutput').value = res.themeXml || '';
-            document.getElementById('status').textContent =
-              'Theme generated as "' + (res.themeName || name) + '". Copy the XML into Blogger.';
+            if (res.status === 'name-exists') {
+              statusEl.textContent = res.message || 'Theme name already exists. Choose another name.';
+              statusEl.classList.add('text-danger');
+              return;
+            }
+            if (res.status === 'ok') {
+              let msg = 'Theme "' + (res.themeName || themeName) + '" saved to Themes sheet.';
+              if (res.github && res.github.status === 'ok') {
+                msg += ' Also pushed to GitHub.';
+              } else if (res.github && res.github.status === 'error') {
+                msg += ' GitHub error: ' + (res.github.message || '');
+              }
+              statusEl.textContent = msg;
+              statusEl.classList.add('text-success');
+              return;
+            }
+            statusEl.textContent = res.message || 'Error generating theme.';
+            statusEl.classList.add('text-danger');
           })
           .withFailureHandler(function(err) {
-            alert('Error: ' + err.message);
-            document.getElementById('status').textContent = 'Error generating theme.';
+            statusEl.textContent = 'Error: ' + err.message;
+            statusEl.classList.add('text-danger');
           })
-          .generateThemeNamed(name);
+          .withUserObject(null)
+          .generateThemeAndSave(themeName, pushGithub);
       }
 
       document.getElementById('nextBtn').addEventListener('click', function() {
@@ -216,6 +251,7 @@
           currentStep++;
           showStep(currentStep);
         } else {
+          // On last step "Finish" just saves settings again.
           saveSettings();
         }
       });
@@ -228,13 +264,12 @@
       });
 
       document.getElementById('saveBtn').addEventListener('click', saveSettings);
-      document.getElementById('generateBtn').addEventListener('click', generateThemeXml);
 
       document.getElementById('ecommerceIncluded').addEventListener('change', function() {
         document.getElementById('ecommerceOptions').style.display = this.checked ? 'block' : 'none';
       });
 
-      // TODO: Load existing settings on startup via google.script.run.getSettings().
+      document.getElementById('generateThemeBtn').addEventListener('click', generateThemeAndSave);
     </script>
   </body>
 </html>
