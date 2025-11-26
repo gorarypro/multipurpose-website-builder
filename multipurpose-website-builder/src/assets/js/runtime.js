@@ -2,7 +2,7 @@
  * Core runtime engine.
  * NOTE: Set BASE_SCRIPT_URL to your deployed Apps Script web app URL.
  */
-const BASE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxBOuXmYcOpeijxpBMwEV5clzoUg1zYG6hwQ93AFj5FRjXE3rHPR5fdauhInRh4uB00BA/exec';
+const BASE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwyzCNs3LoUus8PpPCz8Zko-7PWN0-ivzTTLvXwxDs47wAyDi2w8NVJv_PrJqq3kFRGyA/exec';
 
 window.Runtime = {
   settings: null,
