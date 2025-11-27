@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html b:version='2' expr:dir='data:blog.languageDirection'>
+  <head>
+    &lt;meta charset=&#34;utf-8&#34;&gt;
+&lt;title&gt;&amp;lt;?= settings.site_title || &amp;#39;My Website&amp;#39; ?&amp;gt;&lt;/title&gt;
+&lt;meta name=&#34;viewport&#34; content=&#34;width=device-width, initial-scale=1&#34;&gt;
+&lt;link href=&#34;https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css&#34; rel=&#34;stylesheet&#34;&gt;
+&lt;link href=&#34;https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css&#34; rel=&#34;stylesheet&#34;&gt;
+
+
+&lt;link href=&#34;https://multipurpose-website-builder/assets/css/theme-base.css&#34; rel=&#34;stylesheet&#34;&gt;
+&lt;link href=&#34;https://multipurpose-website-builder/assets/css/rtl.css&#34; rel=&#34;stylesheet&#34; expr:if=&#39;data:blog.languageDirection == &#34;rtl&#34;&#39;&gt;
+
+&lt;style&gt;
+  body.theme-body {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, &#34;Segoe UI&#34;, sans-serif;
+  }
+  .hide-comp { display: none !important; }
+&lt;/style&gt;
+  </head>
+  <body class='theme-body lang-en'>
+
+    
+    <b:section id='navbar-section'>
+      &lt;nav class=&#34;navbar navbar-expand-lg navbar-light bg-white border-bottom sticky-top&#34;&gt;
+  &lt;div class=&#34;container&#34;&gt;
+    &lt;a class=&#34;navbar-brand fw-bold&#34; href=&#34;#top&#34; id=&#34;brandLogo&#34;&gt;
+      {{SITE_TITLE}}
+    &lt;/a&gt;
+    &lt;button class=&#34;navbar-toggler&#34; type=&#34;button&#34; data-bs-toggle=&#34;collapse&#34; data-bs-target=&#34;#mainNavbar&#34;
+      aria-controls=&#34;mainNavbar&#34; aria-expanded=&#34;false&#34; aria-label=&#34;Toggle navigation&#34;&gt;
+      &lt;span class=&#34;navbar-toggler-icon&#34;&gt;&lt;/span&gt;
+    &lt;/button&gt;
+    &lt;div class=&#34;collapse navbar-collapse&#34; id=&#34;mainNavbar&#34;&gt;
+      &lt;ul class=&#34;navbar-nav me-auto mb-2 mb-lg-0&#34; id=&#34;navLinks&#34;&gt;
+        &lt;li class=&#34;nav-item&#34;&gt;
+          &lt;a class=&#34;nav-link active&#34; aria-current=&#34;page&#34; href=&#34;#hero&#34;&gt;{{TEXT_HOME}}&lt;/a&gt;
+        &lt;/li&gt;
+        &lt;li class=&#34;nav-item&#34;&gt;
+          &lt;a class=&#34;nav-link&#34; href=&#34;#products&#34;&gt;{{TEXT_PRODUCTS}}&lt;/a&gt;
+        &lt;/li&gt;
+        &lt;li class=&#34;nav-item&#34;&gt;
+          &lt;a class=&#34;nav-link&#34; href=&#34;#contact&#34;&gt;{{TEXT_CONTACT}}&lt;/a&gt;
+        &lt;/li&gt;
+      &lt;/ul&gt;
+      &lt;div class=&#34;d-flex align-items-center gap-3&#34;&gt;
+        &lt;div id=&#34;langSwitcher&#34; class=&#34;d-none&#34;&gt;&lt;/div&gt;
+        &lt;button type=&#34;button&#34;
+                class=&#34;btn btn-sm btn-outline-secondary position-relative {{WISHLIST_INCLUDED}}&#34;
+                id=&#34;wishlistButton&#34;
+                data-bs-toggle=&#34;modal&#34; data-bs-target=&#34;#wishlistModal&#34;&gt;
+          &lt;i class=&#34;bi bi-heart&#34;&gt;&lt;/i&gt;
+          &lt;span class=&#34;position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger&#34;
+                id=&#34;wishlistCount&#34;&gt;0&lt;/span&gt;
+        &lt;/button&gt;
+        &lt;button type=&#34;button&#34;
+                class=&#34;btn btn-sm btn-primary position-relative {{CART_INCLUDED}}&#34;
+                id=&#34;cartButton&#34;
+                data-bs-toggle=&#34;modal&#34; data-bs-target=&#34;#cartModal&#34;&gt;
+          &lt;i class=&#34;bi bi-cart3&#34;&gt;&lt;/i&gt;
+          &lt;span class=&#34;position-absolute top-0 start-100 translate-middle badge rounded-pill bg-light text-dark&#34;
+                id=&#34;cartCount&#34;&gt;0&lt;/span&gt;
+        &lt;/button&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/nav&gt;
+    </b:section>
+
+    
+    <b:section id='hero-section'>
+      &lt;section id=&#34;hero&#34; class=&#34;py-5 py-md-6 bg-light&#34;&gt;
+  &lt;div class=&#34;container&#34;&gt;
+    &lt;div class=&#34;row align-items-center g-4&#34;&gt;
+      &lt;div class=&#34;col-lg-6&#34;&gt;
+        &lt;h1 class=&#34;display-5 fw-bold mb-3&#34; id=&#34;heroTitle&#34;&gt;
+          {{HERO_TITLE}}
+        &lt;/h1&gt;
+        &lt;p class=&#34;lead mb-4&#34; id=&#34;heroSubtitle&#34;&gt;
+          {{HERO_SUBTITLE}}
+        &lt;/p&gt;
+        &lt;div class=&#34;d-flex flex-wrap gap-2&#34;&gt;
+          &lt;a href=&#34;#products&#34; class=&#34;btn btn-primary btn-lg&#34;&gt;
+            {{TEXT_BROWSE_PRODUCTS}}
+          &lt;/a&gt;
+          &lt;a href=&#34;#contact&#34; class=&#34;btn btn-outline-secondary btn-lg&#34;&gt;
+            {{TEXT_CONTACT_US}}
+          &lt;/a&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class=&#34;col-lg-6 text-center&#34;&gt;
+        &lt;img src=&#34;{{HERO_IMAGE_URL}}&#34; id=&#34;heroImage&#34; alt=&#34;Hero&#34; class=&#34;img-fluid rounded shadow-sm&#34;&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/section&gt;
+    </b:section>
+
+    
+    <section id="products-section">
+      &lt;section id=&#34;products&#34; class=&#34;py-5&#34;&gt;
+  &lt;div class=&#34;container&#34;&gt;
+    &lt;div class=&#34;d-flex justify-content-between align-items-center mb-4&#34;&gt;
+      &lt;h2 class=&#34;h3 mb-0&#34;&gt;{{TEXT_PRODUCTS}}&lt;/h2&gt;
+      &lt;div class=&#34;d-flex gap-2&#34;&gt;
+        &lt;select id=&#34;productFilter&#34; class=&#34;form-select form-select-sm&#34; style=&#34;width:auto;&#34;&gt;
+          &lt;option value=&#34;all&#34;&gt;{{TEXT_ALL}}&lt;/option&gt;
+        &lt;/select&gt;
+        &lt;select id=&#34;productSort&#34; class=&#34;form-select form-select-sm&#34; style=&#34;width:auto;&#34;&gt;
+          &lt;option value=&#34;latest&#34;&gt;{{TEXT_SORT_LATEST}}&lt;/option&gt;
+          &lt;option value=&#34;price-asc&#34;&gt;{{TEXT_SORT_PRICE_ASC}}&lt;/option&gt;
+          &lt;option value=&#34;price-desc&#34;&gt;{{TEXT_SORT_PRICE_DESC}}&lt;/option&gt;
+        &lt;/select&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div id=&#34;productGrid&#34; class=&#34;row g-4&#34;&gt;
+      
+    &lt;/div&gt;
+    &lt;div id=&#34;productsEmpty&#34; class=&#34;text-center text-muted mt-4 d-none&#34;&gt;
+      {{TEXT_NO_PRODUCTS}}
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/section&gt;
+    </section>
+
+    
+    <section id="cart-section">
+      &lt;div class=&#34;modal fade&#34; id=&#34;cartModal&#34; tabindex=&#34;-1&#34; aria-labelledby=&#34;cartModalLabel&#34; aria-hidden=&#34;true&#34;&gt;
+  &lt;div class=&#34;modal-dialog modal-lg modal-dialog-scrollable&#34;&gt;
+    &lt;div class=&#34;modal-content&#34;&gt;
+      &lt;div class=&#34;modal-header&#34;&gt;
+        &lt;h5 class=&#34;modal-title&#34; id=&#34;cartModalLabel&#34;&gt;{{TEXT_CART}}&lt;/h5&gt;
+        &lt;button type=&#34;button&#34; class=&#34;btn-close&#34; data-bs-dismiss=&#34;modal&#34; aria-label=&#34;{{TEXT_CLOSE}}&#34;&gt;&lt;/button&gt;
+      &lt;/div&gt;
+      &lt;div class=&#34;modal-body&#34;&gt;
+        &lt;div id=&#34;cartContent&#34;&gt;&lt;/div&gt;
+        &lt;div id=&#34;cartEmpty&#34; class=&#34;text-center text-muted d-none&#34;&gt;
+          {{TEXT_CART_EMPTY}}
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class=&#34;modal-footer d-flex justify-content-between&#34;&gt;
+        &lt;div&gt;
+          &lt;span class=&#34;fw-semibold&#34;&gt;{{TEXT_TOTAL}}: &lt;/span&gt;
+          &lt;span id=&#34;cartTotal&#34;&gt;0 {{CURRENCY_SYMBOL}}&lt;/span&gt;
+        &lt;/div&gt;
+        &lt;div class=&#34;d-flex gap-2&#34;&gt;
+          &lt;button type=&#34;button&#34; class=&#34;btn btn-outline-secondary&#34; data-bs-dismiss=&#34;modal&#34;&gt;
+            {{TEXT_CONTINUE_SHOPPING}}
+          &lt;/button&gt;
+          &lt;button type=&#34;button&#34; class=&#34;btn btn-primary&#34; id=&#34;checkoutButton&#34;&gt;
+            {{TEXT_CHECKOUT}}
+          &lt;/button&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+    </section>
+
+    <section id="wishlist-section">
+      &lt;div class=&#34;modal fade&#34; id=&#34;wishlistModal&#34; tabindex=&#34;-1&#34; aria-labelledby=&#34;wishlistModalLabel&#34; aria-hidden=&#34;true&#34;&gt;
+  &lt;div class=&#34;modal-dialog modal-lg modal-dialog-scrollable&#34;&gt;
+    &lt;div class=&#34;modal-content&#34;&gt;
+      &lt;div class=&#34;modal-header&#34;&gt;
+        &lt;h5 class=&#34;modal-title&#34; id=&#34;wishlistModalLabel&#34;&gt;{{TEXT_WISHLIST}}&lt;/h5&gt;
+        &lt;button type=&#34;button&#34; class=&#34;btn-close&#34; data-bs-dismiss=&#34;modal&#34; aria-label=&#34;{{TEXT_CLOSE}}&#34;&gt;&lt;/button&gt;
+      &lt;/div&gt;
+      &lt;div class=&#34;modal-body&#34;&gt;
+        &lt;div id=&#34;wishlistContent&#34;&gt;&lt;/div&gt;
+        &lt;div id=&#34;wishlistEmpty&#34; class=&#34;text-center text-muted d-none&#34;&gt;
+          {{TEXT_WISHLIST_EMPTY}}
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class=&#34;modal-footer d-flex justify-content-between&#34;&gt;
+        &lt;button type=&#34;button&#34; class=&#34;btn btn-outline-secondary&#34; data-bs-dismiss=&#34;modal&#34;&gt;
+          {{TEXT_CLOSE}}
+        &lt;/button&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+    </section>
+
+    
+    <section id="popup-section">
+      &lt;div class=&#34;modal fade&#34; id=&#34;timedPopup&#34; tabindex=&#34;-1&#34; aria-labelledby=&#34;timedPopupLabel&#34; aria-hidden=&#34;true&#34;&gt;
+  &lt;div class=&#34;modal-dialog modal-dialog-centered modal-lg&#34;&gt;
+    &lt;div class=&#34;modal-content&#34;&gt;
+      &lt;div class=&#34;modal-header border-0&#34;&gt;
+        &lt;h5 class=&#34;modal-title&#34; id=&#34;timedPopupLabel&#34;&gt;{{POPUP_TITLE}}&lt;/h5&gt;
+        &lt;button type=&#34;button&#34; class=&#34;btn-close&#34; data-bs-dismiss=&#34;modal&#34; aria-label=&#34;{{TEXT_CLOSE}}&#34;&gt;&lt;/button&gt;
+      &lt;/div&gt;
+      &lt;div class=&#34;modal-body&#34; id=&#34;timedPopupContent&#34;&gt;
+        {{{POPUP_HTML}}}
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+    </section>
+
+    
+    <section id="contact-section">
+      &lt;section id=&#34;contact&#34; class=&#34;py-5 bg-light&#34;&gt;
+  &lt;div class=&#34;container&#34;&gt;
+    &lt;div class=&#34;row g-4&#34;&gt;
+      &lt;div class=&#34;col-lg-5&#34;&gt;
+        &lt;h2 class=&#34;h3 mb-3&#34;&gt;{{TEXT_CONTACT_US}}&lt;/h2&gt;
+        &lt;p class=&#34;text-muted&#34;&gt;{{TEXT_CONTACT_INTRO}}&lt;/p&gt;
+        &lt;ul class=&#34;list-unstyled small&#34;&gt;
+          &lt;li&gt;&lt;strong&gt;{{TEXT_PHONE}}:&lt;/strong&gt; {{CONTACT_PHONE}}&lt;/li&gt;
+          &lt;li&gt;&lt;strong&gt;{{TEXT_EMAIL}}:&lt;/strong&gt; {{CONTACT_EMAIL}}&lt;/li&gt;
+          &lt;li&gt;&lt;strong&gt;{{TEXT_WHATSAPP}}:&lt;/strong&gt; {{WHATSAPP_NUMBER}}&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/div&gt;
+      &lt;div class=&#34;col-lg-7&#34;&gt;
+        &lt;form id=&#34;contactForm&#34; novalidate&gt;
+          &lt;div class=&#34;mb-3&#34;&gt;
+            &lt;label class=&#34;form-label&#34; for=&#34;contactName&#34;&gt;{{TEXT_NAME}}&lt;/label&gt;
+            &lt;input type=&#34;text&#34; class=&#34;form-control&#34; id=&#34;contactName&#34; required&gt;
+          &lt;/div&gt;
+          &lt;div class=&#34;mb-3&#34;&gt;
+            &lt;label class=&#34;form-label&#34; for=&#34;contactEmail&#34;&gt;{{TEXT_EMAIL}}&lt;/label&gt;
+            &lt;input type=&#34;email&#34; class=&#34;form-control&#34; id=&#34;contactEmail&#34; required&gt;
+          &lt;/div&gt;
+          &lt;div class=&#34;mb-3&#34;&gt;
+            &lt;label class=&#34;form-label&#34; for=&#34;contactMessage&#34;&gt;{{TEXT_MESSAGE}}&lt;/label&gt;
+            &lt;textarea class=&#34;form-control&#34; id=&#34;contactMessage&#34; rows=&#34;4&#34; required&gt;&lt;/textarea&gt;
+          &lt;/div&gt;
+          &lt;div class=&#34;d-none&#34;&gt;
+            &lt;input type=&#34;text&#34; id=&#34;contactHp&#34; autocomplete=&#34;off&#34;&gt;
+          &lt;/div&gt;
+          &lt;button type=&#34;submit&#34; class=&#34;btn btn-primary&#34; id=&#34;contactSubmit&#34;&gt;
+            {{TEXT_SEND_MESSAGE}}
+          &lt;/button&gt;
+          &lt;div id=&#34;contactStatus&#34; class=&#34;mt-2 small text-muted&#34;&gt;&lt;/div&gt;
+        &lt;/form&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/section&gt;
+    </section>
+
+    
+    <section id="testimonials-section">
+      &lt;section id=&#34;testimonials&#34; class=&#34;py-5 bg-white&#34;&gt;
+  &lt;div class=&#34;container&#34;&gt;
+    &lt;div class=&#34;text-center mb-4&#34;&gt;
+      &lt;h2 class=&#34;h3&#34;&gt;{{TEXT_TESTIMONIALS}}&lt;/h2&gt;
+      &lt;p class=&#34;text-muted&#34;&gt;{{TEXT_TESTIMONIALS_SUBTITLE}}&lt;/p&gt;
+    &lt;/div&gt;
+    &lt;div class=&#34;row g-4&#34; id=&#34;testimonialsGrid&#34;&gt;
+      &lt;div class=&#34;col-md-4&#34;&gt;
+        &lt;div class=&#34;border rounded p-3 h-100&#34;&gt;
+          &lt;p class=&#34;mb-3 fst-italic&#34;&gt;
+            &#34;{{TEXT_TESTIMONIAL_SAMPLE}}&#34;
+          &lt;/p&gt;
+          &lt;div class=&#34;fw-semibold&#34;&gt;John Doe&lt;/div&gt;
+          &lt;div class=&#34;text-muted small&#34;&gt;{{TEXT_TESTIMONIAL_ROLE}}&lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/section&gt;
+    </section>
+
+    
+    <section id="pricing-section">
+      &lt;section id=&#34;pricing&#34; class=&#34;py-5 bg-light&#34;&gt;
+  &lt;div class=&#34;container&#34;&gt;
+    &lt;div class=&#34;text-center mb-4&#34;&gt;
+      &lt;h2 class=&#34;h3&#34;&gt;{{TEXT_PRICING}}&lt;/h2&gt;
+      &lt;p class=&#34;text-muted&#34;&gt;{{TEXT_PRICING_SUBTITLE}}&lt;/p&gt;
+    &lt;/div&gt;
+    &lt;div class=&#34;row g-4&#34; id=&#34;pricingGrid&#34;&gt;
+      &lt;div class=&#34;col-md-4&#34;&gt;
+        &lt;div class=&#34;card h-100 border&#34;&gt;
+          &lt;div class=&#34;card-body d-flex flex-column&#34;&gt;
+            &lt;h5 class=&#34;card-title&#34;&gt;{{TEXT_PLAN_BASIC}}&lt;/h5&gt;
+            &lt;h6 class=&#34;card-subtitle mb-2 text-muted&#34;&gt;{{TEXT_PLAN_BASIC_SUBTITLE}}&lt;/h6&gt;
+            &lt;p class=&#34;display-6 fw-bold my-3&#34;&gt;
+              29 {{CURRENCY_SYMBOL}}&lt;small class=&#34;fs-6 text-muted&#34;&gt;/{{TEXT_MONTH}}&lt;/small&gt;
+            &lt;/p&gt;
+            &lt;ul class=&#34;list-unstyled small mb-4 flex-grow-1&#34;&gt;
+              &lt;li&gt;{{TEXT_FEATURE_1}}&lt;/li&gt;
+              &lt;li&gt;{{TEXT_FEATURE_2}}&lt;/li&gt;
+            &lt;/ul&gt;
+            &lt;a href=&#34;#contact&#34; class=&#34;btn btn-outline-primary mt-auto&#34;&gt;
+              {{TEXT_CHOOSE_PLAN}}
+            &lt;/a&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/section&gt;
+    </section>
+
+    
+    <footer>
+      &lt;footer class=&#34;py-4 border-top bg-white&#34;&gt;
+  &lt;div class=&#34;container&#34;&gt;
+    &lt;div class=&#34;row g-3 align-items-center&#34;&gt;
+      &lt;div class=&#34;col-md-6&#34;&gt;
+        &lt;div class=&#34;small text-muted&#34;&gt;
+          ? &lt;span id=&#34;footerYear&#34;&gt;&lt;/span&gt; {{SITE_TITLE}} ? {{TEXT_ALL_RIGHTS_RESERVED}}
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class=&#34;col-md-6 text-md-end&#34;&gt;
+        &lt;a href=&#34;#hero&#34; class=&#34;small text-decoration-none me-3&#34;&gt;{{TEXT_BACK_TO_TOP}}&lt;/a&gt;
+        &lt;a href=&#34;{{PRIVACY_URL}}&#34; class=&#34;small text-decoration-none me-2&#34;&gt;{{TEXT_PRIVACY}}&lt;/a&gt;
+        &lt;a href=&#34;{{TERMS_URL}}&#34; class=&#34;small text-decoration-none&#34;&gt;{{TEXT_TERMS}}&lt;/a&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/footer&gt;
+&lt;script&gt;
+  (function() {
+    var y = new Date().getFullYear();
+    var el = document.getElementById(&#39;footerYear&#39;);
+    if (el) el.textContent = y;
+  })();
+&lt;/script&gt;
+    </footer>
+
+    &lt;script src=&#34;https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js&#34;&gt;&lt;/script&gt;
+
+
+&lt;script src=&#34;https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder/assets/js/runtime.js&#34;&gt;&lt;/script&gt;
+&lt;script src=&#34;https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder/assets/js/products.js&#34;&gt;&lt;/script&gt;
+&lt;script src=&#34;https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder/assets/js/variants.js&#34;&gt;&lt;/script&gt;
+&lt;script src=&#34;https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder/assets/js/i18n.js&#34;&gt;&lt;/script&gt;
+&lt;script src=&#34;https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder/assets/js/cart.js&#34;&gt;&lt;/script&gt;
+&lt;script src=&#34;https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder/assets/js/wishlist.js&#34;&gt;&lt;/script&gt;
+&lt;script src=&#34;https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder/assets/js/popup.js&#34;&gt;&lt;/script&gt;
+&lt;script src=&#34;https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder/assets/js/currency.js&#34;&gt;&lt;/script&gt;
+&lt;script src=&#34;https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder/assets/js/lazyload.js&#34;&gt;&lt;/script&gt;
+&lt;script src=&#34;https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder/assets/js/analytics.js&#34;&gt;&lt;/script&gt;
+&lt;script src=&#34;https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder/assets/js/seo.js&#34;&gt;&lt;/script&gt;
+&lt;script src=&#34;https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder/assets/js/gallery.js&#34;&gt;&lt;/script&gt;
+  </body>
+</html>
