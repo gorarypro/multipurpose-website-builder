@@ -8,48 +8,118 @@ window.Runtime = {
   settings: null,
   textMap: null,
   products: [],
-  init: async function() {
+
+  init: async function () {
     try {
+      // Load all data in sequence (or you can parallelize later)
       await this.loadSettings();
       await this.loadTextMap();
       await this.loadProducts();
-      I18n.init(this.textMap, this.settings);
-      Products.renderGrid(this.products, this.settings);
-      Cart.init();
-      Wishlist.init();
-      Popup.init(this.settings);
-      LazyLoad.init();
-      Analytics.init(this.settings);
-      SEO.applyBasic(this.settings);
+
+      // Initialize i18n and UI
+      if (typeof I18n !== 'undefined') {
+        I18n.init(this.textMap, this.settings);
+      }
+      if (typeof Products !== 'undefined') {
+        Products.renderGrid(this.products, this.settings);
+      }
+      if (typeof Cart !== 'undefined') {
+        Cart.init();
+      }
+      if (typeof Wishlist !== 'undefined') {
+        Wishlist.init();
+      }
+      if (typeof Popup !== 'undefined') {
+        Popup.init(this.settings);
+      }
+      if (typeof LazyLoad !== 'undefined') {
+        LazyLoad.init();
+      }
+      if (typeof Analytics !== 'undefined') {
+        Analytics.init(this.settings);
+      }
+      if (typeof SEO !== 'undefined') {
+        SEO.applyBasic(this.settings);
+      }
+
     } catch (err) {
       console.error('Runtime init error', err);
     }
   },
-  fetchJson: async function(action, extraParams) {
-    const params = new URLSearchParams({ action, ...(extraParams || {}) });
-    const url = BASE_SCRIPT_URL + '?' + params.toString();
-    const res = await fetch(url, { method: 'GET' });
-    return res.json();
+
+  /**
+   * JSONP fetch to bypass CORS.
+   * Calls GAS with ?action=...&callback=Runtime.__cb_XYZ
+   */
+  fetchJson: function (action, extraParams) {
+    return new Promise((resolve, reject) => {
+      // Create unique callback name on the Runtime object
+      const cbName = '__jsonp_cb_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+      const callbackFullName = 'Runtime.' + cbName;
+
+      const params = new URLSearchParams(
+        Object.assign(
+          { action: action, callback: callbackFullName },
+          extraParams || {}
+        )
+      );
+
+      const url = BASE_SCRIPT_URL + '?' + params.toString();
+
+      // Define the callback that GAS will call
+      window.Runtime[cbName] = function (data) {
+        try {
+          resolve(data);
+        } finally {
+          cleanup();
+        }
+      };
+
+      function cleanup() {
+        try {
+          delete window.Runtime[cbName];
+        } catch (e) { /* ignore */ }
+        if (script && script.parentNode) {
+          script.parentNode.removeChild(script);
+        }
+      }
+
+      const script = document.createElement('script');
+      script.src = url;
+      script.async = true;
+      script.onerror = function () {
+        cleanup();
+        reject(new Error('JSONP request failed: ' + url));
+      };
+
+      document.body.appendChild(script);
+    });
   },
-  loadSettings: async function() {
+
+  loadSettings: async function () {
     const res = await this.fetchJson('getSettings');
-    this.settings = res.settings || {};
+    this.settings = res && res.settings ? res.settings : {};
   },
-  loadTextMap: async function() {
+
+  loadTextMap: async function () {
     const res = await this.fetchJson('getTextMap');
-    this.textMap = res.map || {};
+    this.textMap = res && res.map ? res.map : {};
   },
-  loadProducts: async function() {
+
+  loadProducts: async function () {
     const res = await this.fetchJson('getProducts');
-    this.products = res.items || [];
+    this.products = res && res.items ? res.items : [];
   },
-  saveEntry: async function(entry) {
-    const res = await this.fetchJson('saveEntry', { entry: JSON.stringify(entry) });
+
+  saveEntry: async function (entry) {
+    const res = await this.fetchJson('saveEntry', {
+      entry: JSON.stringify(entry)
+    });
     return res;
   }
 };
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', function () {
   if (typeof window.Runtime !== 'undefined') {
     window.Runtime.init();
   }
