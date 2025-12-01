@@ -148,7 +148,7 @@ window.Runtime = {
     // Contact info
     setText('[data-setting="contact_phone"]', s.contact_phone || '');
     setText('[data-setting="contact_email"]', s.contact_email || '');
-    setText('[data-setting="contact_whatsapp"]', s.contact_whatsapp || s.contact_whatsapp || '');
+    setText('[data-setting="contact_whatsapp"]', s.contact_whatsapp || '');
 
     // Site title
     setText('[data-setting="site_title"]', s.site_title || 'My Website');
