@@ -1,382 +1,456 @@
-const SPREADSHEET_ID = 'PUT_YOUR_SHEET_ID_HERE';  // <- replace with your real Sheet ID
-const SETTINGS_SHEET = 'Settings';
-const ENTRIES_SHEET = 'Entries';
-const TEXTMAPPING_SHEET = 'TextMapping';
-const THEMES_SHEET = 'Themes';
+/** ========================================================
+ *  Multipurpose Website Builder – Backend (Code.gs)
+ *  SAFE VERSION — JSONP + Base64 theme XML
+ *  ========================================================
+ *
+ *  Frontend (runtime.js) calls this as JSONP:
+ *    BASE_SCRIPT_URL?action=getSettings&callback=Runtime.__jsonp_cb_...
+ *
+ *  doGet() detects ?callback=... and wraps JSON as:
+ *    callback({...});
+ */
 
-// ============= Entry Point =============
+/* ========================================================
+ *  GitHub Integration (optional)
+ * ======================================================== */
+// These constants are just defaults. In practice, we mainly
+// read github_* settings from the Settings sheet.
+const GITHUB_ENABLED = true;
+const GITHUB_REPO = 'gorarypro/multipurpose-website-builder';
+const GITHUB_BRANCH = 'main';
+
+/* ========================================================
+ *  Sheets & Blogger constants
+ * ======================================================== */
+const SPREADSHEET_ID    = '1JEqIVnhjDaz7otgNAikpQj7Trw1SRG_0-iSfYMLQwtA';
+const SETTINGS_SHEET    = 'Settings';
+const ENTRIES_SHEET     = 'Entries';
+const TEXTMAPPING_SHEET = 'TextMapping';
+const THEMES_SHEET      = 'Themes';
+
+// Fallback Blogger feed URL if none set in the Settings sheet
+const BLOG_FEED_URL     = 'https://eventsushi1.blogspot.com/feeds/posts/default?alt=json&max-results=50';
+
+/* ========================================================
+ * doGet — serves Builder UI or JSON/JSONP API
+ * ======================================================== */
 function doGet(e) {
   const params = e && e.parameter ? e.parameter : {};
   const action = params.action || '';
 
+  // No action → serve the Builder UI
   if (!action) {
-    // Serve Builder UI by default
     return HtmlService
       .createTemplateFromFile('Builder')
       .evaluate()
       .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
   }
 
+  // API actions
   switch (action) {
     case 'getSettings':
-      return jsonResponse(getSettings());
+      return json(getSettings(), e);
+
     case 'saveSettings':
-      return jsonResponse(saveSettings(params.config));
+      return json(saveSettings(params.config), e);
+
     case 'getProducts':
-      return jsonResponse(getProducts());
+      return json(getProducts(), e);
+
     case 'getTextMap':
-      return jsonResponse(getTextMapping());
+      return json(getTextMapping(), e);
+
     case 'saveEntry':
-      return jsonResponse(saveEntry(params.entry));
+      return json(saveEntry(params.entry), e);
+
     case 'generateTheme':
-      return jsonResponse(generateTheme());
-    // Step 4: builder calls this
-    case 'generateThemeAndSave':
-      return jsonResponse(generateThemeAndSave(params.themeName, params.pushToGitHub === 'true'));
+      return json(generateTheme(params.name), e);
+
+    case 'saveThemeXml':
+      return json(saveThemeXml(params.name, params.xml), e);
+
+    case 'pushThemeToGitHub':
+      return json(pushThemeToGitHub(params.name), e);
+
     default:
-      return jsonResponse({ status: 'error', message: 'Unknown action' });
+      return json(
+        { status: 'error', message: 'Unknown action: ' + action },
+        e
+      );
   }
 }
 
-function jsonResponse(obj) {
-  const output = ContentService.createTextOutput(JSON.stringify(obj || {}));
-  output.setMimeType(ContentService.MimeType.JSON);
-  return output;
+/**
+ * json(obj, e)
+ * - If e.parameter.callback exists → JSONP (callback(<json>);)
+ * - Else → normal JSON
+ */
+function json(obj, e) {
+  const callback =
+    e && e.parameter && typeof e.parameter.callback === 'string'
+      ? e.parameter.callback
+      : null;
+
+  const text = JSON.stringify(obj);
+
+  if (callback) {
+    // JSONP
+    return ContentService
+      .createTextOutput(callback + '(' + text + ');')
+      .setMimeType(ContentService.MimeType.JAVASCRIPT);
+  }
+
+  // Plain JSON
+  return ContentService
+    .createTextOutput(text)
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
-// ============= Settings =============
+/* ========================================================
+ * SETTINGS
+ * ======================================================== */
 function getSettings() {
-  const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(SETTINGS_SHEET);
+  const sheet = SpreadsheetApp
+    .openById(SPREADSHEET_ID)
+    .getSheetByName(SETTINGS_SHEET);
+
   const rows = sheet.getDataRange().getValues();
   const map = {};
+
+  // Row 0 = header, start from 1
   for (let i = 1; i < rows.length; i++) {
-    const row = rows[i];
-    const key = row[0];
-    const value = row[1];
+    const key = rows[i][0];
+    const value = rows[i][1];
     if (key) map[key] = value;
   }
+
   return { status: 'ok', settings: map };
 }
 
-function saveSettings(configJson) {
-  if (!configJson) {
-    return { status: 'error', message: 'Missing config JSON' };
-  }
-  const config = JSON.parse(configJson);
+function saveSettings(jsonConfig) {
+  const config = JSON.parse(jsonConfig);
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   const sheet = ss.getSheetByName(SETTINGS_SHEET);
-  const values = sheet.getDataRange().getValues();
+  const rows = sheet.getDataRange().getValues();
 
-  const rowIndexByKey = {};
-  for (let i = 1; i < values.length; i++) {
-    const key = values[i][0];
-    if (key) rowIndexByKey[key] = i + 1; // 1-based
+  const indexMap = {};
+  for (let i = 1; i < rows.length; i++) {
+    const key = rows[i][0];
+    if (key) indexMap[key] = i + 1; // 1-based
   }
 
-  Object.keys(config).forEach(function(key) {
-    const v = config[key];
-    if (rowIndexByKey[key]) {
-      sheet.getRange(rowIndexByKey[key], 2).setValue(v);
+  Object.keys(config).forEach(key => {
+    if (indexMap[key]) {
+      sheet.getRange(indexMap[key], 2).setValue(config[key]);
     } else {
-      const lastRow = sheet.getLastRow() + 1;
-      sheet.getRange(lastRow, 1).setValue(key);
-      sheet.getRange(lastRow, 2).setValue(v);
+      const last = sheet.getLastRow() + 1;
+      sheet.getRange(last, 1).setValue(key);
+      sheet.getRange(last, 2).setValue(config[key]);
     }
   });
 
   return { status: 'ok' };
 }
 
-// ============= Products / Entries =============
+/* ========================================================
+ * PRODUCTS (Blogger / WordPress)
+ * ======================================================== */
 function getProducts() {
-  const settingsObj = getSettings();
-  const settings = settingsObj.settings || {};
-  const source = settings.product_source || 'blogger'; // blogger|wordpress|woocommerce
+  const settings = getSettings().settings;
+  const source = settings.product_source || 'blogger';
 
   if (source === 'wordpress' || source === 'woocommerce') {
-    return { status: 'ok', items: fetchFromWordpress(settings) };
+    return { status: 'ok', items: fetchFromWordPress(settings) };
   }
+
+  // Default: Blogger
   return { status: 'ok', items: fetchFromBlogger(settings) };
 }
 
+/* ===== Blogger ===== */
 function fetchFromBlogger(settings) {
-  const feedUrl = settings.blogger_feed_url;
+  // Prefer Settings sheet value, fallback to BLOG_FEED_URL constant
+  const feedUrl = settings.blogger_feed_url || BLOG_FEED_URL;
   if (!feedUrl) return [];
 
   const resp = UrlFetchApp.fetch(feedUrl);
   const data = JSON.parse(resp.getContentText());
+
   const entries = (data.feed && data.feed.entry) || [];
-  return entries.map(function(entry) {
-    return normalizeBloggerEntry(entry);
-  });
+  return entries.map(entry => normalizeBloggerEntry(entry));
 }
 
 function normalizeBloggerEntry(entry) {
-  const title = entry.title ? entry.title.$t : '';
-  const content = entry.content ? entry.content.$t : '';
-  const labels = (entry.category || []).map(function(c) { return c.term; });
-  const image = extractImageFromHtml(content);
-  const price = extractPrice(content, labels);
-  const variants = extractVariantsFromLabels(labels);
+  const title   = entry.title  && entry.title.$t  ? entry.title.$t  : '';
+  const content = entry.content && entry.content.$t ? entry.content.$t : '';
+  const labels  = (entry.category || []).map(c => c.term);
 
   return {
-    id: entry.id ? entry.id.$t : '',
-    title: title,
-    content: content,
-    labels: labels,
-    image: image,
-    price: price,
-    variants: variants
+    id      : entry.id && entry.id.$t ? entry.id.$t : '',
+    title   : title,
+    content : content,
+    labels  : labels,
+    image   : extractImageFromHtml(content),
+    price   : extractPrice(content, labels),
+    variants: extractVariantsFromLabels(labels)
   };
 }
 
-// TODO: Implement WordPress / WooCommerce mapping if needed
-function fetchFromWordpress(settings) {
-  // const wpUrl = settings.wp_api_url;
-  // if (!wpUrl) return [];
-  // const resp = UrlFetchApp.fetch(wpUrl);
-  // const data = JSON.parse(resp.getContentText());
-  // return data.map(normalizeWordpressItem);
-  return [];
-}
-
 function extractImageFromHtml(html) {
-  const m = html && html.match(/<img[^>]+src=["']([^"']+)["']/i);
+  const m = html.match(/<img[^>]+src=["']([^"']+)["']/i);
   return m ? m[1] : '';
 }
 
 function extractPrice(content, labels) {
-  if (content) {
-    const m = content.match(/price[:=]\s*([\d.,]+)/i);
-    if (m) return m[1];
-  }
+  const m = content.match(/price[:=]\s*([\d.,]+)/i);
+  if (m) return m[1];
 
-  const priceLabel = (labels || []).find(function(l) {
-    return /^price[-:]/i.test(l);
-  });
-  if (priceLabel) {
-    return priceLabel.split(/[-:]/)[1];
-  }
-  return '';
+  const label = labels.find(l => /^price[-:]/i.test(l));
+  return label ? label.split(/[-:]/)[1] : '';
 }
 
 function extractVariantsFromLabels(labels) {
-  const variants = {};
-  (labels || []).forEach(function(label) {
-    const idx = label.indexOf(':');
-    if (idx > 0) {
-      const group = label.slice(0, idx).trim();
-      const option = label.slice(idx + 1).trim();
-      if (!variants[group]) variants[group] = [];
-      if (variants[group].indexOf(option) === -1) {
-        variants[group].push(option);
+  const map = {};
+  (labels || []).forEach(label => {
+    const p = label.indexOf(':');
+    if (p > 0) {
+      const group  = label.slice(0, p).trim();
+      const option = label.slice(p + 1).trim();
+      if (!map[group]) map[group] = [];
+      if (!map[group].includes(option)) map[group].push(option);
+    }
+  });
+  return map;
+}
+
+/* ===== WordPress (placeholder) ===== */
+function fetchFromWordPress(settings) {
+  // Example:
+  // const url  = settings.wp_api_url;
+  // if (!url) return [];
+  // const json = UrlFetchApp.fetch(url).getContentText();
+  // return JSON.parse(json).map(item => normalizeWordPress(item));
+  return [];
+}
+
+/* ========================================================
+ * TEXT MAPPING
+ * ======================================================== */
+function getTextMapping() {
+  const sheet = SpreadsheetApp
+    .openById(SPREADSHEET_ID)
+    .getSheetByName(TEXTMAPPING_SHEET);
+
+  const data = sheet.getDataRange().getValues();
+  const headers = data.shift();  // first row = header
+  const result = {};
+
+  data.forEach(row => {
+    const key = row[0];
+    if (!key) return;
+
+    result[key] = { default: row[1] };
+    for (let i = 2; i < headers.length; i++) {
+      const lang = headers[i];
+      if (lang) {
+        result[key][lang] = row[i];
       }
     }
   });
-  return variants;
-}
-
-// ============= Text Mapping (Multi-language) =============
-function getTextMapping() {
-  const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(TEXTMAPPING_SHEET);
-  const values = sheet.getDataRange().getValues();
-  if (!values || values.length === 0) {
-    return { status: 'ok', map: {} };
-  }
-
-  const headers = values[0]; // key | default | en | fr | ar ...
-  const result = {};
-  for (var r = 1; r < values.length; r++) {
-    const row = values[r];
-    const key = row[0];
-    if (!key) continue;
-    const entry = {};
-    entry.default = row[1];
-    for (var c = 2; c < headers.length; c++) {
-      const lang = headers[c];
-      if (!lang) continue;
-      entry[lang] = row[c];
-    }
-    result[key] = entry;
-  }
 
   return { status: 'ok', map: result };
 }
 
-// ============= Entries (Orders / Forms) =============
+/* ========================================================
+ * SAVE ENTRIES (orders / forms)
+ * ======================================================== */
 function saveEntry(entryJson) {
-  const entry = JSON.parse(entryJson || '{}');
-  const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(ENTRIES_SHEET);
-  const row = [
+  const entry = JSON.parse(entryJson);
+  const sheet = SpreadsheetApp
+    .openById(SPREADSHEET_ID)
+    .getSheetByName(ENTRIES_SHEET);
+
+  sheet.appendRow([
     new Date(),
-    entry.type || '',
+    entry.type      || '',
     entry.productId || '',
-    entry.title || '',
-    entry.variants || '',
-    entry.quantity || '',
-    entry.price || '',
-    entry.total || '',
-    entry.name || '',
-    entry.email || '',
-    entry.phone || '',
-    entry.message || ''
-  ];
-  sheet.appendRow(row);
+    entry.title     || '',
+    entry.variants  || '',
+    entry.quantity  || '',
+    entry.price     || '',
+    entry.total     || '',
+    entry.name      || '',
+    entry.email     || '',
+    entry.phone     || '',
+    entry.message   || ''
+  ]);
+
   return { status: 'ok' };
 }
 
-// ============= Theme Generation (Step 4 support) =============
-
-/**
- * Internal: Builds the theme XML using ThemeTemplate.html
- */
-function generateThemeXml_() {
-  const settingsObj = getSettings();
-  const settings = settingsObj.settings || {};
-  const template = HtmlService.createTemplateFromFile('ThemeTemplate');
-  template.settings = settings;
-  const xml = template.evaluate().getContent();
-  return xml;
-}
-
-/**
- * Old endpoint, kept for compatibility: just returns xml.
- */
-function generateTheme() {
-  const xml = generateThemeXml_();
-  return { status: 'ok', themeXml: xml };
-}
-
-/**
- * Ensure Themes sheet exists and has basic header.
- */
-function ensureThemesSheet_() {
-  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-  let sheet = ss.getSheetByName(THEMES_SHEET);
-  if (!sheet) {
-    sheet = ss.insertSheet(THEMES_SHEET);
-    sheet.appendRow(['timestamp', 'theme_name', 'xml']);
-  }
-  return sheet;
-}
-
-/**
- * Find row index (1-based) for a theme name in Themes sheet.
- * Returns 0 if not found.
- */
-function findThemeRowByName_(themeName) {
-  const sheet = ensureThemesSheet_();
-  const values = sheet.getDataRange().getValues();
-  for (var r = 1; r < values.length; r++) {
-    if (values[r][1] === themeName) {
-      return r + 1; // 1-based row index
-    }
-  }
-  return 0;
-}
-
-/**
- * Step 4 main function: generate XML, save into Themes sheet,
- * optionally push to GitHub.
- */
-function generateThemeAndSave(themeName, pushToGitHub) {
-  themeName = (themeName || '').trim();
-  if (!themeName) {
-    return { status: 'error', message: 'Theme name is required.' };
-  }
-
-  const sheet = ensureThemesSheet_();
-  const existingRow = findThemeRowByName_(themeName);
-  if (existingRow) {
-    return {
-      status: 'name-exists',
-      message: 'Theme name already exists. Please choose another name.'
-    };
-  }
-
-  const xml = generateThemeXml_();
-
-  const newRow = sheet.getLastRow() + 1;
-  sheet.getRange(newRow, 1).setValue(new Date());
-  sheet.getRange(newRow, 2).setValue(themeName);
-  sheet.getRange(newRow, 3).setValue(xml);
-
-  var githubResult = { status: 'skipped' };
-  if (pushToGitHub) {
-    githubResult = pushThemeToGitHub_(themeName, xml);
-  }
-
-  return {
-    status: 'ok',
-    themeName: themeName,
-    sheetRow: newRow,
-    github: githubResult
-  };
-}
-
-/**
- * Optional GitHub push.
- * Uses Settings keys:
- *   github_enabled (yes/no)
- *   github_repo    (e.g. user/repo)
- *   github_token   (PAT)
- *   github_branch  (e.g. themes or main)
- *
- * This is intentionally simple and defensive.
- */
-function pushThemeToGitHub_(themeName, xml) {
-  var settingsObj = getSettings();
-  var settings = settingsObj.settings || {};
-
-  var enabled = (settings.github_enabled || '').toString().toLowerCase();
-  if (enabled !== 'yes') {
-    return { status: 'skipped', message: 'GitHub integration not enabled in Settings.' };
-  }
-
-  var repo = settings.github_repo;
-  var token = settings.github_token;
-  var branch = settings.github_branch || 'main';
-
-  if (!repo || !token) {
-    return { status: 'error', message: 'Missing github_repo or github_token in Settings.' };
-  }
-
+/* ========================================================
+ * THEME GENERATION — SAFE BASE64 VERSION
+ * ======================================================== */
+function generateTheme(name) {
   try {
-    var contentBase64 = Utilities.base64Encode(xml);
-    var filePath = 'themes/' + themeName + '.xml';
+    const template = HtmlService.createTemplateFromFile('ThemeTemplate');
+    template.settings = getSettings().settings;
 
-    var url = 'https://api.github.com/repos/' + repo + '/contents/' + encodeURIComponent(filePath);
-    var options = {
-      method: 'put',
-      headers: {
-        Authorization: 'Bearer ' + token,
-        Accept: 'application/vnd.github+json'
-      },
-      muteHttpExceptions: true,
-      contentType: 'application/json',
-      payload: JSON.stringify({
-        message: 'Add/update theme ' + themeName,
-        content: contentBase64,
-        branch: branch
-      })
+    // Render full Blogger theme XML
+    const xml = template.evaluate().getContent();
+
+    // Encode before sending to frontend (IMPORTANT)
+    const encoded = Utilities.base64Encode(xml);
+
+    return {
+      status: 'ok',
+      xml   : encoded,
+      name  : name
     };
 
-    var response = UrlFetchApp.fetch(url, options);
-    var code = response.getResponseCode();
-    if (code >= 200 && code < 300) {
-      return { status: 'ok', message: 'Theme pushed to GitHub.' };
-    } else {
-      return {
-        status: 'error',
-        message: 'GitHub API error: ' + code + ' ' + response.getContentText()
-      };
-    }
-  } catch (e) {
-    return { status: 'error', message: 'Exception while pushing to GitHub: ' + e };
+  } catch (err) {
+    return { status: 'error', message: err.toString() };
   }
 }
 
-// ============= HTML Includes Helper =============
+/* ========================================================
+ * SAVE THEME XML TO SHEET
+ * ======================================================== */
+function saveThemeXml(name, xmlPlain) {
+  try {
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    let sheet = ss.getSheetByName(THEMES_SHEET);
+
+    if (!sheet) {
+      sheet = ss.insertSheet(THEMES_SHEET);
+      sheet.appendRow(['theme_name', 'xml', 'timestamp']);
+    }
+
+    sheet.appendRow([name, xmlPlain, new Date()]);
+    return { status: 'ok' };
+
+  } catch (err) {
+    return { status: 'error', message: err.toString() };
+  }
+}
+
+/* ========================================================
+ * PUSH THEME TO GITHUB (optional)
+ * ======================================================== */
+function pushThemeToGitHub(name) {
+  try {
+    const settings = getSettings().settings;
+
+    // Prefer sheet settings; fallback to constants
+    const enabledFlag = (settings.github_enabled || '').toString().toLowerCase();
+    const repo   = settings.github_repo   || GITHUB_REPO;
+    const branch = settings.github_branch || GITHUB_BRANCH;
+    const token  = settings.github_token  || null;
+
+    if (!token || !repo || enabledFlag === 'no') {
+      return { status: 'error', message: 'GitHub not configured' };
+    }
+
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const sheet = ss.getSheetByName(THEMES_SHEET);
+    if (!sheet) {
+      return { status: 'error', message: 'Themes sheet not found.' };
+    }
+
+    const rows = sheet.getDataRange().getValues();
+    const row = rows.find(r => r[0] === name);
+    if (!row) {
+      return { status: 'error', message: 'Theme not found in sheet.' };
+    }
+
+    const xml  = row[1];
+    const path = 'themes/' + name + '.xml';
+
+    const url = 'https://api.github.com/repos/' + repo + '/contents/' + path;
+
+    const body = {
+      message: 'Upload Blogger theme XML',
+      content: Utilities.base64Encode(xml),
+      branch : branch
+    };
+
+    const options = {
+      method : 'put',
+      headers: {
+        Authorization: 'token ' + token,
+        Accept      : 'application/vnd.github+json'
+      },
+      payload           : JSON.stringify(body),
+      muteHttpExceptions: true
+    };
+
+    const resp = UrlFetchApp.fetch(url, options);
+    const jsonResp = JSON.parse(resp.getContentText());
+
+    if (jsonResp.content && jsonResp.content.path) {
+      return { status: 'ok', path: jsonResp.content.path };
+    }
+
+    return { status: 'error', message: JSON.stringify(jsonResp) };
+
+  } catch (err) {
+    return { status: 'error', message: err.toString() };
+  }
+}
+
+/* ========================================================
+ * HTML Includes for Template()
+ * ======================================================== */
 function include(filename) {
   return HtmlService.createHtmlOutputFromFile(filename).getContent();
 }
+
+/* ========================================================
+ * Helpers
+ * ======================================================== */
+
+/**
+ * escapeXml(str)
+ * Safely escape user / settings content before injecting into XML.
+ * Use this INSIDE ThemeTemplate.html where needed via <?= escapeXml(...) ?>.
+ */
+function escapeXml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/**
+ * manualGithubAuth()
+ * - Run once from the Script Editor to force:
+ *   - external_request scope
+ *   - https://api.github.com URL whitelist
+ */
+function manualGithubAuth() {
+  UrlFetchApp.fetch('https://api.github.com');
+}
+
+/**
+ * testBloggerFetch()
+ * - Optional helper to test BLOG_FEED_URL / settings.blogger_feed_url.
+ * - Run manually from the Script Editor. Check the Logs for the status.
+ */
+function testBloggerFetch() {
+  const settings = getSettings().settings;
+  const feedUrl = settings.blogger_feed_url || BLOG_FEED_URL;
+  const resp = UrlFetchApp.fetch(feedUrl);
+  Logger.log(resp.getResponseCode());
+}
+
+function debugGithubSettings() {
+  const s = getSettings().settings;
+  Logger.log('github_repo = ' + s.github_repo);
+  Logger.log('github_token = ' + (s.github_token ? 'present' : 'MISSING'));
+  Logger.log('github_branch = ' + s.github_branch);
+  Logger.log('github_enabled = ' + s.github_enabled);
+}
+
