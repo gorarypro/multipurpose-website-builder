@@ -1,36 +1,43 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom sticky-top">
   <div class="container">
     <a class="navbar-brand fw-bold" href="#top" id="brandLogo">
-      {{SITE_TITLE}}
+      <?= settings.site_title || 'My Website' ?>
     </a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar"
-      aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
+
+    <button class="navbar-toggler" type="button"
+            data-bs-toggle="collapse" data-bs-target="#mainNavbar"
+            aria-controls="mainNavbar" aria-expanded="false"
+            aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
+
     <div class="collapse navbar-collapse" id="mainNavbar">
       <ul class="navbar-nav me-auto mb-2 mb-lg-0" id="navLinks">
         <li class="nav-item">
-          <a class="nav-link active" aria-current="page" href="#hero">{{TEXT_HOME}}</a>
+          <a class="nav-link active" aria-current="page" href="#hero" data-i18n="HOME"></a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="#products">{{TEXT_PRODUCTS}}</a>
+          <a class="nav-link" href="#products" data-i18n="PRODUCTS"></a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="#contact">{{TEXT_CONTACT}}</a>
+          <a class="nav-link" href="#contact" data-i18n="CONTACT"></a>
         </li>
       </ul>
+
       <div class="d-flex align-items-center gap-3">
         <div id="langSwitcher" class="d-none"></div>
+
         <button type="button"
-                class="btn btn-sm btn-outline-secondary position-relative {{WISHLIST_INCLUDED}}"
+                class="btn btn-sm btn-outline-secondary position-relative"
                 id="wishlistButton"
                 data-bs-toggle="modal" data-bs-target="#wishlistModal">
           <i class="bi bi-heart"></i>
           <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
                 id="wishlistCount">0</span>
         </button>
+
         <button type="button"
-                class="btn btn-sm btn-primary position-relative {{CART_INCLUDED}}"
+                class="btn btn-sm btn-primary position-relative"
                 id="cartButton"
                 data-bs-toggle="modal" data-bs-target="#cartModal">
           <i class="bi bi-cart3"></i>
