@@ -11,12 +11,12 @@ window.Runtime = {
 
   init: async function () {
     try {
-      // Load all data in sequence (or you can parallelize later)
+      // Load all data
       await this.loadSettings();
       await this.loadTextMap();
       await this.loadProducts();
 
-      // Initialize i18n and UI
+      // Initialize i18n and UI pieces, if present
       if (typeof I18n !== 'undefined') {
         I18n.init(this.textMap, this.settings);
       }
@@ -42,6 +42,11 @@ window.Runtime = {
         SEO.applyBasic(this.settings);
       }
 
+      // 🔔 VERY IMPORTANT:
+      // Let the theme know that settings/products/textMap are ready.
+      // Your theme script can listen to this to replace {{PLACEHOLDER}} text.
+      document.dispatchEvent(new Event('runtime_ready'));
+
     } catch (err) {
       console.error('Runtime init error', err);
     }
@@ -49,7 +54,7 @@ window.Runtime = {
 
   /**
    * JSONP fetch to bypass CORS.
-   * Calls GAS with ?action=...&callback=Runtime.__cb_XYZ
+   * Calls GAS with ?action=...&callback=Runtime.__jsonp_cb_XYZ
    */
   fetchJson: function (action, extraParams) {
     return new Promise((resolve, reject) => {
@@ -98,17 +103,17 @@ window.Runtime = {
 
   loadSettings: async function () {
     const res = await this.fetchJson('getSettings');
-    this.settings = res && res.settings ? res.settings : {};
+    this.settings = (res && res.settings) ? res.settings : {};
   },
 
   loadTextMap: async function () {
     const res = await this.fetchJson('getTextMap');
-    this.textMap = res && res.map ? res.map : {};
+    this.textMap = (res && res.map) ? res.map : {};
   },
 
   loadProducts: async function () {
     const res = await this.fetchJson('getProducts');
-    this.products = res && res.items ? res.items : [];
+    this.products = (res && res.items) ? res.items : [];
   },
 
   saveEntry: async function (entry) {
@@ -124,3 +129,4 @@ document.addEventListener('DOMContentLoaded', function () {
     window.Runtime.init();
   }
 });
+
