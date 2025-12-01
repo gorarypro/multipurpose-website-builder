@@ -1,30 +1,35 @@
-<div class="modal fade" id="cartModal" tabindex="-1" aria-labelledby="cartModalLabel" aria-hidden="true">
+<div class="modal fade" id="cartModal" tabindex="-1"
+     aria-labelledby="cartModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content">
+
       <div class="modal-header">
-        <h5 class="modal-title" id="cartModalLabel">{{TEXT_CART}}</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{TEXT_CLOSE}}"></button>
+        <h5 class="modal-title" id="cartModalLabel" data-i18n="TEXT_CART"></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
+
       <div class="modal-body">
         <div id="cartContent"></div>
-        <div id="cartEmpty" class="text-center text-muted d-none">
-          {{TEXT_CART_EMPTY}}
-        </div>
+        <div id="cartEmpty"
+             class="text-center text-muted d-none"
+             data-i18n="CART_EMPTY"></div>
       </div>
-      <div class="modal-footer d-flex justify-content-between">
+
+      <div class="modal-footer d-flex justify-content-between align-items-center">
         <div>
-          <span class="fw-semibold">{{TEXT_TOTAL}}: </span>
-          <span id="cartTotal">0 {{CURRENCY_SYMBOL}}</span>
+          <span class="fw-semibold" data-i18n="TEXT_TOTAL"></span>:
+          <span id="cartTotal">0</span>
         </div>
         <div class="d-flex gap-2">
           <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-            {{TEXT_CONTINUE_SHOPPING}}
+            <span data-i18n="TEXT_CONTINUE_SHOPPING"></span>
           </button>
           <button type="button" class="btn btn-primary" id="checkoutButton">
-            {{TEXT_CHECKOUT}}
+            <span data-i18n="CHECKOUT"></span>
           </button>
         </div>
       </div>
+
     </div>
   </div>
 </div>
