@@ -1,38 +1,58 @@
-<section id="contact" class="py-5 bg-light">
-  <div class="container">
-    <div class="row g-4">
-      <div class="col-lg-5">
-        <h2 class="h3 mb-3">{{TEXT_CONTACT_US}}</h2>
-        <p class="text-muted">{{TEXT_CONTACT_INTRO}}</p>
-        <ul class="list-unstyled small">
-          <li><strong>{{TEXT_PHONE}}:</strong> {{CONTACT_PHONE}}</li>
-          <li><strong>{{TEXT_EMAIL}}:</strong> {{CONTACT_EMAIL}}</li>
-          <li><strong>{{TEXT_WHATSAPP}}:</strong> {{WHATSAPP_NUMBER}}</li>
-        </ul>
+<section id='contact-section'>
+  <section id='contact' class='py-5 bg-light'>
+    <div class='container'>
+
+      <h2 class='h3 mb-3' data-i18n='TEXT_CONTACT_US'></h2>
+      <p class='text-muted' data-i18n='TEXT_CONTACT_INTRO'></p>
+
+      <div class='row g-4'>
+        <div class='col-lg-5'>
+          <ul class='list-unstyled small'>
+            <li>
+              <strong data-i18n='TEXT_PHONE'></strong>:
+              <span data-setting="contact_phone"></span>
+            </li>
+            <li>
+              <strong data-i18n='TEXT_EMAIL'></strong>:
+              <span data-setting="contact_email"></span>
+            </li>
+            <li>
+              <strong data-i18n='TEXT_WHATSAPP'></strong>:
+              <span data-setting="contact_whatsapp"></span>
+            </li>
+          </ul>
+        </div>
+
+        <div class='col-lg-7'>
+          <form id='contactForm' novalidate='novalidate'>
+            <div class='mb-3'>
+              <label class='form-label' for='contactName' data-i18n='TEXT_NAME'></label>
+              <input type='text' id='contactName' class='form-control' required='required' />
+            </div>
+
+            <div class='mb-3'>
+              <label class='form-label' for='contactEmail' data-i18n='TEXT_EMAIL'></label>
+              <input type='email' id='contactEmail' class='form-control' required='required' />
+            </div>
+
+            <div class='mb-3'>
+              <label class='form-label' for='contactMessage' data-i18n='TEXT_MESSAGE'></label>
+              <textarea id='contactMessage' class='form-control' rows='4' required='required'></textarea>
+            </div>
+
+            <div class='d-none'>
+              <input type='text' id='contactHp' autocomplete='off' />
+            </div>
+
+            <button type='submit' id='contactSubmit' class='btn btn-primary mt-2'>
+              <span data-i18n='TEXT_SEND_MESSAGE'></span>
+            </button>
+
+            <div id='contactStatus' class='mt-2 small text-muted'></div>
+          </form>
+        </div>
       </div>
-      <div class="col-lg-7">
-        <form id="contactForm" novalidate>
-          <div class="mb-3">
-            <label class="form-label" for="contactName">{{TEXT_NAME}}</label>
-            <input type="text" class="form-control" id="contactName" required>
-          </div>
-          <div class="mb-3">
-            <label class="form-label" for="contactEmail">{{TEXT_EMAIL}}</label>
-            <input type="email" class="form-control" id="contactEmail" required>
-          </div>
-          <div class="mb-3">
-            <label class="form-label" for="contactMessage">{{TEXT_MESSAGE}}</label>
-            <textarea class="form-control" id="contactMessage" rows="4" required></textarea>
-          </div>
-          <div class="d-none">
-            <input type="text" id="contactHp" autocomplete="off">
-          </div>
-          <button type="submit" class="btn btn-primary" id="contactSubmit">
-            {{TEXT_SEND_MESSAGE}}
-          </button>
-          <div id="contactStatus" class="mt-2 small text-muted"></div>
-        </form>
-      </div>
+
     </div>
-  </div>
+  </section>
 </section>
