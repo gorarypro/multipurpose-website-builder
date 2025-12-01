@@ -1,21 +1,26 @@
-<div class="modal fade" id="wishlistModal" tabindex="-1" aria-labelledby="wishlistModalLabel" aria-hidden="true">
+<div class="modal fade" id="wishlistModal" tabindex="-1"
+     aria-labelledby="wishlistModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content">
+
       <div class="modal-header">
-        <h5 class="modal-title" id="wishlistModalLabel">{{TEXT_WISHLIST}}</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{TEXT_CLOSE}}"></button>
+        <h5 class="modal-title" id="wishlistModalLabel" data-i18n="TEXT_WISHLIST"></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
+
       <div class="modal-body">
         <div id="wishlistContent"></div>
-        <div id="wishlistEmpty" class="text-center text-muted d-none">
-          {{TEXT_WISHLIST_EMPTY}}
-        </div>
+        <div id="wishlistEmpty"
+             class="text-center text-muted d-none"
+             data-i18n="TEXT_WISHLIST_EMPTY"></div>
       </div>
+
       <div class="modal-footer d-flex justify-content-between">
         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-          {{TEXT_CLOSE}}
+          <span data-i18n="TEXT_CLOSE"></span>
         </button>
       </div>
+
     </div>
   </div>
 </div>
