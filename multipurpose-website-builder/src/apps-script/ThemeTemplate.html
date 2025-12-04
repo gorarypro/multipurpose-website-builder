@@ -36,17 +36,17 @@
     </section>
 
     <!-- Forms -->
-    <section id="contact-section">
+    <section id="contact-section" class="<?= (settings.forms_included === "yes") ? "" : "hide-comp" ?>">
       <?= include('forms'); ?>
     </section>
 
     <!-- Testimonials -->
-    <section id="testimonials-section">
+    <section id="testimonials-section" class="<?= (settings.testimonials_included === "yes") ? "" : "hide-comp" ?>">
       <?= include('testimonials'); ?>
     </section>
 
     <!-- Pricing -->
-    <section id="pricing-section">
+    <section id="pricing-section" class="<?= (settings.pricing_included === "yes") ? "" : "hide-comp" ?>">
       <?= include('pricing'); ?>
     </section>
 
@@ -54,6 +54,9 @@
     <footer>
       <?= include('footer'); ?>
     </footer>
+
+    <!-- Floating cart / wishlist / WhatsApp (Event Sushi style) -->
+    <?= (settings.floating_buttons_included === "yes") ? include('floating-actions') : "" ?>
 
     <?= include('footer-scripts'); ?>
   </body>
