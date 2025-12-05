@@ -1,43 +1,90 @@
-<?= '<?xml version="1.0" encoding="UTF-8" ?>' ?>
-<html
-  b:version='2'
-  expr:dir='data:blog.languageDirection'
-  xmlns='http://www.w3.org/1999/xhtml'
-  xmlns:b='http://www.google.com/2005/gml/b'
-  xmlns:data='http://www.google.com/2005/gml/data'
-  xmlns:expr='http://www.google.com/2005/gml/expr'
->
+<?= '<' + '?xml version="1.0" encoding="UTF-8" ?' + '>' ?>
+<html b:version='2' expr:dir='data:blog.languageDirection' xmlns='http://www.w3.org/1999/xhtml' xmlns:b='http://www.google.com/2005/gml/b' xmlns:data='http://www.google.com/2005/gml/data' xmlns:expr='http://www.google.com/2005/gml/expr'>
+
   <head>
     <meta charset='utf-8'/>
-    <title><?= escapeXml(settings.site_title || 'My Website') ?></title>
+    <title>&lt;?= settings.site_title || &#39;My Website&#39; ?&gt;</title>
     <meta content='width=device-width, initial-scale=1' name='viewport'/>
 
-    <!-- CSS -->
-    <link
-      href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css'
-      rel='stylesheet'
-    />
-    <link
-      href='https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css'
-      rel='stylesheet'
-    />
+    <link href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css' rel='stylesheet'/>
+    <link href='https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css' rel='stylesheet'/>
 
-    <link
-      href='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/css/theme-base.css'
-      rel='stylesheet'
-    />
-    <link
-      expr:if='data:blog.languageDirection == "rtl"'
-      href='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/css/rtl.css'
-      rel='stylesheet'
-    />
+    <link href='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/css/theme-base.css' rel='stylesheet'/>
+    <link expr:if='data:blog.languageDirection == &quot;rtl&quot;' href='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/css/rtl.css' rel='stylesheet'/>
 
-    <style>
-      body.theme-body {
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      }
-      .hide-comp { display: none !important; }
-    </style>
+<style>
+  body.theme-body {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;
+  }
+
+  .hide-comp {
+    display: none !important;
+  }
+
+  /* Floating action buttons (Cart, Wishlist, WhatsApp) */
+  .floating-btn {
+    position: fixed;
+    right: 16px;
+    z-index: 1050;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #ffffff;
+    border: 1px solid rgba(0,0,0,0.08);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+  }
+
+  .floating-btn i {
+    font-size: 1.4rem;
+  }
+
+  .floating-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(0,0,0,0.18);
+  }
+
+  /* Positions */
+  .floating-cart {
+    bottom: 112px; /* Cart button */
+  }
+
+  .floating-wishlist {
+    bottom: 176px; /* Wishlist above cart */
+  }
+
+  .floating-whatsapp {
+    bottom: 48px; /* WhatsApp at the bottom */
+    background-color: #25D366;
+    color: #ffffff;
+    border: none;
+  }
+
+  .floating-whatsapp i {
+    font-size: 1.6rem;
+  }
+
+  /* Counter badge on floating buttons */
+  .floating-btn .icon-count {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 4px;
+    border-radius: 999px;
+    background-color: #dc3545;
+    color: #ffffff;
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+</style>
 
     <b:skin><![CDATA[
 
@@ -62,109 +109,102 @@ a,
   display: none !important;
 }
 
-/* Optional: adjust top padding slightly */
-body.theme-body {
-  padding-top: 0.5rem;
-}
-
     ]]></b:skin>
   </head>
 
-  <body class='theme-body lang-<?= escapeXml(settings.default_language || "en") ?>'>
+  <body class='theme-body lang-en'>
+    
+      <!-- SIMPLE NAVBAR WITH CART & WISHLIST -->
+    <nav class='navbar navbar-expand-lg navbar-light bg-white border-bottom mb-3'>
+      <div class='container'>
 
-    <!-- NAVBAR SECTION (Blogger widget area) -->
-    <b:section
-      id='navbar-section'
-      class='<?= (settings.navbar_included === "no") ? "hide-comp" : "" ?>'
-    />
+        <!-- Brand / site title -->
+        <a class='navbar-brand' href='#hero'>
+          <span data-setting='site_title'/> 
+        </a>
 
-    <!-- HERO SECTION (Blogger widget area) -->
-    <b:section
-      id='hero-section'
-      class='<?= (settings.hero_included === "no") ? "hide-comp" : "" ?>'
-    />
+        <div class='ms-auto d-flex gap-2'>
+
+          <!-- Cart button -->
+          <button class='btn btn-outline-secondary position-relative' data-bs-target='#cartModal' data-bs-toggle='modal' type='button'>
+            <i class='bi bi-cart'/>
+
+            <!-- Cart count badge (Cart.js updates #cartCount) -->
+            <span class='position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger' id='cartCount'>0</span>
+          </button>
+
+          <!-- Wishlist button -->
+          <button class='btn btn-outline-secondary position-relative' data-bs-target='#wishlistModal' data-bs-toggle='modal' type='button'>
+            <i class='bi bi-heart'/>
+
+            <!-- Wishlist count badge (Wishlist.js updates #wishlistCount) -->
+            <span class='position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger' id='wishlistCount'>0</span>
+          </button>
+
+        </div>
+
+      </div>
+    </nav>
+
+
+    <!-- NAVBAR SECTION -->
+    <b:section class='' id='navbar-section'/>
+
+    <!-- HERO SECTION -->
+    <b:section class='' id='hero-section'/>
 
     <!-- PRODUCTS SECTION -->
-    <section
-      id='products-section'
-      class='<?= (settings.ecommerce_included === "yes") ? "" : "hide-comp" ?>'
-    >
+    <section class='' id='products-section'>
       <section class='py-5' id='products'>
         <div class='container'>
           <div class='d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2'>
-            <h2 class='h3 mb-0' data-i18n='TEXT_PRODUCTS'></h2>
+            <h2 class='h3 mb-0' data-i18n='TEXT_PRODUCTS'/>
             <div class='d-flex gap-2'>
               <select class='form-select form-select-sm' id='productFilter'>
-                <option data-i18n='TEXT_ALL' value='all'></option>
+                <option data-i18n='TEXT_ALL' value='all'/>
               </select>
               <select class='form-select form-select-sm' id='productSort'>
-                <option data-i18n='TEXT_SORT_LATEST' value='latest'></option>
-                <option data-i18n='TEXT_SORT_PRICE_ASC' value='price-asc'></option>
-                <option data-i18n='TEXT_SORT_PRICE_DESC' value='price-desc'></option>
+                <option data-i18n='TEXT_SORT_LATEST' value='latest'/>
+                <option data-i18n='TEXT_SORT_PRICE_ASC' value='price-asc'/>
+                <option data-i18n='TEXT_SORT_PRICE_DESC' value='price-desc'/>
               </select>
             </div>
           </div>
 
-          <div class='row g-4' id='productGrid'></div>
+          <div class='row g-4' id='productGrid'/>
 
-          <div
-            class='text-center text-muted mt-4 d-none'
-            data-i18n='TEXT_NO_PRODUCTS'
-            id='productsEmpty'
-          ></div>
+          <div class='text-center text-muted mt-4 d-none' data-i18n='TEXT_NO_PRODUCTS' id='productsEmpty'/>
         </div>
       </section>
     </section>
 
     <!-- CART MODAL -->
-    <section
-      id='cart-section'
-      class='<?= (settings.cart_included === "yes") ? "" : "hide-comp" ?>'
-    >
-      <div
-        aria-hidden='true'
-        aria-labelledby='cartModalLabel'
-        class='modal fade'
-        id='cartModal'
-        tabindex='-1'
-      >
+    <section class='' id='cart-section'>
+      <div aria-hidden='true' aria-labelledby='cartModalLabel' class='modal fade' id='cartModal' tabindex='-1'>
         <div class='modal-dialog modal-lg modal-dialog-scrollable'>
           <div class='modal-content'>
 
             <div class='modal-header'>
-              <h5 class='modal-title' data-i18n='TEXT_CART' id='cartModalLabel'></h5>
-              <button
-                aria-label='Close'
-                class='btn-close'
-                data-bs-dismiss='modal'
-                type='button'
-              ></button>
+              <h5 class='modal-title' data-i18n='TEXT_CART' id='cartModalLabel'/>
+              <button aria-label='Close' class='btn-close' data-bs-dismiss='modal' type='button'/>
             </div>
 
             <div class='modal-body'>
-              <div id='cartContent'></div>
-              <div
-                class='text-center text-muted d-none'
-                data-i18n='CART_EMPTY'
-                id='cartEmpty'
-              ></div>
+              <div id='cartContent'/>
+              <div class='text-center text-muted d-none' data-i18n='CART_EMPTY' id='cartEmpty'/>
             </div>
 
             <div class='modal-footer d-flex justify-content-between align-items-center'>
               <div>
-                <span class='fw-semibold' data-i18n='TEXT_TOTAL'></span>:
+                <span class='fw-semibold' data-i18n='TEXT_TOTAL'/>:
                 <span id='cartTotal'>0</span>
               </div>
               <div class='d-flex gap-2'>
-                <button
-                  class='btn btn-outline-secondary'
-                  data-bs-dismiss='modal'
-                  type='button'
-                >
-                  <span data-i18n='TEXT_CONTINUE_SHOPPING'></span>
+                <button class='btn btn-outline-secondary' data-bs-dismiss='modal' type='button'>
+                  <span data-i18n='TEXT_CONTINUE_SHOPPING'/>
                 </button>
                 <button class='btn btn-primary' id='checkoutButton' type='button'>
-                  <span data-i18n='CHECKOUT'></span>
+                  <span data-i18n='CHECKOUT'/>
                 </button>
               </div>
             </div>
@@ -175,46 +215,24 @@ body.theme-body {
     </section>
 
     <!-- WISHLIST MODAL -->
-    <section
-      id='wishlist-section'
-      class='<?= (settings.wishlist_included === "yes") ? "" : "hide-comp" ?>'
-    >
-      <div
-        aria-hidden='true'
-        aria-labelledby='wishlistModalLabel'
-        class='modal fade'
-        id='wishlistModal'
-        tabindex='-1'
-      >
+    <section class='' id='wishlist-section'>
+      <div aria-hidden='true' aria-labelledby='wishlistModalLabel' class='modal fade' id='wishlistModal' tabindex='-1'>
         <div class='modal-dialog modal-lg modal-dialog-scrollable'>
           <div class='modal-content'>
 
             <div class='modal-header'>
-              <h5 class='modal-title' data-i18n='TEXT_WISHLIST' id='wishlistModalLabel'></h5>
-              <button
-                aria-label='Close'
-                class='btn-close'
-                data-bs-dismiss='modal'
-                type='button'
-              ></button>
+              <h5 class='modal-title' data-i18n='TEXT_WISHLIST' id='wishlistModalLabel'/>
+              <button aria-label='Close' class='btn-close' data-bs-dismiss='modal' type='button'/>
             </div>
 
             <div class='modal-body'>
-              <div id='wishlistContent'></div>
-              <div
-                class='text-center text-muted d-none'
-                data-i18n='TEXT_WISHLIST_EMPTY'
-                id='wishlistEmpty'
-              ></div>
+              <div id='wishlistContent'/>
+              <div class='text-center text-muted d-none' data-i18n='TEXT_WISHLIST_EMPTY' id='wishlistEmpty'/>
             </div>
 
             <div class='modal-footer d-flex justify-content-between'>
-              <button
-                class='btn btn-outline-secondary'
-                data-bs-dismiss='modal'
-                type='button'
-              >
-                <span data-i18n='TEXT_CLOSE'></span>
+              <button class='btn btn-outline-secondary' data-bs-dismiss='modal' type='button'>
+                <span data-i18n='TEXT_CLOSE'/>
               </button>
             </div>
 
@@ -224,34 +242,20 @@ body.theme-body {
     </section>
 
     <!-- POPUP SECTION -->
-    <section
-      id='popup-section'
-      class='<?= (settings.popup_included === "yes") ? "" : "hide-comp" ?>'
-    >
-      <div
-        aria-hidden='true'
-        aria-labelledby='timedPopupLabel'
-        class='modal fade'
-        id='timedPopup'
-        tabindex='-1'
-      >
+    <section class='hide-comp' id='popup-section'>
+      <div aria-hidden='true' aria-labelledby='timedPopupLabel' class='modal fade' id='timedPopup' tabindex='-1'>
         <div class='modal-dialog modal-dialog-centered modal-lg'>
           <div class='modal-content'>
 
             <div class='modal-header border-0'>
               <h5 class='modal-title' id='timedPopupLabel'>
-                <?= escapeXml(settings.popup_title || '') ?>
+                &lt;?= settings.popup_title || &#39;&#39; ?&gt;
               </h5>
-              <button
-                aria-label='Close'
-                class='btn-close'
-                data-bs-dismiss='modal'
-                type='button'
-              ></button>
+              <button aria-label='Close' class='btn-close' data-bs-dismiss='modal' type='button'/>
             </div>
 
             <div class='modal-body' id='timedPopupContent'>
-              <?= settings.popup_html || '' ?>
+              &lt;?!= settings.popup_html || &#39;&#39; ?&gt;
             </div>
 
           </div>
@@ -260,30 +264,27 @@ body.theme-body {
     </section>
 
     <!-- CONTACT SECTION -->
-    <section
-      id='contact-section'
-      class='<?= (settings.forms_included === "yes") ? "" : "hide-comp" ?>'
-    >
+    <section id='contact-section'>
       <section class='py-5 bg-light' id='contact'>
         <div class='container'>
 
-          <h2 class='h3 mb-3' data-i18n='TEXT_CONTACT_US'></h2>
-          <p class='text-muted' data-i18n='TEXT_CONTACT_INTRO'></p>
+          <h2 class='h3 mb-3' data-i18n='TEXT_CONTACT_US'/>
+          <p class='text-muted' data-i18n='TEXT_CONTACT_INTRO'/>
 
           <div class='row g-4'>
             <div class='col-lg-5'>
               <ul class='list-unstyled small'>
                 <li>
-                  <strong data-i18n='TEXT_PHONE'></strong>:
-                  <span data-setting='contact_phone'></span>
+                  <strong data-i18n='TEXT_PHONE'/>:
+                  <span data-setting='contact_phone'/>
                 </li>
                 <li>
-                  <strong data-i18n='TEXT_EMAIL'></strong>:
-                  <span data-setting='contact_email'></span>
+                  <strong data-i18n='TEXT_EMAIL'/>:
+                  <span data-setting='contact_email'/>
                 </li>
                 <li>
-                  <strong data-i18n='TEXT_WHATSAPP'></strong>:
-                  <span data-setting='contact_whatsapp'></span>
+                  <strong data-i18n='TEXT_WHATSAPP'/>:
+                  <span data-setting='contact_whatsapp'/>
                 </li>
               </ul>
             </div>
@@ -291,37 +292,18 @@ body.theme-body {
             <div class='col-lg-7'>
               <form id='contactForm' novalidate='novalidate'>
                 <div class='mb-3'>
-                  <label class='form-label' data-i18n='TEXT_NAME' for='contactName'></label>
-                  <input
-                    class='form-control'
-                    id='contactName'
-                    required='required'
-                    type='text'
-                  />
+                  <label class='form-label' data-i18n='TEXT_NAME' for='contactName'/>
+                  <input class='form-control' id='contactName' required='required' type='text'/>
                 </div>
 
                 <div class='mb-3'>
-                  <label class='form-label' data-i18n='TEXT_EMAIL' for='contactEmail'></label>
-                  <input
-                    class='form-control'
-                    id='contactEmail'
-                    required='required'
-                    type='email'
-                  />
+                  <label class='form-label' data-i18n='TEXT_EMAIL' for='contactEmail'/>
+                  <input class='form-control' id='contactEmail' required='required' type='email'/>
                 </div>
 
                 <div class='mb-3'>
-                  <label
-                    class='form-label'
-                    data-i18n='TEXT_MESSAGE'
-                    for='contactMessage'
-                  ></label>
-                  <textarea
-                    class='form-control'
-                    id='contactMessage'
-                    required='required'
-                    rows='4'
-                  ></textarea>
+                  <label class='form-label' data-i18n='TEXT_MESSAGE' for='contactMessage'/>
+                  <textarea class='form-control' id='contactMessage' required='required' rows='4'/>
                 </div>
 
                 <div class='d-none'>
@@ -329,10 +311,10 @@ body.theme-body {
                 </div>
 
                 <button class='btn btn-primary mt-2' id='contactSubmit' type='submit'>
-                  <span data-i18n='TEXT_SEND_MESSAGE'></span>
+                  <span data-i18n='TEXT_SEND_MESSAGE'/>
                 </button>
 
-                <div class='mt-2 small text-muted' id='contactStatus'></div>
+                <div class='mt-2 small text-muted' id='contactStatus'/>
               </form>
             </div>
           </div>
@@ -342,20 +324,17 @@ body.theme-body {
     </section>
 
     <!-- TESTIMONIALS SECTION -->
-    <section
-      id='testimonials-section'
-      class='<?= (settings.testimonials_included === "yes") ? "" : "hide-comp" ?>'
-    >
+    <section id='testimonials-section'>
       <section class='py-5' id='testimonials'>
         <div class='container text-center'>
 
-          <h2 class='h3' data-i18n='TEXT_TESTIMONIALS'></h2>
-          <p class='text-muted' data-i18n='TEXT_TESTIMONIALS_SUBTITLE'></p>
+          <h2 class='h3' data-i18n='TEXT_TESTIMONIALS'/>
+          <p class='text-muted' data-i18n='TEXT_TESTIMONIALS_SUBTITLE'/>
 
           <div class='border rounded p-3 mt-4 mx-auto' style='max-width: 480px;'>
-            <p class='fst-italic' data-i18n='TEXT_TESTIMONIAL_SAMPLE'></p>
+            <p class='fst-italic' data-i18n='TEXT_TESTIMONIAL_SAMPLE'/>
             <div class='fw-semibold'>John Doe</div>
-            <div class='text-muted small' data-i18n='TEXT_TESTIMONIAL_ROLE'></div>
+            <div class='text-muted small' data-i18n='TEXT_TESTIMONIAL_ROLE'/>
           </div>
 
         </div>
@@ -363,33 +342,30 @@ body.theme-body {
     </section>
 
     <!-- PRICING SECTION -->
-    <section
-      id='pricing-section'
-      class='<?= (settings.pricing_included === "yes") ? "" : "hide-comp" ?>'
-    >
+    <section id='pricing-section'>
       <section class='py-5 bg-light' id='pricing'>
         <div class='container text-center'>
 
-          <h2 class='h3' data-i18n='TEXT_PRICING'></h2>
-          <p class='text-muted' data-i18n='TEXT_PRICING_SUBTITLE'></p>
+          <h2 class='h3' data-i18n='TEXT_PRICING'/>
+          <p class='text-muted' data-i18n='TEXT_PRICING_SUBTITLE'/>
 
           <div class='card mt-4 mx-auto' style='max-width: 420px;'>
             <div class='card-body'>
 
-              <h5 data-i18n='TEXT_PLAN_BASIC'></h5>
-              <p class='text-muted' data-i18n='TEXT_PLAN_BASIC_SUBTITLE'></p>
+              <h5 data-i18n='TEXT_PLAN_BASIC'/>
+              <p class='text-muted' data-i18n='TEXT_PLAN_BASIC_SUBTITLE'/>
 
               <p class='display-6 fw-bold'>
-                29 <span data-setting='currency_symbol'></span> /
-                <span data-i18n='TEXT_MONTH'></span>
+                29 <span data-setting='currency_symbol'/> /
+                <span data-i18n='TEXT_MONTH'/>
               </p>
 
               <ul class='list-unstyled'>
-                <li data-i18n='TEXT_FEATURE_1'></li>
-                <li data-i18n='TEXT_FEATURE_2'></li>
+                <li data-i18n='TEXT_FEATURE_1'/>
+                <li data-i18n='TEXT_FEATURE_2'/>
               </ul>
 
-              <a class='btn btn-outline-primary' data-i18n='TEXT_CHOOSE_PLAN' href='#contact'></a>
+              <a class='btn btn-outline-primary' data-i18n='TEXT_CHOOSE_PLAN' href='#contact'/>
 
             </div>
           </div>
@@ -398,128 +374,85 @@ body.theme-body {
       </section>
     </section>
 
+    
+        <!-- FLOATING ACTION BUTTONS (Cart, Wishlist, WhatsApp) -->
+    <!-- Floating Cart Button: opens the existing #cartModal -->
+    <div class='floating-btn floating-cart' data-bs-target='#cartModal' data-bs-toggle='modal' id='floatingCart'>
+      <i class='bi bi-cart3'/>
+      <span class='icon-count' id='floatingCartCount'>0</span>
+    </div>
+
+    <!-- Floating Wishlist Button: opens the existing #wishlistModal -->
+    <div class='floating-btn floating-wishlist' data-bs-target='#wishlistModal' data-bs-toggle='modal' id='floatingWishlist'>
+      <i class='bi bi-heart-fill'/>
+      <span class='icon-count' id='floatingWishlistCount'>0</span>
+    </div>
+
+    <!-- Floating WhatsApp Button: number comes from settings via {{WHATSAPP_NUMBER}} -->
+    <a class='floating-btn floating-whatsapp' href='https://wa.me/{{WHATSAPP_NUMBER}}' id='floatingWhatsapp' rel='noopener' target='_blank'>
+      <i class='bi bi-whatsapp'/>
+    </a>
+
+    
     <!-- FOOTER -->
     <footer class='py-4 border-top bg-white'>
       <div class='container d-flex flex-wrap justify-content-between align-items-center gap-2'>
         <div class='small text-muted'>
-          &#169; <span id='footerYear'></span>
-          <span data-setting='site_title'></span> &#8211;
-          <span data-i18n='TEXT_ALL_RIGHTS_RESERVED'></span>
+          &#169; <span id='footerYear'/>
+          <span data-setting='site_title'/> &#8211;
+          <span data-i18n='TEXT_ALL_RIGHTS_RESERVED'/>
         </div>
 
         <div class='small'>
-          <a class='text-decoration-none me-2' data-i18n='TEXT_BACK_TO_TOP' href='#hero'></a>
+          <a class='text-decoration-none me-2' data-i18n='TEXT_BACK_TO_TOP' href='#hero'/>
           |
-          <a
-            class='text-decoration-none mx-2'
-            data-i18n='TEXT_PRIVACY'
-            href='<?= escapeXml(settings.privacy_url || "#") ?>'
-          ></a>
+          <a class='text-decoration-none mx-2' data-i18n='TEXT_PRIVACY' href='#'/>
           |
-          <a
-            class='text-decoration-none ms-2'
-            data-i18n='TEXT_TERMS'
-            href='<?= escapeXml(settings.terms_url || "#") ?>'
-          ></a>
+          <a class='text-decoration-none ms-2' data-i18n='TEXT_TERMS' href='#'/>
         </div>
       </div>
     </footer>
 
-    <!-- SIMPLE FLOATING CART/WISHLIST/WHATSAPP -->
-    <div
-      class='floating-btn floating-cart'
-      id='floatingCart'
-      data-bs-toggle='modal'
-      data-bs-target='#cartModal'
-      style='position:fixed;right:16px;bottom:112px;z-index:1050;display:flex;align-items:center;justify-content:center;width:52px;height:52px;border-radius:50%;background:#fff;border:1px solid rgba(0,0,0,0.08);box-shadow:0 6px 16px rgba(0,0,0,0.15);cursor:pointer;'
-    >
-      <i class='bi bi-cart3'></i>
-      <span
-        class='icon-count'
-        id='floatingCartCount'
-        style='position:absolute;top:-6px;right:-6px;min-width:20px;height:20px;padding:0 4px;border-radius:999px;background:#dc3545;color:#fff;font-size:0.75rem;display:flex;align-items:center;justify-content:center;'
-      >
-        0
-      </span>
-    </div>
-
-    <div
-      class='floating-btn floating-wishlist'
-      id='floatingWishlist'
-      data-bs-toggle='modal'
-      data-bs-target='#wishlistModal'
-      style='position:fixed;right:16px;bottom:176px;z-index:1050;display:flex;align-items:center;justify-content:center;width:52px;height:52px;border-radius:50%;background:#fff;border:1px solid rgba(0,0,0,0.08);box-shadow:0 6px 16px rgba(0,0,0,0.15);cursor:pointer;'
-    >
-      <i class='bi bi-heart-fill'></i>
-      <span
-        class='icon-count'
-        id='floatingWishlistCount'
-        style='position:absolute;top:-6px;right:-6px;min-width:20px;height:20px;padding:0 4px;border-radius:999px;background:#dc3545;color:#fff;font-size:0.75rem;display:flex;align-items:center;justify-content:center;'
-      >
-        0
-      </span>
-    </div>
-
-    <a
-      class='floating-btn floating-whatsapp'
-      id='floatingWhatsapp'
-      href='#'
-      rel='noopener'
-      target='_blank'
-      style='position:fixed;right:16px;bottom:48px;z-index:1050;display:flex;align-items:center;justify-content:center;width:52px;height:52px;border-radius:50%;background:#25D366;color:#fff;border:none;box-shadow:0 6px 16px rgba(0,0,0,0.15);cursor:pointer;'
-    >
-      <i class='bi bi-whatsapp' style='font-size:1.6rem;'></i>
-    </a>
-
-    <!-- INLINE SCRIPT: INIT SETTINGS / I18N / YEAR / WHATSAPP -->
+    <!-- PLACEHOLDER REPLACEMENT SCRIPT (SINGLE, CLEAN VERSION) -->
     <script>
-      document.addEventListener("runtime_ready", function () {
-        try {
-          var s = (window.Runtime && Runtime.settings) || {};
-          var textMap = (window.Runtime && Runtime.textMap) || {};
-          var lang = s.default_language || "en";
+    (function() {
+      function replacePlaceholders() {
+        if (!window.Runtime || !Runtime.settings) return;
 
-          function setText(selector, value) {
-            document.querySelectorAll(selector).forEach(function (el) {
-              el.textContent = value || "";
-            });
-          }
+        const s = Runtime.settings;
 
-          setText('[data-setting="contact_phone"]', s.contact_phone || "");
-          setText('[data-setting="contact_email"]', s.contact_email || "");
-          setText('[data-setting="contact_whatsapp"]', s.contact_whatsapp || "");
-          setText('[data-setting="site_title"]', s.site_title || "My Website");
-          setText('[data-setting="currency_symbol"]', s.currency_symbol || "$");
+        const map = {
+          '&#123;&#123;CONTACT_PHONE&#125;&#125;': s.contact_phone || '',
+          '&#123;&#123;CONTACT_EMAIL&#125;&#125;': s.contact_email || '',
+          '&#123;&#123;WHATSAPP_NUMBER&#125;&#125;': s.contact_whatsapp || '',
+          '&#123;&#123;SITE_TITLE&#125;&#125;': s.site_title || '',
+          '&#123;&#123;CURRENCY_SYMBOL&#125;&#125;': s.currency_symbol || '',
+          '&#123;&#123;HERO_TITLE&#125;&#125;': s.hero_title || '',
+          '&#123;&#123;HERO_SUBTITLE&#125;&#125;': s.hero_subtitle || ''
+        };
 
-          var wa = document.getElementById("floatingWhatsapp");
-          if (wa && s.contact_whatsapp) {
-            wa.href = "https://wa.me/" + String(s.contact_whatsapp).replace(/[^0-9]/g, "");
-          }
-
-          document.querySelectorAll("[data-i18n]").forEach(function (el) {
-            var key = el.getAttribute("data-i18n");
-            if (textMap && textMap[key]) {
-              el.textContent =
-                textMap[key][lang] ||
-                textMap[key]["default"] ||
-                el.textContent;
-            }
-          });
-
-          console.log("Theme placeholders and i18n applied.");
-        } catch (e) {
-          console.error("runtime_ready handler error", e);
+        let html = document.body.innerHTML;
+        for (const key in map) {
+          html = html.replace(new RegExp(key, 'g'), map[key]);
         }
-      });
+        document.body.innerHTML = html;
+      }
 
-      (function () {
-        var y = new Date().getFullYear();
-        var el = document.getElementById("footerYear");
-        if (el) el.textContent = y;
-      })();
+      // Run AFTER runtime has loaded settings
+      document.addEventListener("runtime_ready", replacePlaceholders);
+    })();
     </script>
 
-    <!-- EXTERNAL SCRIPTS (NO SELF-CLOSING TAGS) -->
+    <!-- FOOTER YEAR SCRIPT -->
+    <script>
+    (function() {
+      var y = new Date().getFullYear();
+      var el = document.getElementById('footerYear');
+      if (el) el.textContent = y;
+    })();
+    </script>
+
+    <!-- EXTERNAL SCRIPTS -->
     <script src='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js'></script>
 
     <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/runtime.js?v=3'></script>
@@ -534,6 +467,25 @@ body.theme-body {
     <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/analytics.js'></script>
     <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/seo.js'></script>
     <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/gallery.js'></script>
+
+      <!-- FLOATING ACTION BUTTONS (Cart, Wishlist, WhatsApp) -->
+
+    <!-- Floating Cart Button: opens the existing #cartModal -->
+    <div class='floating-btn floating-cart' data-bs-target='#cartModal' data-bs-toggle='modal' id='floatingCart'>
+      <i class='bi bi-cart3'/>
+      <span class='icon-count' id='floatingCartCount'>0</span>
+    </div>
+
+    <!-- Floating Wishlist Button: opens the existing #wishlistModal -->
+    <div class='floating-btn floating-wishlist' data-bs-target='#wishlistModal' data-bs-toggle='modal' id='floatingWishlist'>
+      <i class='bi bi-heart-fill'/>
+      <span class='icon-count' id='floatingWishlistCount'>0</span>
+    </div>
+
+    <!-- Floating WhatsApp Button: number comes from settings via {{WHATSAPP_NUMBER}} -->
+    <a class='floating-btn floating-whatsapp' href='https://wa.me/{{WHATSAPP_NUMBER}}' id='floatingWhatsapp' rel='noopener' target='_blank'>
+      <i class='bi bi-whatsapp'/>
+    </a>
 
   </body>
 </html>
