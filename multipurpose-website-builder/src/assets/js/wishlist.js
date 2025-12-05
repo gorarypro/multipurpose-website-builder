@@ -38,7 +38,6 @@ window.Wishlist = {
   updateBadge() {
     const count = this.items.length;
 
-    // Support navbar + floating buttons
     const ids = ['wishlistCount', 'floatingWishlistCount'];
     ids.forEach(id => {
       const el = document.getElementById(id);
