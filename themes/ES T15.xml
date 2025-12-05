@@ -1,0 +1,490 @@
+&lt;?xml version=&#34;1.0&#34; encoding=&#34;UTF-8&#34; ?&gt;<html b:version='2' expr:dir='data:blog.languageDirection' xmlns='http://www.w3.org/1999/xhtml' xmlns:b='http://www.google.com/2005/gml/b' xmlns:data='http://www.google.com/2005/gml/data' xmlns:expr='http://www.google.com/2005/gml/expr'>
+
+  <head>
+    <meta charset='utf-8'/>
+    <title>&lt;?= settings.site_title || &#39;My Website&#39; ?&gt;</title>
+    <meta content='width=device-width, initial-scale=1' name='viewport'/>
+
+    <link href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css' rel='stylesheet'/>
+    <link href='https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css' rel='stylesheet'/>
+
+    <link href='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/css/theme-base.css' rel='stylesheet'/>
+    <link expr:if='data:blog.languageDirection == "rtl"' href='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/css/rtl.css' rel='stylesheet'/>
+
+<style>
+  body.theme-body {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;
+  }
+
+  .hide-comp {
+    display: none !important;
+  }
+
+   
+  .floating-btn {
+    position: fixed;
+    right: 16px;
+    z-index: 1050;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #ffffff;
+    border: 1px solid rgba(0,0,0,0.08);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+  }
+
+  .floating-btn i {
+    font-size: 1.4rem;
+  }
+
+  .floating-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(0,0,0,0.18);
+  }
+
+   
+  .floating-cart {
+    bottom: 112px;  
+  }
+
+  .floating-wishlist {
+    bottom: 176px;  
+  }
+
+  .floating-whatsapp {
+    bottom: 48px;  
+    background-color: #25D366;
+    color: #ffffff;
+    border: none;
+  }
+
+  .floating-whatsapp i {
+    font-size: 1.6rem;
+  }
+
+   
+  .floating-btn .icon-count {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 4px;
+    border-radius: 999px;
+    background-color: #dc3545;
+    color: #ffffff;
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+</style>
+
+    <b:skin>
+
+/* ===== Blogger Required Skin Block ===== */
+
+body.theme-body {
+  margin: 0;
+  padding: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+/* Use primary color from settings if available */
+a,
+.btn-primary,
+.navbar,
+.bg-primary {
+  background-color: #0d6efd;
+}
+
+/* Basic layout helpers */
+.hide-comp {
+  display: none !important;
+}
+
+    </b:skin>
+  </head>
+
+  <body class='theme-body lang-en'>
+    
+      
+    <nav class='navbar navbar-expand-lg navbar-light bg-white border-bottom mb-3'>
+      <div class='container'>
+
+        
+        <a class='navbar-brand' href='#hero'>
+          <span data-setting='site_title'/> 
+        </a>
+
+        <div class='ms-auto d-flex gap-2'>
+
+          
+          <button class='btn btn-outline-secondary position-relative' data-bs-target='#cartModal' data-bs-toggle='modal' type='button'>
+            <i class='bi bi-cart'/>
+
+            
+            <span class='position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger' id='cartCount'>0</span>
+          </button>
+
+          
+          <button class='btn btn-outline-secondary position-relative' data-bs-target='#wishlistModal' data-bs-toggle='modal' type='button'>
+            <i class='bi bi-heart'/>
+
+            
+            <span class='position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger' id='wishlistCount'>0</span>
+          </button>
+
+        </div>
+
+      </div>
+    </nav>
+
+
+    
+    <b:section class='' id='navbar-section'/>
+
+    
+    <b:section class='' id='hero-section'/>
+
+    
+    <section class='' id='products-section'>
+      <section class='py-5' id='products'>
+        <div class='container'>
+          <div class='d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2'>
+            <h2 class='h3 mb-0' data-i18n='TEXT_PRODUCTS'/>
+            <div class='d-flex gap-2'>
+              <select class='form-select form-select-sm' id='productFilter'>
+                <option data-i18n='TEXT_ALL' value='all'/>
+              </select>
+              <select class='form-select form-select-sm' id='productSort'>
+                <option data-i18n='TEXT_SORT_LATEST' value='latest'/>
+                <option data-i18n='TEXT_SORT_PRICE_ASC' value='price-asc'/>
+                <option data-i18n='TEXT_SORT_PRICE_DESC' value='price-desc'/>
+              </select>
+            </div>
+          </div>
+
+          <div class='row g-4' id='productGrid'/>
+
+          <div class='text-center text-muted mt-4 d-none' data-i18n='TEXT_NO_PRODUCTS' id='productsEmpty'/>
+        </div>
+      </section>
+    </section>
+
+    
+    <section class='' id='cart-section'>
+      <div aria-hidden='true' aria-labelledby='cartModalLabel' class='modal fade' id='cartModal' tabindex='-1'>
+        <div class='modal-dialog modal-lg modal-dialog-scrollable'>
+          <div class='modal-content'>
+
+            <div class='modal-header'>
+              <h5 class='modal-title' data-i18n='TEXT_CART' id='cartModalLabel'/>
+              <button aria-label='Close' class='btn-close' data-bs-dismiss='modal' type='button'/>
+            </div>
+
+            <div class='modal-body'>
+              <div id='cartContent'/>
+              <div class='text-center text-muted d-none' data-i18n='CART_EMPTY' id='cartEmpty'/>
+            </div>
+
+            <div class='modal-footer d-flex justify-content-between align-items-center'>
+              <div>
+                <span class='fw-semibold' data-i18n='TEXT_TOTAL'/>:
+                <span id='cartTotal'>0</span>
+              </div>
+              <div class='d-flex gap-2'>
+                <button class='btn btn-outline-secondary' data-bs-dismiss='modal' type='button'>
+                  <span data-i18n='TEXT_CONTINUE_SHOPPING'/>
+                </button>
+                <button class='btn btn-primary' id='checkoutButton' type='button'>
+                  <span data-i18n='CHECKOUT'/>
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </section>
+
+    
+    <section class='' id='wishlist-section'>
+      <div aria-hidden='true' aria-labelledby='wishlistModalLabel' class='modal fade' id='wishlistModal' tabindex='-1'>
+        <div class='modal-dialog modal-lg modal-dialog-scrollable'>
+          <div class='modal-content'>
+
+            <div class='modal-header'>
+              <h5 class='modal-title' data-i18n='TEXT_WISHLIST' id='wishlistModalLabel'/>
+              <button aria-label='Close' class='btn-close' data-bs-dismiss='modal' type='button'/>
+            </div>
+
+            <div class='modal-body'>
+              <div id='wishlistContent'/>
+              <div class='text-center text-muted d-none' data-i18n='TEXT_WISHLIST_EMPTY' id='wishlistEmpty'/>
+            </div>
+
+            <div class='modal-footer d-flex justify-content-between'>
+              <button class='btn btn-outline-secondary' data-bs-dismiss='modal' type='button'>
+                <span data-i18n='TEXT_CLOSE'/>
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </section>
+
+    
+    <section class='hide-comp' id='popup-section'>
+      <div aria-hidden='true' aria-labelledby='timedPopupLabel' class='modal fade' id='timedPopup' tabindex='-1'>
+        <div class='modal-dialog modal-dialog-centered modal-lg'>
+          <div class='modal-content'>
+
+            <div class='modal-header border-0'>
+              <h5 class='modal-title' id='timedPopupLabel'>
+                &lt;?= settings.popup_title || &#39;&#39; ?&gt;
+              </h5>
+              <button aria-label='Close' class='btn-close' data-bs-dismiss='modal' type='button'/>
+            </div>
+
+            <div class='modal-body' id='timedPopupContent'>
+              &lt;?!= settings.popup_html || &#39;&#39; ?&gt;
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </section>
+
+    
+    <section id='contact-section'>
+      <section class='py-5 bg-light' id='contact'>
+        <div class='container'>
+
+          <h2 class='h3 mb-3' data-i18n='TEXT_CONTACT_US'/>
+          <p class='text-muted' data-i18n='TEXT_CONTACT_INTRO'/>
+
+          <div class='row g-4'>
+            <div class='col-lg-5'>
+              <ul class='list-unstyled small'>
+                <li>
+                  <strong data-i18n='TEXT_PHONE'/>:
+                  <span data-setting='contact_phone'/>
+                </li>
+                <li>
+                  <strong data-i18n='TEXT_EMAIL'/>:
+                  <span data-setting='contact_email'/>
+                </li>
+                <li>
+                  <strong data-i18n='TEXT_WHATSAPP'/>:
+                  <span data-setting='contact_whatsapp'/>
+                </li>
+              </ul>
+            </div>
+
+            <div class='col-lg-7'>
+              <form id='contactForm' novalidate='novalidate'>
+                <div class='mb-3'>
+                  <label class='form-label' data-i18n='TEXT_NAME' for='contactName'/>
+                  <input class='form-control' id='contactName' required='required' type='text'/>
+                </div>
+
+                <div class='mb-3'>
+                  <label class='form-label' data-i18n='TEXT_EMAIL' for='contactEmail'/>
+                  <input class='form-control' id='contactEmail' required='required' type='email'/>
+                </div>
+
+                <div class='mb-3'>
+                  <label class='form-label' data-i18n='TEXT_MESSAGE' for='contactMessage'/>
+                  <textarea class='form-control' id='contactMessage' required='required' rows='4'/>
+                &lt;/div&gt;
+
+                &lt;div class=&#39;d-none&#39;&gt;
+                  &lt;input autocomplete=&#39;off&#39; id=&#39;contactHp&#39; type=&#39;text&#39;/&gt;
+                &lt;/div&gt;
+
+                &lt;button class=&#39;btn btn-primary mt-2&#39; id=&#39;contactSubmit&#39; type=&#39;submit&#39;&gt;
+                  &lt;span data-i18n=&#39;TEXT_SEND_MESSAGE&#39;/&gt;
+                &lt;/button&gt;
+
+                &lt;div class=&#39;mt-2 small text-muted&#39; id=&#39;contactStatus&#39;/&gt;
+              &lt;/form&gt;
+            &lt;/div&gt;
+          &lt;/div&gt;
+
+        &lt;/div&gt;
+      &lt;/section&gt;
+    &lt;/section&gt;
+
+    &lt;!-- TESTIMONIALS SECTION --&gt;
+    &lt;section id=&#39;testimonials-section&#39;&gt;
+      &lt;section class=&#39;py-5&#39; id=&#39;testimonials&#39;&gt;
+        &lt;div class=&#39;container text-center&#39;&gt;
+
+          &lt;h2 class=&#39;h3&#39; data-i18n=&#39;TEXT_TESTIMONIALS&#39;/&gt;
+          &lt;p class=&#39;text-muted&#39; data-i18n=&#39;TEXT_TESTIMONIALS_SUBTITLE&#39;/&gt;
+
+          &lt;div class=&#39;border rounded p-3 mt-4 mx-auto&#39; style=&#39;max-width: 480px;&#39;&gt;
+            &lt;p class=&#39;fst-italic&#39; data-i18n=&#39;TEXT_TESTIMONIAL_SAMPLE&#39;/&gt;
+            &lt;div class=&#39;fw-semibold&#39;&gt;John Doe&lt;/div&gt;
+            &lt;div class=&#39;text-muted small&#39; data-i18n=&#39;TEXT_TESTIMONIAL_ROLE&#39;/&gt;
+          &lt;/div&gt;
+
+        &lt;/div&gt;
+      &lt;/section&gt;
+    &lt;/section&gt;
+
+    &lt;!-- PRICING SECTION --&gt;
+    &lt;section id=&#39;pricing-section&#39;&gt;
+      &lt;section class=&#39;py-5 bg-light&#39; id=&#39;pricing&#39;&gt;
+        &lt;div class=&#39;container text-center&#39;&gt;
+
+          &lt;h2 class=&#39;h3&#39; data-i18n=&#39;TEXT_PRICING&#39;/&gt;
+          &lt;p class=&#39;text-muted&#39; data-i18n=&#39;TEXT_PRICING_SUBTITLE&#39;/&gt;
+
+          &lt;div class=&#39;card mt-4 mx-auto&#39; style=&#39;max-width: 420px;&#39;&gt;
+            &lt;div class=&#39;card-body&#39;&gt;
+
+              &lt;h5 data-i18n=&#39;TEXT_PLAN_BASIC&#39;/&gt;
+              &lt;p class=&#39;text-muted&#39; data-i18n=&#39;TEXT_PLAN_BASIC_SUBTITLE&#39;/&gt;
+
+              &lt;p class=&#39;display-6 fw-bold&#39;&gt;
+                29 &lt;span data-setting=&#39;currency_symbol&#39;/&gt; /
+                &lt;span data-i18n=&#39;TEXT_MONTH&#39;/&gt;
+              &lt;/p&gt;
+
+              &lt;ul class=&#39;list-unstyled&#39;&gt;
+                &lt;li data-i18n=&#39;TEXT_FEATURE_1&#39;/&gt;
+                &lt;li data-i18n=&#39;TEXT_FEATURE_2&#39;/&gt;
+              &lt;/ul&gt;
+
+              &lt;a class=&#39;btn btn-outline-primary&#39; data-i18n=&#39;TEXT_CHOOSE_PLAN&#39; href=&#39;#contact&#39;/&gt;
+
+            &lt;/div&gt;
+          &lt;/div&gt;
+
+        &lt;/div&gt;
+      &lt;/section&gt;
+    &lt;/section&gt;
+
+    
+        &lt;!-- FLOATING ACTION BUTTONS (Cart, Wishlist, WhatsApp) --&gt;
+    &lt;!-- Floating Cart Button: opens the existing #cartModal --&gt;
+    &lt;div class=&#39;floating-btn floating-cart&#39; data-bs-target=&#39;#cartModal&#39; data-bs-toggle=&#39;modal&#39; id=&#39;floatingCart&#39;&gt;
+      &lt;i class=&#39;bi bi-cart3&#39;/&gt;
+      &lt;span class=&#39;icon-count&#39; id=&#39;floatingCartCount&#39;&gt;0&lt;/span&gt;
+    &lt;/div&gt;
+
+    &lt;!-- Floating Wishlist Button: opens the existing #wishlistModal --&gt;
+    &lt;div class=&#39;floating-btn floating-wishlist&#39; data-bs-target=&#39;#wishlistModal&#39; data-bs-toggle=&#39;modal&#39; id=&#39;floatingWishlist&#39;&gt;
+      &lt;i class=&#39;bi bi-heart-fill&#39;/&gt;
+      &lt;span class=&#39;icon-count&#39; id=&#39;floatingWishlistCount&#39;&gt;0&lt;/span&gt;
+    &lt;/div&gt;
+
+    &lt;!-- Floating WhatsApp Button: number comes from settings via {{WHATSAPP_NUMBER}} --&gt;
+    &lt;a class=&#39;floating-btn floating-whatsapp&#39; href=&#39;https://wa.me/{{WHATSAPP_NUMBER}}&#39; id=&#39;floatingWhatsapp&#39; rel=&#39;noopener&#39; target=&#39;_blank&#39;&gt;
+      &lt;i class=&#39;bi bi-whatsapp&#39;/&gt;
+    &lt;/a&gt;
+
+    
+    &lt;!-- FOOTER --&gt;
+    &lt;footer class=&#39;py-4 border-top bg-white&#39;&gt;
+      &lt;div class=&#39;container d-flex flex-wrap justify-content-between align-items-center gap-2&#39;&gt;
+        &lt;div class=&#39;small text-muted&#39;&gt;
+          &#169; &lt;span id=&#39;footerYear&#39;/&gt;
+          &lt;span data-setting=&#39;site_title&#39;/&gt; &#8211;
+          &lt;span data-i18n=&#39;TEXT_ALL_RIGHTS_RESERVED&#39;/&gt;
+        &lt;/div&gt;
+
+        &lt;div class=&#39;small&#39;&gt;
+          &lt;a class=&#39;text-decoration-none me-2&#39; data-i18n=&#39;TEXT_BACK_TO_TOP&#39; href=&#39;#hero&#39;/&gt;
+          |
+          &lt;a class=&#39;text-decoration-none mx-2&#39; data-i18n=&#39;TEXT_PRIVACY&#39; href=&#39;#&#39;/&gt;
+          |
+          &lt;a class=&#39;text-decoration-none ms-2&#39; data-i18n=&#39;TEXT_TERMS&#39; href=&#39;#&#39;/&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/footer&gt;
+
+    &lt;!-- PLACEHOLDER REPLACEMENT SCRIPT (SINGLE, CLEAN VERSION) --&gt;
+    &lt;script&gt;
+    (function() {
+      function replacePlaceholders() {
+        if (!window.Runtime || !Runtime.settings) return;
+
+        const s = Runtime.settings;
+
+        const map = {
+          &#39;&#123;&#123;CONTACT_PHONE&#125;&#125;&#39;: s.contact_phone || &#39;&#39;,
+          &#39;&#123;&#123;CONTACT_EMAIL&#125;&#125;&#39;: s.contact_email || &#39;&#39;,
+          &#39;&#123;&#123;WHATSAPP_NUMBER&#125;&#125;&#39;: s.contact_whatsapp || &#39;&#39;,
+          &#39;&#123;&#123;SITE_TITLE&#125;&#125;&#39;: s.site_title || &#39;&#39;,
+          &#39;&#123;&#123;CURRENCY_SYMBOL&#125;&#125;&#39;: s.currency_symbol || &#39;&#39;,
+          &#39;&#123;&#123;HERO_TITLE&#125;&#125;&#39;: s.hero_title || &#39;&#39;,
+          &#39;&#123;&#123;HERO_SUBTITLE&#125;&#125;&#39;: s.hero_subtitle || &#39;&#39;
+        };
+
+        let html = document.body.innerHTML;
+        for (const key in map) {
+          html = html.replace(new RegExp(key, &#39;g&#39;), map[key]);
+        }
+        document.body.innerHTML = html;
+      }
+
+      // Run AFTER runtime has loaded settings
+      document.addEventListener(&#34;runtime_ready&#34;, replacePlaceholders);
+    })();
+    &lt;/script&gt;
+
+    &lt;!-- FOOTER YEAR SCRIPT --&gt;
+    &lt;script&gt;
+    (function() {
+      var y = new Date().getFullYear();
+      var el = document.getElementById(&#39;footerYear&#39;);
+      if (el) el.textContent = y;
+    })();
+    &lt;/script&gt;
+
+    &lt;!-- EXTERNAL SCRIPTS --&gt;
+    &lt;script src=&#39;https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js&#39;&gt;&lt;/script&gt;
+
+    &lt;script src=&#39;https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/runtime.js?v=3&#39;&gt;&lt;/script&gt;
+    &lt;script src=&#39;https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/products.js&#39;&gt;&lt;/script&gt;
+    &lt;script src=&#39;https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/variants.js&#39;&gt;&lt;/script&gt;
+    &lt;script src=&#39;https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/i18n.js&#39;&gt;&lt;/script&gt;
+    &lt;script src=&#39;https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/cart.js&#39;&gt;&lt;/script&gt;
+    &lt;script src=&#39;https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/wishlist.js&#39;&gt;&lt;/script&gt;
+    &lt;script src=&#39;https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/popup.js&#39;&gt;&lt;/script&gt;
+    &lt;script src=&#39;https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/currency.js&#39;&gt;&lt;/script&gt;
+    &lt;script src=&#39;https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/lazyload.js&#39;&gt;&lt;/script&gt;
+    &lt;script src=&#39;https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/analytics.js&#39;&gt;&lt;/script&gt;
+    &lt;script src=&#39;https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/seo.js&#39;&gt;&lt;/script&gt;
+    &lt;script src=&#39;https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/gallery.js&#39;&gt;&lt;/script&gt;
+
+      &lt;!-- FLOATING ACTION BUTTONS (Cart, Wishlist, WhatsApp) --&gt;
+
+    &lt;!-- Floating Cart Button: opens the existing #cartModal --&gt;
+    &lt;div class=&#39;floating-btn floating-cart&#39; data-bs-target=&#39;#cartModal&#39; data-bs-toggle=&#39;modal&#39; id=&#39;floatingCart&#39;&gt;
+      &lt;i class=&#39;bi bi-cart3&#39;/&gt;
+      &lt;span class=&#39;icon-count&#39; id=&#39;floatingCartCount&#39;&gt;0&lt;/span&gt;
+    &lt;/div&gt;
+
+    &lt;!-- Floating Wishlist Button: opens the existing #wishlistModal --&gt;
+    &lt;div class=&#39;floating-btn floating-wishlist&#39; data-bs-target=&#39;#wishlistModal&#39; data-bs-toggle=&#39;modal&#39; id=&#39;floatingWishlist&#39;&gt;
+      &lt;i class=&#39;bi bi-heart-fill&#39;/&gt;
+      &lt;span class=&#39;icon-count&#39; id=&#39;floatingWishlistCount&#39;&gt;0&lt;/span&gt;
+    &lt;/div&gt;
+
+    &lt;!-- Floating WhatsApp Button: number comes from settings via {{WHATSAPP_NUMBER}} --&gt;
+    &lt;a class=&#39;floating-btn floating-whatsapp&#39; href=&#39;https://wa.me/{{WHATSAPP_NUMBER}}&#39; id=&#39;floatingWhatsapp&#39; rel=&#39;noopener&#39; target=&#39;_blank&#39;&gt;
+      &lt;i class=&#39;bi bi-whatsapp&#39;/&gt;
+    &lt;/a&gt;
+
+  &lt;/body&gt;
+&lt;/html&gt;
