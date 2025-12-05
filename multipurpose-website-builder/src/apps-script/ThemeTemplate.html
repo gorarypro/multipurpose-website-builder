@@ -1,63 +1,544 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE html>
-<html b:version='2' expr:dir='data:blog.languageDirection'>
+<html
+  b:version='2'
+  expr:dir='data:blog.languageDirection'
+  xmlns='http://www.w3.org/1999/xhtml'
+  xmlns:b='http://www.google.com/2005/gml/b'
+  xmlns:data='http://www.google.com/2005/gml/data'
+  xmlns:expr='http://www.google.com/2005/gml/expr'
+>
   <head>
-    <?= include('head'); ?>
+    <meta charset='utf-8'/>
+    <title><?= escapeXml(settings.site_title || 'My Website') ?></title>
+    <meta content='width=device-width, initial-scale=1' name='viewport'/>
+
+    <!-- CSS -->
+    <link
+      href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css'
+      rel='stylesheet'
+    />
+    <link
+      href='https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css'
+      rel='stylesheet'
+    />
+
+    <link
+      href='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/css/theme-base.css'
+      rel='stylesheet'
+    />
+    <link
+      expr:if='data:blog.languageDirection == "rtl"'
+      href='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/css/rtl.css'
+      rel='stylesheet'
+    />
+
+    <style>
+      body.theme-body {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+      .hide-comp { display: none !important; }
+    </style>
+
+    <b:skin><![CDATA[
+
+/* ===== Blogger Required Skin Block ===== */
+
+body.theme-body {
+  margin: 0;
+  padding: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+/* Use primary color from settings if available */
+a,
+.btn-primary,
+.navbar,
+.bg-primary {
+  background-color: #0d6efd;
+}
+
+/* Basic layout helpers */
+.hide-comp {
+  display: none !important;
+}
+
+/* Optional: adjust top padding if navbar is sticky */
+body.theme-body {
+  padding-top: 0.5rem;
+}
+
+    ]]></b:skin>
   </head>
-  <body class='theme-body lang-<?= settings.default_language || "en" ?>'>
 
-    <!-- Navbar -->
-    <b:section id='navbar-section' class='<?= (settings.navbar_included === "yes") ? "" : "hide-comp" ?>'>
-      <?= include('navbar'); ?>
-    </b:section>
+  <body class='theme-body lang-<?= escapeXml(settings.default_language || "en") ?>'>
 
-    <!-- Hero -->
-    <b:section id='hero-section' class='<?= (settings.hero_included === "yes") ? "" : "hide-comp" ?>'>
-      <?= include('hero'); ?>
-    </b:section>
+    <!-- NAVBAR SECTION -->
+    <b:section
+      id='navbar-section'
+      class='<?= (settings.navbar_included === "yes") ? "" : "hide-comp" ?>'
+    />
 
-    <!-- Products / Entries -->
-    <section id="products-section" class="<?= (settings.ecommerce_included === "yes") ? "" : "hide-comp" ?>">
-      <?= include('product-grid'); ?>
+    <!-- HERO SECTION -->
+    <b:section
+      id='hero-section'
+      class='<?= (settings.hero_included === "yes") ? "" : "hide-comp" ?>'
+    />
+
+    <!-- PRODUCTS SECTION -->
+    <section
+      id='products-section'
+      class='<?= (settings.ecommerce_included === "yes") ? "" : "hide-comp" ?>'
+    >
+      <section class='py-5' id='products'>
+        <div class='container'>
+          <div class='d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2'>
+            <h2 class='h3 mb-0' data-i18n='TEXT_PRODUCTS'></h2>
+            <div class='d-flex gap-2'>
+              <select class='form-select form-select-sm' id='productFilter'>
+                <option data-i18n='TEXT_ALL' value='all'></option>
+              </select>
+              <select class='form-select form-select-sm' id='productSort'>
+                <option data-i18n='TEXT_SORT_LATEST' value='latest'></option>
+                <option data-i18n='TEXT_SORT_PRICE_ASC' value='price-asc'></option>
+                <option data-i18n='TEXT_SORT_PRICE_DESC' value='price-desc'></option>
+              </select>
+            </div>
+          </div>
+
+          <div class='row g-4' id='productGrid'></div>
+
+          <div
+            class='text-center text-muted mt-4 d-none'
+            data-i18n='TEXT_NO_PRODUCTS'
+            id='productsEmpty'
+          ></div>
+        </div>
+      </section>
     </section>
 
-    <!-- Cart & Wishlist -->
-    <section id="cart-section" class="<?= (settings.cart_included === "yes") ? "" : "hide-comp" ?>">
-      <?= include('cart'); ?>
+    <!-- CART MODAL -->
+    <section
+      id='cart-section'
+      class='<?= (settings.cart_included === "yes") ? "" : "hide-comp" ?>'
+    >
+      <div
+        aria-hidden='true'
+        aria-labelledby='cartModalLabel'
+        class='modal fade'
+        id='cartModal'
+        tabindex='-1'
+      >
+        <div class='modal-dialog modal-lg modal-dialog-scrollable'>
+          <div class='modal-content'>
+
+            <div class='modal-header'>
+              <h5 class='modal-title' data-i18n='TEXT_CART' id='cartModalLabel'></h5>
+              <button
+                aria-label='Close'
+                class='btn-close'
+                data-bs-dismiss='modal'
+                type='button'
+              ></button>
+            </div>
+
+            <div class='modal-body'>
+              <div id='cartContent'></div>
+              <div
+                class='text-center text-muted d-none'
+                data-i18n='CART_EMPTY'
+                id='cartEmpty'
+              ></div>
+            </div>
+
+            <div class='modal-footer d-flex justify-content-between align-items-center'>
+              <div>
+                <span class='fw-semibold' data-i18n='TEXT_TOTAL'></span>:
+                <span id='cartTotal'>0</span>
+              </div>
+              <div class='d-flex gap-2'>
+                <button
+                  class='btn btn-outline-secondary'
+                  data-bs-dismiss='modal'
+                  type='button'
+                >
+                  <span data-i18n='TEXT_CONTINUE_SHOPPING'></span>
+                </button>
+                <button class='btn btn-primary' id='checkoutButton' type='button'>
+                  <span data-i18n='CHECKOUT'></span>
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
     </section>
 
-    <section id="wishlist-section" class="<?= (settings.wishlist_included === "yes") ? "" : "hide-comp" ?>">
-      <?= include('wishlist'); ?>
+    <!-- WISHLIST MODAL -->
+    <section
+      id='wishlist-section'
+      class='<?= (settings.wishlist_included === "yes") ? "" : "hide-comp" ?>'
+    >
+      <div
+        aria-hidden='true'
+        aria-labelledby='wishlistModalLabel'
+        class='modal fade'
+        id='wishlistModal'
+        tabindex='-1'
+      >
+        <div class='modal-dialog modal-lg modal-dialog-scrollable'>
+          <div class='modal-content'>
+
+            <div class='modal-header'>
+              <h5 class='modal-title' data-i18n='TEXT_WISHLIST' id='wishlistModalLabel'></h5>
+              <button
+                aria-label='Close'
+                class='btn-close'
+                data-bs-dismiss='modal'
+                type='button'
+              ></button>
+            </div>
+
+            <div class='modal-body'>
+              <div id='wishlistContent'></div>
+              <div
+                class='text-center text-muted d-none'
+                data-i18n='TEXT_WISHLIST_EMPTY'
+                id='wishlistEmpty'
+              ></div>
+            </div>
+
+            <div class='modal-footer d-flex justify-content-between'>
+              <button
+                class='btn btn-outline-secondary'
+                data-bs-dismiss='modal'
+                type='button'
+              >
+                <span data-i18n='TEXT_CLOSE'></span>
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </div>
     </section>
 
-    <!-- Popup -->
-    <section id="popup-section" class="<?= (settings.popup_included === "yes") ? "" : "hide-comp" ?>">
-      <?= include('popup'); ?>
+    <!-- POPUP SECTION -->
+    <section
+      id='popup-section'
+      class='<?= (settings.popup_included === "yes") ? "" : "hide-comp" ?>'
+    >
+      <div
+        aria-hidden='true'
+        aria-labelledby='timedPopupLabel'
+        class='modal fade'
+        id='timedPopup'
+        tabindex='-1'
+      >
+        <div class='modal-dialog modal-dialog-centered modal-lg'>
+          <div class='modal-content'>
+
+            <div class='modal-header border-0'>
+              <h5 class='modal-title' id='timedPopupLabel'>
+                <?= escapeXml(settings.popup_title || '') ?>
+              </h5>
+              <button
+                aria-label='Close'
+                class='btn-close'
+                data-bs-dismiss='modal'
+                type='button'
+              ></button>
+            </div>
+
+            <div class='modal-body' id='timedPopupContent'>
+              <?= settings.popup_html || '' ?>
+            </div>
+
+          </div>
+        </div>
+      </div>
     </section>
 
-    <!-- Forms -->
-    <section id="contact-section" class="<?= (settings.forms_included === "yes") ? "" : "hide-comp" ?>">
-      <?= include('forms'); ?>
+    <!-- CONTACT SECTION -->
+    <section
+      id='contact-section'
+      class='<?= (settings.forms_included === "yes") ? "" : "hide-comp" ?>'
+    >
+      <section class='py-5 bg-light' id='contact'>
+        <div class='container'>
+
+          <h2 class='h3 mb-3' data-i18n='TEXT_CONTACT_US'></h2>
+          <p class='text-muted' data-i18n='TEXT_CONTACT_INTRO'></p>
+
+          <div class='row g-4'>
+            <div class='col-lg-5'>
+              <ul class='list-unstyled small'>
+                <li>
+                  <strong data-i18n='TEXT_PHONE'></strong>:
+                  <span data-setting='contact_phone'></span>
+                </li>
+                <li>
+                  <strong data-i18n='TEXT_EMAIL'></strong>:
+                  <span data-setting='contact_email'></span>
+                </li>
+                <li>
+                  <strong data-i18n='TEXT_WHATSAPP'></strong>:
+                  <span data-setting='contact_whatsapp'></span>
+                </li>
+              </ul>
+            </div>
+
+            <div class='col-lg-7'>
+              <form id='contactForm' novalidate='novalidate'>
+                <div class='mb-3'>
+                  <label class='form-label' data-i18n='TEXT_NAME' for='contactName'></label>
+                  <input
+                    class='form-control'
+                    id='contactName'
+                    required='required'
+                    type='text'
+                  />
+                </div>
+
+                <div class='mb-3'>
+                  <label class='form-label' data-i18n='TEXT_EMAIL' for='contactEmail'></label>
+                  <input
+                    class='form-control'
+                    id='contactEmail'
+                    required='required'
+                    type='email'
+                  />
+                </div>
+
+                <div class='mb-3'>
+                  <label
+                    class='form-label'
+                    data-i18n='TEXT_MESSAGE'
+                    for='contactMessage'
+                  ></label>
+                  <textarea
+                    class='form-control'
+                    id='contactMessage'
+                    required='required'
+                    rows='4'
+                  ></textarea>
+                </div>
+
+                <div class='d-none'>
+                  <input autocomplete='off' id='contactHp' type='text'/>
+                </div>
+
+                <button class='btn btn-primary mt-2' id='contactSubmit' type='submit'>
+                  <span data-i18n='TEXT_SEND_MESSAGE'></span>
+                </button>
+
+                <div class='mt-2 small text-muted' id='contactStatus'></div>
+              </form>
+            </div>
+          </div>
+
+        </div>
+      </section>
     </section>
 
-    <!-- Testimonials -->
-    <section id="testimonials-section" class="<?= (settings.testimonials_included === "yes") ? "" : "hide-comp" ?>">
-      <?= include('testimonials'); ?>
+    <!-- TESTIMONIALS SECTION -->
+    <section
+      id='testimonials-section'
+      class='<?= (settings.testimonials_included === "yes") ? "" : "hide-comp" ?>'
+    >
+      <section class='py-5' id='testimonials'>
+        <div class='container text-center'>
+
+          <h2 class='h3' data-i18n='TEXT_TESTIMONIALS'></h2>
+          <p class='text-muted' data-i18n='TEXT_TESTIMONIALS_SUBTITLE'></p>
+
+          <div class='border rounded p-3 mt-4 mx-auto' style='max-width: 480px;'>
+            <p class='fst-italic' data-i18n='TEXT_TESTIMONIAL_SAMPLE'></p>
+            <div class='fw-semibold'>John Doe</div>
+            <div class='text-muted small' data-i18n='TEXT_TESTIMONIAL_ROLE'></div>
+          </div>
+
+        </div>
+      </section>
     </section>
 
-    <!-- Pricing -->
-    <section id="pricing-section" class="<?= (settings.pricing_included === "yes") ? "" : "hide-comp" ?>">
-      <?= include('pricing'); ?>
+    <!-- PRICING SECTION -->
+    <section
+      id='pricing-section'
+      class='<?= (settings.pricing_included === "yes") ? "" : "hide-comp" ?>'
+    >
+      <section class='py-5 bg-light' id='pricing'>
+        <div class='container text-center'>
+
+          <h2 class='h3' data-i18n='TEXT_PRICING'></h2>
+          <p class='text-muted' data-i18n='TEXT_PRICING_SUBTITLE'></p>
+
+          <div class='card mt-4 mx-auto' style='max-width: 420px;'>
+            <div class='card-body'>
+
+              <h5 data-i18n='TEXT_PLAN_BASIC'></h5>
+              <p class='text-muted' data-i18n='TEXT_PLAN_BASIC_SUBTITLE'></p>
+
+              <p class='display-6 fw-bold'>
+                29 <span data-setting='currency_symbol'></span> /
+                <span data-i18n='TEXT_MONTH'></span>
+              </p>
+
+              <ul class='list-unstyled'>
+                <li data-i18n='TEXT_FEATURE_1'></li>
+                <li data-i18n='TEXT_FEATURE_2'></li>
+              </ul>
+
+              <a class='btn btn-outline-primary' data-i18n='TEXT_CHOOSE_PLAN' href='#contact'></a>
+
+            </div>
+          </div>
+
+        </div>
+      </section>
     </section>
 
-    <!-- Footer -->
-    <footer>
-      <?= include('footer'); ?>
+    <!-- FOOTER -->
+    <footer class='py-4 border-top bg-white'>
+      <div class='container d-flex flex-wrap justify-content-between align-items-center gap-2'>
+        <div class='small text-muted'>
+          &#169; <span id='footerYear'></span>
+          <span data-setting='site_title'></span> &#8211;
+          <span data-i18n='TEXT_ALL_RIGHTS_RESERVED'></span>
+        </div>
+
+        <div class='small'>
+          <a class='text-decoration-none me-2' data-i18n='TEXT_BACK_TO_TOP' href='#hero'></a>
+          |
+          <a
+            class='text-decoration-none mx-2'
+            data-i18n='TEXT_PRIVACY'
+            href='<?= escapeXml(settings.privacy_url || "#") ?>'
+          ></a>
+          |
+          <a
+            class='text-decoration-none ms-2'
+            data-i18n='TEXT_TERMS'
+            href='<?= escapeXml(settings.terms_url || "#") ?>'
+          ></a>
+        </div>
+      </div>
     </footer>
 
-    <!-- Floating cart / wishlist / WhatsApp (Event Sushi style) -->
-    <?= (settings.floating_buttons_included === "yes") ? include('floating-actions') : "" ?>
+    <!-- BASIC FLOATING CART/WISHLIST/WHATSAPP (OPTIONAL SIMPLE VERSION) -->
+    <!-- You can later upgrade to Event Sushi–style sidebars. -->
+    <div
+      class='floating-btn floating-cart'
+      id='floatingCart'
+      data-bs-toggle='modal'
+      data-bs-target='#cartModal'
+      style='position:fixed;right:16px;bottom:112px;z-index:1050;display:flex;align-items:center;justify-content:center;width:52px;height:52px;border-radius:50%;background:#fff;border:1px solid rgba(0,0,0,0.08);box-shadow:0 6px 16px rgba(0,0,0,0.15);cursor:pointer;'
+    >
+      <i class='bi bi-cart3'></i>
+      <span
+        class='icon-count'
+        id='floatingCartCount'
+        style='position:absolute;top:-6px;right:-6px;min-width:20px;height:20px;padding:0 4px;border-radius:999px;background:#dc3545;color:#fff;font-size:0.75rem;display:flex;align-items:center;justify-content:center;'
+      >
+        0
+      </span>
+    </div>
 
-    <?= include('footer-scripts'); ?>
+    <div
+      class='floating-btn floating-wishlist'
+      id='floatingWishlist'
+      data-bs-toggle='modal'
+      data-bs-target='#wishlistModal'
+      style='position:fixed;right:16px;bottom:176px;z-index:1050;display:flex;align-items:center;justify-content:center;width:52px;height:52px;border-radius:50%;background:#fff;border:1px solid rgba(0,0,0,0.08);box-shadow:0 6px 16px rgba(0,0,0,0.15);cursor:pointer;'
+    >
+      <i class='bi bi-heart-fill'></i>
+      <span
+        class='icon-count'
+        id='floatingWishlistCount'
+        style='position:absolute;top:-6px;right:-6px;min-width:20px;height:20px;padding:0 4px;border-radius:999px;background:#dc3545;color:#fff;font-size:0.75rem;display:flex;align-items:center;justify-content:center;'
+      >
+        0
+      </span>
+    </div>
+
+    <a
+      class='floating-btn floating-whatsapp'
+      id='floatingWhatsapp'
+      href='#'
+      rel='noopener'
+      target='_blank'
+      style='position:fixed;right:16px;bottom:48px;z-index:1050;display:flex;align-items:center;justify-content:center;width:52px;height:52px;border-radius:50%;background:#25D366;color:#fff;border:none;box-shadow:0 6px 16px rgba(0,0,0,0.15);cursor:pointer;'
+    >
+      <i class='bi bi-whatsapp' style='font-size:1.6rem;'></i>
+    </a>
+
+    <!-- INLINE SCRIPT: INIT SETTINGS / I18N / YEAR / WHATSAPP -->
+    <script>
+      document.addEventListener("runtime_ready", function () {
+        try {
+          var s = (window.Runtime && Runtime.settings) || {};
+          var textMap = (window.Runtime && Runtime.textMap) || {};
+          var lang = s.default_language || "en";
+
+          // Apply settings text
+          function setText(selector, value) {
+            document.querySelectorAll(selector).forEach(function (el) {
+              el.textContent = value || "";
+            });
+          }
+
+          setText('[data-setting="contact_phone"]', s.contact_phone || "");
+          setText('[data-setting="contact_email"]', s.contact_email || "");
+          setText('[data-setting="contact_whatsapp"]', s.contact_whatsapp || "");
+          setText('[data-setting="site_title"]', s.site_title || "My Website");
+          setText('[data-setting="currency_symbol"]', s.currency_symbol || "$");
+
+          // Set WhatsApp link if available
+          var wa = document.getElementById("floatingWhatsapp");
+          if (wa && s.contact_whatsapp) {
+            wa.href = "https://wa.me/" + String(s.contact_whatsapp).replace(/[^0-9]/g, "");
+          }
+
+          // i18n texts
+          document.querySelectorAll("[data-i18n]").forEach(function (el) {
+            var key = el.getAttribute("data-i18n");
+            if (textMap && textMap[key]) {
+              el.textContent =
+                textMap[key][lang] ||
+                textMap[key]["default"] ||
+                el.textContent;
+            }
+          });
+
+          console.log("Theme placeholders and i18n applied.");
+        } catch (e) {
+          console.error("runtime_ready handler error", e);
+        }
+      });
+
+      // Footer year
+      (function () {
+        var y = new Date().getFullYear();
+        var el = document.getElementById("footerYear");
+        if (el) el.textContent = y;
+      })();
+    </script>
+
+    <!-- EXTERNAL SCRIPTS (NO SELF-CLOSING TAGS) -->
+    <script src='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js'></script>
+
+    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/runtime.js?v=3'></script>
+    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/products.js'></script>
+    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/variants.js'></script>
+    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/i18n.js'></script>
+    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/cart.js'></script>
+    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/wishlist.js'></script>
+    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/popup.js'></script>
+    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/currency.js'></script>
+    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/lazyload.js'></script>
+    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/analytics.js'></script>
+    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/seo.js'></script>
+    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/gallery.js'></script>
+
   </body>
 </html>
