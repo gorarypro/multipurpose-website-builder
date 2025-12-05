@@ -1,0 +1,99 @@
+<!-- Floating Cart / Wishlist / WhatsApp – Event Sushi–style -->
+<!-- Uses Bootstrap Icons. Cart & wishlist open existing modals. 
+     WhatsApp number is filled via {{WHATSAPP_NUMBER}} placeholder. -->
+
+<style>
+  .floating-btn {
+    position: fixed;
+    right: 16px;
+    z-index: 1050;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+  }
+
+  .floating-btn i {
+    font-size: 1.4rem;
+  }
+
+  .floating-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+  }
+
+  .floating-cart {
+    bottom: 112px;
+  }
+
+  .floating-wishlist {
+    bottom: 176px;
+  }
+
+  .floating-whatsapp {
+    bottom: 48px;
+    background-color: #25D366;
+    color: #ffffff;
+    border: none;
+  }
+
+  .floating-whatsapp i {
+    font-size: 1.6rem;
+  }
+
+  .floating-btn .icon-count {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 4px;
+    border-radius: 999px;
+    background-color: #dc3545;
+    color: #ffffff;
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+</style>
+
+<!-- Floating Cart Button – opens #cartModal -->
+<div
+  class="floating-btn floating-cart"
+  id="floatingCart"
+  data-bs-toggle="modal"
+  data-bs-target="#cartModal"
+>
+  <i class="bi bi-cart3"></i>
+  <span class="icon-count" id="floatingCartCount">0</span>
+</div>
+
+<!-- Floating Wishlist Button – opens #wishlistModal -->
+<div
+  class="floating-btn floating-wishlist"
+  id="floatingWishlist"
+  data-bs-toggle="modal"
+  data-bs-target="#wishlistModal"
+>
+  <i class="bi bi-heart-fill"></i>
+  <span class="icon-count" id="floatingWishlistCount">0</span>
+</div>
+
+<!-- Floating WhatsApp Button – number from settings ({{WHATSAPP_NUMBER}}) -->
+<a
+  class="floating-btn floating-whatsapp"
+  id="floatingWhatsapp"
+  href="https://wa.me/{{WHATSAPP_NUMBER}}"
+  rel="noopener"
+  target="_blank"
+>
+  <i class="bi bi-whatsapp"></i>
+</a>
