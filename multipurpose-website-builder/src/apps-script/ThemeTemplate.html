@@ -1,4 +1,4 @@
-<?!= '<?xml version="1.0" encoding="UTF-8" ?>' ?>
+<?= '<?xml version="1.0" encoding="UTF-8" ?>' ?>
 <html
   b:version='2'
   expr:dir='data:blog.languageDirection'
@@ -9,7 +9,7 @@
 >
   <head>
     <meta charset='utf-8'/>
-    <title><?!= escapeXml(settings.site_title || 'My Website') ?></title>
+    <title><?= escapeXml(settings.site_title || 'My Website') ?></title>
     <meta content='width=device-width, initial-scale=1' name='viewport'/>
 
     <!-- CSS -->
@@ -70,24 +70,24 @@ body.theme-body {
     ]]></b:skin>
   </head>
 
-  <body class='theme-body lang-<?!= escapeXml(settings.default_language || "en") ?>'>
+  <body class='theme-body lang-<?= escapeXml(settings.default_language || "en") ?>'>
 
     <!-- NAVBAR SECTION (Blogger widget area) -->
     <b:section
       id='navbar-section'
-      class='<?!= (settings.navbar_included === "no") ? "hide-comp" : "" ?>'
+      class='<?= (settings.navbar_included === "no") ? "hide-comp" : "" ?>'
     />
 
     <!-- HERO SECTION (Blogger widget area) -->
     <b:section
       id='hero-section'
-      class='<?!= (settings.hero_included === "no") ? "hide-comp" : "" ?>'
+      class='<?= (settings.hero_included === "no") ? "hide-comp" : "" ?>'
     />
 
     <!-- PRODUCTS SECTION -->
     <section
       id='products-section'
-      class='<?!= (settings.ecommerce_included === "yes") ? "" : "hide-comp" ?>'
+      class='<?= (settings.ecommerce_included === "yes") ? "" : "hide-comp" ?>'
     >
       <section class='py-5' id='products'>
         <div class='container'>
@@ -119,7 +119,7 @@ body.theme-body {
     <!-- CART MODAL -->
     <section
       id='cart-section'
-      class='<?!= (settings.cart_included === "yes") ? "" : "hide-comp" ?>'
+      class='<?= (settings.cart_included === "yes") ? "" : "hide-comp" ?>'
     >
       <div
         aria-hidden='true'
@@ -177,7 +177,7 @@ body.theme-body {
     <!-- WISHLIST MODAL -->
     <section
       id='wishlist-section'
-      class='<?!= (settings.wishlist_included === "yes") ? "" : "hide-comp" ?>'
+      class='<?= (settings.wishlist_included === "yes") ? "" : "hide-comp" ?>'
     >
       <div
         aria-hidden='true'
@@ -226,7 +226,7 @@ body.theme-body {
     <!-- POPUP SECTION -->
     <section
       id='popup-section'
-      class='<?!= (settings.popup_included === "yes") ? "" : "hide-comp" ?>'
+      class='<?= (settings.popup_included === "yes") ? "" : "hide-comp" ?>'
     >
       <div
         aria-hidden='true'
@@ -240,7 +240,7 @@ body.theme-body {
 
             <div class='modal-header border-0'>
               <h5 class='modal-title' id='timedPopupLabel'>
-                <?!= escapeXml(settings.popup_title || '') ?>
+                <?= escapeXml(settings.popup_title || '') ?>
               </h5>
               <button
                 aria-label='Close'
@@ -251,7 +251,7 @@ body.theme-body {
             </div>
 
             <div class='modal-body' id='timedPopupContent'>
-              <?!= settings.popup_html || '' ?>
+              <?= settings.popup_html || '' ?>
             </div>
 
           </div>
@@ -262,7 +262,7 @@ body.theme-body {
     <!-- CONTACT SECTION -->
     <section
       id='contact-section'
-      class='<?!= (settings.forms_included === "yes") ? "" : "hide-comp" ?>'
+      class='<?= (settings.forms_included === "yes") ? "" : "hide-comp" ?>'
     >
       <section class='py-5 bg-light' id='contact'>
         <div class='container'>
@@ -344,7 +344,7 @@ body.theme-body {
     <!-- TESTIMONIALS SECTION -->
     <section
       id='testimonials-section'
-      class='<?!= (settings.testimonials_included === "yes") ? "" : "hide-comp" ?>'
+      class='<?= (settings.testimonials_included === "yes") ? "" : "hide-comp" ?>'
     >
       <section class='py-5' id='testimonials'>
         <div class='container text-center'>
@@ -365,7 +365,7 @@ body.theme-body {
     <!-- PRICING SECTION -->
     <section
       id='pricing-section'
-      class='<?!= (settings.pricing_included === "yes") ? "" : "hide-comp" ?>'
+      class='<?= (settings.pricing_included === "yes") ? "" : "hide-comp" ?>'
     >
       <section class='py-5 bg-light' id='pricing'>
         <div class='container text-center'>
@@ -413,13 +413,13 @@ body.theme-body {
           <a
             class='text-decoration-none mx-2'
             data-i18n='TEXT_PRIVACY'
-            href='<?!= escapeXml(settings.privacy_url || "#") ?>'
+            href='<?= escapeXml(settings.privacy_url || "#") ?>'
           ></a>
           |
           <a
             class='text-decoration-none ms-2'
             data-i18n='TEXT_TERMS'
-            href='<?!= escapeXml(settings.terms_url || "#") ?>'
+            href='<?= escapeXml(settings.terms_url || "#") ?>'
           ></a>
         </div>
       </div>
