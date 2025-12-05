@@ -949,10 +949,11 @@
         const exportBtn = document.getElementById("exportThemeBtn");
         if (!exportBtn) return;
 
+        const status = document.getElementById("exportStatus");
+
         exportBtn.addEventListener("click", function () {
           const name = document.getElementById("themeName").value.trim();
           const push = document.getElementById("pushGithub").checked;
-          const status = document.getElementById("exportStatus");
 
           if (!name) {
             status.textContent = "⚠️ Please enter a theme name.";
@@ -965,7 +966,6 @@
 
           google.script.run
             .withSuccessHandler(function (saveRes) {
-              // We don't care too much about the content, just continue if no error
               if (!saveRes || saveRes.status !== "ok") {
                 status.textContent =
                   "⚠️ Settings save may have failed, continuing anyway...";
