@@ -48,7 +48,6 @@ window.Cart = {
   updateBadge() {
     const qty = this.items.reduce((sum, i) => sum + i.qty, 0);
 
-    // Support multiple counters: navbar + floating button
     const ids = ['cartCount', 'floatingCartCount'];
     ids.forEach(id => {
       const el = document.getElementById(id);
