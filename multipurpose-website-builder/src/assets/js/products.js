@@ -5,12 +5,6 @@
  * - filter dropdown (#productFilter)
  * - sort dropdown (#productSort)
  * - "No products found" state (#productsEmpty)
- *
- * Depends on:
- *   - Runtime.products (array)
- *   - Runtime.settings (optional)
- *
- * Safe for Blogger (external JS; Blogger does NOT modify this file).
  */
 
 window.Products = (function () {
@@ -34,24 +28,11 @@ window.Products = (function () {
     return arr.slice ? arr.slice() : Array.prototype.slice.call(arr);
   }
 
-  function sanitizeHtml(html) {
-    // Basic safety: create a temporary div and use its innerHTML.
-    // This is mostly just to ensure content is wrapped, not a full sanitizer.
-    var div = document.createElement("div");
-    div.innerHTML = html || "";
-    return div.innerHTML;
-  }
-
   function extractShortDescription(html, maxLength) {
-    if (!html) {
-      return "";
-    }
-    // Strip tags
+    if (!html) return "";
     var text = html.replace(/<[^>]+>/g, " ");
     text = text.replace(/\s+/g, " ").trim();
-    if (text.length <= maxLength) {
-      return text;
-    }
+    if (text.length <= maxLength) return text;
     return text.slice(0, maxLength) + "...";
   }
 
@@ -100,12 +81,11 @@ window.Products = (function () {
     btn.textContent = "Add to cart";
     btn.addEventListener("click", function () {
       if (typeof Cart !== "undefined") {
-        Cart.addProduct(product);
+        Cart.add(product, 1);
       } else {
         console.log("Cart module not available. Product:", product);
       }
     });
-
     footer.appendChild(btn);
 
     if (typeof Wishlist !== "undefined") {
@@ -113,7 +93,7 @@ window.Products = (function () {
       wishBtn.className = "btn btn-sm btn-outline-secondary";
       wishBtn.textContent = "Wishlist";
       wishBtn.addEventListener("click", function () {
-        Wishlist.toggleProduct(product);
+        Wishlist.toggle(product);
       });
       footer.appendChild(wishBtn);
     }
@@ -126,9 +106,7 @@ window.Products = (function () {
   }
 
   function renderGridInternal(list) {
-    if (!gridEl || !emptyEl) {
-      return;
-    }
+    if (!gridEl || !emptyEl) return;
 
     gridEl.innerHTML = "";
 
@@ -149,26 +127,18 @@ window.Products = (function () {
     var set = {};
     products.forEach(function (p) {
       (p.labels || []).forEach(function (lab) {
-        if (lab) {
-          set[lab] = true;
-        }
+        if (lab) set[lab] = true;
       });
     });
     return Object.keys(set).sort();
   }
 
   function populateFilter(products) {
-    if (!filterEl) {
-      return;
-    }
+    if (!filterEl) return;
 
-    // Keep existing "All" option
-    // Clear any others
     var options = filterEl.querySelectorAll("option");
     options.forEach(function (opt, idx) {
-      if (idx > 0) {
-        opt.remove();
-      }
+      if (idx > 0) opt.remove();
     });
 
     var labels = getUniqueLabels(products);
@@ -183,7 +153,6 @@ window.Products = (function () {
   function applyFilterAndSort() {
     var filtered = cloneArray(allProducts);
 
-    // Filter
     if (filterEl && filterEl.value && filterEl.value !== "all") {
       var filterValue = filterEl.value;
       filtered = filtered.filter(function (p) {
@@ -191,7 +160,6 @@ window.Products = (function () {
       });
     }
 
-    // Sort
     if (sortEl && sortEl.value) {
       var sortValue = sortEl.value;
 
@@ -208,7 +176,6 @@ window.Products = (function () {
           return pb - pa;
         });
       } else if (sortValue === "latest") {
-        // Blogger IDs contain a timestamp. We can attempt to sort desc by id string.
         filtered.sort(function (a, b) {
           var ia = a.id || "";
           var ib = b.id || "";
@@ -236,11 +203,7 @@ window.Products = (function () {
     }
   }
 
-  // Public API
   return {
-    /**
-     * Main entry: called from Runtime once products & settings are loaded.
-     */
     renderGrid: function (products, runtimeSettings) {
       initElements();
       settings = runtimeSettings || {};
