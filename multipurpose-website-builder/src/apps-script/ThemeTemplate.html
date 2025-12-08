@@ -1,4 +1,3 @@
-<?!= '<?xml version="1.0" encoding="UTF-8" ?>' ?>
 <html b:version='2' expr:dir='data:blog.languageDirection' xmlns='http://www.w3.org/1999/xhtml' xmlns:b='http://www.google.com/2005/gml/b' xmlns:data='http://www.google.com/2005/gml/data' xmlns:expr='http://www.google.com/2005/gml/expr'>
 
   <head>
@@ -422,13 +421,13 @@ a,
         const s = Runtime.settings;
 
         const map = {
-          '&#123;&#123;CONTACT_PHONE&#125;&#125;': s.contact_phone || '',
-          '&#123;&#123;CONTACT_EMAIL&#125;&#125;': s.contact_email || '',
-          '&#123;&#123;WHATSAPP_NUMBER&#125;&#125;': s.contact_whatsapp || '',
-          '&#123;&#123;SITE_TITLE&#125;&#125;': s.site_title || '',
-          '&#123;&#123;CURRENCY_SYMBOL&#125;&#125;': s.currency_symbol || '',
-          '&#123;&#123;HERO_TITLE&#125;&#125;': s.hero_title || '',
-          '&#123;&#123;HERO_SUBTITLE&#125;&#125;': s.hero_subtitle || ''
+          '{{CONTACT_PHONE}}': s.contact_phone || '',
+          '{{CONTACT_EMAIL}}': s.contact_email || '',
+          '{{WHATSAPP_NUMBER}}': s.contact_whatsapp || '',
+          '{{SITE_TITLE}}': s.site_title || '',
+          '{{CURRENCY_SYMBOL}}': s.currency_symbol || '',
+          '{{HERO_TITLE}}': s.hero_title || '',
+          '{{HERO_SUBTITLE}}': s.hero_subtitle || ''
         };
 
         let html = document.body.innerHTML;
@@ -453,20 +452,20 @@ a,
     </script>
 
     <!-- EXTERNAL SCRIPTS -->
-    <script src='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js'></script>
+    <script src='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js'/>
 
-    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/runtime.js?v=3'></script>
-    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/products.js'></script>
-    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/variants.js'></script>
-    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/i18n.js'></script>
-    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/cart.js'></script>
-    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/wishlist.js'></script>
-    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/popup.js'></script>
-    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/currency.js'></script>
-    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/lazyload.js'></script>
-    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/analytics.js'></script>
-    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/seo.js'></script>
-    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/gallery.js'></script>
+    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/runtime.js?v=3'/>
+    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/products.js'/>
+    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/variants.js'/>
+    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/i18n.js'/>
+    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/cart.js'/>
+    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/wishlist.js'/>
+    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/popup.js'/>
+    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/currency.js'/>
+    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/lazyload.js'/>
+    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/analytics.js'/>
+    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/seo.js'/>
+    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/gallery.js'/>
 
       <!-- FLOATING ACTION BUTTONS (Cart, Wishlist, WhatsApp) -->
 
