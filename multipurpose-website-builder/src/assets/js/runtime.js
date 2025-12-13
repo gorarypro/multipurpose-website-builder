@@ -5,9 +5,11 @@
  * - Initializes i18n, products grid, cart, wishlist, popup, etc.
  * - Applies settings to DOM using [data-setting="..."]
  * - Dispatches `runtime_ready` event when everything is loaded
+ * * NOTE: BASE_SCRIPT_URL is now expected to be injected globally before this script runs.
  */
 
-const BASE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwyzCNs3LoUus8PpPCz8Zko-7PWN0-ivzTTLvXwxDs47wAyDi2w8NVJv_PrJqq3kFRGyA/exec"; // <-- update if your Web App URL changes
+// Global variable defined in ThemeTemplate.html is used here.
+window.BASE_SCRIPT_URL = window.BASE_SCRIPT_URL || ''; 
 
 window.Runtime = {
   settings: null,
@@ -19,6 +21,11 @@ window.Runtime = {
    */
   init: async function () {
     try {
+      if (!window.BASE_SCRIPT_URL) {
+          console.error("Runtime init error: BASE_SCRIPT_URL not defined.");
+          return;
+      }
+      
       // 1) Load data from Apps Script (via JSONP)
       await this.loadSettings();
       await this.loadTextMap();
@@ -74,7 +81,7 @@ window.Runtime = {
         Object.assign({ action: action, callback: callbackFullName }, extraParams || {})
       );
 
-      const url = BASE_SCRIPT_URL + "?" + params.toString();
+      const url = window.BASE_SCRIPT_URL + "?" + params.toString();
 
       window.Runtime[cbName] = function (data) {
         try {
