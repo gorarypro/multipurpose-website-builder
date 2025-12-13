@@ -1,180 +1,220 @@
-<html b:version='2' expr:dir='data:blog.languageDirection' xmlns='http://www.w3.org/1999/xhtml' xmlns:b='http://www.google.com/2005/gml/b' xmlns:data='http://www.google.com/2005/gml/data' xmlns:expr='http://www.google.com/2005/gml/expr'>
+<!DOCTYPE html>
+<html b:version='2' expr:dir='data:blog.languageDirection'
+      xmlns='http://www.w3.org/1999/xhtml'
+      xmlns:b='http://www.google.com/2005/gml/b'
+      xmlns:data='http://www.google.com/2005/gml/data'
+      xmlns:expr='http://www.google.com/2005/gml/expr'>
 
   <head>
     <meta charset='utf-8'/>
     <title>&lt;?= settings.site_title || &#39;My Website&#39; ?&gt;</title>
     <meta content='width=device-width, initial-scale=1' name='viewport'/>
 
+    <!-- Bootstrap + Icons -->
     <link href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css' rel='stylesheet'/>
     <link href='https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css' rel='stylesheet'/>
 
+    <!-- Builder base CSS -->
     <link href='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/css/theme-base.css' rel='stylesheet'/>
-    <link expr:if='data:blog.languageDirection == &quot;rtl&quot;' href='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/css/rtl.css' rel='stylesheet'/>
+    <link expr:if='data:blog.languageDirection == &quot;rtl&quot;'
+          href='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/css/rtl.css'
+          rel='stylesheet'/>
 
-<style>
-  body.theme-body {
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;
-  }
+    <style>
+      body.theme-body {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
 
-  .hide-comp {
-    display: none !important;
-  }
+      .hide-comp { display: none !important; }
 
-  /* Floating action buttons (Cart, Wishlist, WhatsApp) */
-  .floating-btn {
-    position: fixed;
-    right: 16px;
-    z-index: 1050;
-    width: 52px;
-    height: 52px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: #ffffff;
-    border: 1px solid rgba(0,0,0,0.08);
-    box-shadow: 0 6px 16px rgba(0,0,0,0.15);
-    cursor: pointer;
-    transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
-  }
+      /* Product card styles for quickview */
+      .product-card { cursor: pointer; transition: transform 0.2s ease; }
+      .product-card:hover { transform: translateY(-5px); }
+      .product-image { overflow: hidden; }
+      .product-image img { transition: transform 0.3s ease; }
+      .product-card:hover .product-image img { transform: scale(1.05); }
 
-  .floating-btn i {
-    font-size: 1.4rem;
-  }
+      /* Floating action buttons */
+      .floating-btn {
+        position: fixed;
+        right: 16px;
+        z-index: 1050;
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #ffffff;
+        border: 1px solid rgba(0,0,0,0.08);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+        cursor: pointer;
+        transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+        text-decoration: none;
+      }
 
-  .floating-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 24px rgba(0,0,0,0.18);
-  }
+      .floating-btn i { font-size: 1.4rem; }
 
-  /* Positions */
-  .floating-cart {
-    bottom: 112px; /* Cart button */
-  }
+      .floating-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 24px rgba(0,0,0,0.18);
+      }
 
-  .floating-wishlist {
-    bottom: 176px; /* Wishlist above cart */
-  }
+      .floating-cart { bottom: 112px; }
+      .floating-wishlist { bottom: 176px; }
 
-  .floating-whatsapp {
-    bottom: 48px; /* WhatsApp at the bottom */
-    background-color: #25D366;
-    color: #ffffff;
-    border: none;
-  }
+      .floating-whatsapp {
+        bottom: 48px;
+        background-color: #25D366;
+        color: #ffffff;
+        border: none;
+      }
+      .floating-whatsapp i { font-size: 1.6rem; }
 
-  .floating-whatsapp i {
-    font-size: 1.6rem;
-  }
+      /* Counter badge on floating buttons */
+      .floating-btn .icon-count {
+        position: absolute;
+        top: -6px;
+        right: -6px;
+        min-width: 20px;
+        height: 20px;
+        padding: 0 4px;
+        border-radius: 999px;
+        background-color: #dc3545;
+        color: #ffffff;
+        font-size: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
 
-  /* Counter badge on floating buttons */
-  .floating-btn .icon-count {
-    position: absolute;
-    top: -6px;
-    right: -6px;
-    min-width: 20px;
-    height: 20px;
-    padding: 0 4px;
-    border-radius: 999px;
-    background-color: #dc3545;
-    color: #ffffff;
-    font-size: 0.75rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-</style>
+      /* Keep QuickView centered */
+      #quickViewModal .modal-dialog { max-width: 900px; }
 
+      /* Side drawer for cart & wishlist on desktop ONLY */
+      @media (min-width: 768px) {
+        #cartModal .modal-dialog,
+        #wishlistModal .modal-dialog {
+          margin: 0;
+          position: fixed;
+          right: 0;
+          top: 0;
+          height: 100%;
+          max-width: 420px;
+          transform: none;
+        }
+        #cartModal .modal-content,
+        #wishlistModal .modal-content {
+          height: 100%;
+          border-radius: 0;
+        }
+      }
+
+      /* Fix badge clipping */
+      .navbar .btn.position-relative .badge { margin-top: 2px; }
+    </style>
+
+    <!-- ONE (and only one) Blogger skin -->
     <b:skin><![CDATA[
-
 /* ===== Blogger Required Skin Block ===== */
-
 body.theme-body {
   margin: 0;
   padding: 0;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
-
-/* Use primary color from settings if available */
-a,
-.btn-primary,
-.navbar,
-.bg-primary {
-  background-color: #0d6efd;
-}
-
-/* Basic layout helpers */
-.hide-comp {
-  display: none !important;
-}
-
+.hide-comp { display: none !important; }
     ]]></b:skin>
   </head>
 
   <body class='theme-body lang-en'>
-    
-      <!-- SIMPLE NAVBAR WITH CART & WISHLIST -->
+
+    <!-- SIMPLE NAVBAR WITH CART & WISHLIST -->
     <nav class='navbar navbar-expand-lg navbar-light bg-white border-bottom mb-3'>
       <div class='container'>
-
-        <!-- Brand / site title -->
         <a class='navbar-brand' href='#hero'>
-          <span data-setting='site_title'/> 
+          <span data-setting='site_title'></span>
         </a>
 
         <div class='ms-auto d-flex gap-2'>
-
-          <!-- Cart button -->
           <button class='btn btn-outline-secondary position-relative' data-bs-target='#cartModal' data-bs-toggle='modal' type='button'>
-            <i class='bi bi-cart'/>
-
-            <!-- Cart count badge (Cart.js updates #cartCount) -->
+            <i class='bi bi-cart'></i>
             <span class='position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger' id='cartCount'>0</span>
           </button>
 
-          <!-- Wishlist button -->
           <button class='btn btn-outline-secondary position-relative' data-bs-target='#wishlistModal' data-bs-toggle='modal' type='button'>
-            <i class='bi bi-heart'/>
-
-            <!-- Wishlist count badge (Wishlist.js updates #wishlistCount) -->
+            <i class='bi bi-heart'></i>
             <span class='position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger' id='wishlistCount'>0</span>
           </button>
-
         </div>
-
       </div>
     </nav>
 
-
     <!-- NAVBAR SECTION -->
-    <b:section class='' id='navbar-section'/>
+    <b:section class='' id='navbar-section'></b:section>
 
     <!-- HERO SECTION -->
-    <b:section class='' id='hero-section'/>
+    <b:section class='' id='hero-section'></b:section>
 
     <!-- PRODUCTS SECTION -->
     <section class='' id='products-section'>
       <section class='py-5' id='products'>
         <div class='container'>
           <div class='d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2'>
-            <h2 class='h3 mb-0' data-i18n='TEXT_PRODUCTS'/>
+            <h2 class='h3 mb-0' data-i18n='TEXT_PRODUCTS'></h2>
             <div class='d-flex gap-2'>
               <select class='form-select form-select-sm' id='productFilter'>
-                <option data-i18n='TEXT_ALL' value='all'/>
+                <option data-i18n='TEXT_ALL' value='all'></option>
               </select>
               <select class='form-select form-select-sm' id='productSort'>
-                <option data-i18n='TEXT_SORT_LATEST' value='latest'/>
-                <option data-i18n='TEXT_SORT_PRICE_ASC' value='price-asc'/>
-                <option data-i18n='TEXT_SORT_PRICE_DESC' value='price-desc'/>
+                <option data-i18n='TEXT_SORT_LATEST' value='latest'></option>
+                <option data-i18n='TEXT_SORT_PRICE_ASC' value='price-asc'></option>
+                <option data-i18n='TEXT_SORT_PRICE_DESC' value='price-desc'></option>
               </select>
             </div>
           </div>
 
-          <div class='row g-4' id='productGrid'/>
+          <!-- products.js renders inside this -->
+          <div class='row g-4' id='productGrid'></div>
 
-          <div class='text-center text-muted mt-4 d-none' data-i18n='TEXT_NO_PRODUCTS' id='productsEmpty'/>
+          <div class='text-center text-muted mt-4 d-none' data-i18n='TEXT_NO_PRODUCTS' id='productsEmpty'></div>
         </div>
       </section>
+    </section>
+
+    <!-- QUICK VIEW MODAL (CENTERED) -->
+    <section id='quickview-section'>
+      <div aria-hidden='true' aria-labelledby='quickViewLabel' class='modal fade' id='quickViewModal' tabindex='-1'>
+        <div class='modal-dialog modal-dialog-centered modal-lg'>
+          <div class='modal-content'>
+            <div class='modal-header'>
+              <h5 class='modal-title' id='quickViewLabel'>Product</h5>
+              <button aria-label='Close' class='btn-close' data-bs-dismiss='modal' type='button'></button>
+            </div>
+
+            <div class='modal-body'>
+              <div class='row g-4 align-items-start'>
+                <div class='col-md-6'>
+                  <img alt='' class='img-fluid rounded' id='quickViewImage' />
+                </div>
+                <div class='col-md-6'>
+                  <div class='h4 mb-3' id='quickViewPrice'></div>
+                  <div class='small text-muted mb-3' id='quickViewDescription'></div>
+
+                  <button class='btn btn-primary me-2' id='quickViewAddToCart' type='button'>
+                    <i class='bi bi-cart-plus me-1'></i>
+                    <span>Add to cart</span>
+                  </button>
+
+                  <button class='btn btn-outline-secondary' data-bs-dismiss='modal' type='button'>
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
     </section>
 
     <!-- CART MODAL -->
@@ -184,26 +224,26 @@ a,
           <div class='modal-content'>
 
             <div class='modal-header'>
-              <h5 class='modal-title' data-i18n='TEXT_CART' id='cartModalLabel'/>
-              <button aria-label='Close' class='btn-close' data-bs-dismiss='modal' type='button'/>
+              <h5 class='modal-title' data-i18n='TEXT_CART' id='cartModalLabel'></h5>
+              <button aria-label='Close' class='btn-close' data-bs-dismiss='modal' type='button'></button>
             </div>
 
             <div class='modal-body'>
-              <div id='cartContent'/>
-              <div class='text-center text-muted d-none' data-i18n='CART_EMPTY' id='cartEmpty'/>
+              <div id='cartContent'></div>
+              <div class='text-center text-muted d-none' data-i18n='CART_EMPTY' id='cartEmpty'></div>
             </div>
 
             <div class='modal-footer d-flex justify-content-between align-items-center'>
               <div>
-                <span class='fw-semibold' data-i18n='TEXT_TOTAL'/>:
+                <span class='fw-semibold' data-i18n='TEXT_TOTAL'></span>:
                 <span id='cartTotal'>0</span>
               </div>
               <div class='d-flex gap-2'>
                 <button class='btn btn-outline-secondary' data-bs-dismiss='modal' type='button'>
-                  <span data-i18n='TEXT_CONTINUE_SHOPPING'/>
+                  <span data-i18n='TEXT_CONTINUE_SHOPPING'></span>
                 </button>
                 <button class='btn btn-primary' id='checkoutButton' type='button'>
-                  <span data-i18n='CHECKOUT'/>
+                  <span data-i18n='CHECKOUT'></span>
                 </button>
               </div>
             </div>
@@ -220,18 +260,18 @@ a,
           <div class='modal-content'>
 
             <div class='modal-header'>
-              <h5 class='modal-title' data-i18n='TEXT_WISHLIST' id='wishlistModalLabel'/>
-              <button aria-label='Close' class='btn-close' data-bs-dismiss='modal' type='button'/>
+              <h5 class='modal-title' data-i18n='TEXT_WISHLIST' id='wishlistModalLabel'></h5>
+              <button aria-label='Close' class='btn-close' data-bs-dismiss='modal' type='button'></button>
             </div>
 
             <div class='modal-body'>
-              <div id='wishlistContent'/>
-              <div class='text-center text-muted d-none' data-i18n='TEXT_WISHLIST_EMPTY' id='wishlistEmpty'/>
+              <div id='wishlistContent'></div>
+              <div class='text-center text-muted d-none' data-i18n='TEXT_WISHLIST_EMPTY' id='wishlistEmpty'></div>
             </div>
 
             <div class='modal-footer d-flex justify-content-between'>
               <button class='btn btn-outline-secondary' data-bs-dismiss='modal' type='button'>
-                <span data-i18n='TEXT_CLOSE'/>
+                <span data-i18n='TEXT_CLOSE'></span>
               </button>
             </div>
 
@@ -250,7 +290,7 @@ a,
               <h5 class='modal-title' id='timedPopupLabel'>
                 &lt;?= settings.popup_title || &#39;&#39; ?&gt;
               </h5>
-              <button aria-label='Close' class='btn-close' data-bs-dismiss='modal' type='button'/>
+              <button aria-label='Close' class='btn-close' data-bs-dismiss='modal' type='button'></button>
             </div>
 
             <div class='modal-body' id='timedPopupContent'>
@@ -267,23 +307,23 @@ a,
       <section class='py-5 bg-light' id='contact'>
         <div class='container'>
 
-          <h2 class='h3 mb-3' data-i18n='TEXT_CONTACT_US'/>
-          <p class='text-muted' data-i18n='TEXT_CONTACT_INTRO'/>
+          <h2 class='h3 mb-3' data-i18n='TEXT_CONTACT_US'></h2>
+          <p class='text-muted' data-i18n='TEXT_CONTACT_INTRO'></p>
 
           <div class='row g-4'>
             <div class='col-lg-5'>
               <ul class='list-unstyled small'>
                 <li>
-                  <strong data-i18n='TEXT_PHONE'/>:
-                  <span data-setting='contact_phone'/>
+                  <strong data-i18n='TEXT_PHONE'></strong>:
+                  <span data-setting='contact_phone'></span>
                 </li>
                 <li>
-                  <strong data-i18n='TEXT_EMAIL'/>:
-                  <span data-setting='contact_email'/>
+                  <strong data-i18n='TEXT_EMAIL'></strong>:
+                  <span data-setting='contact_email'></span>
                 </li>
                 <li>
-                  <strong data-i18n='TEXT_WHATSAPP'/>:
-                  <span data-setting='contact_whatsapp'/>
+                  <strong data-i18n='TEXT_WHATSAPP'></strong>:
+                  <span data-setting='contact_whatsapp'></span>
                 </li>
               </ul>
             </div>
@@ -291,18 +331,18 @@ a,
             <div class='col-lg-7'>
               <form id='contactForm' novalidate='novalidate'>
                 <div class='mb-3'>
-                  <label class='form-label' data-i18n='TEXT_NAME' for='contactName'/>
+                  <label class='form-label' data-i18n='TEXT_NAME' for='contactName'></label>
                   <input class='form-control' id='contactName' required='required' type='text'/>
                 </div>
 
                 <div class='mb-3'>
-                  <label class='form-label' data-i18n='TEXT_EMAIL' for='contactEmail'/>
+                  <label class='form-label' data-i18n='TEXT_EMAIL' for='contactEmail'></label>
                   <input class='form-control' id='contactEmail' required='required' type='email'/>
                 </div>
 
                 <div class='mb-3'>
-                  <label class='form-label' data-i18n='TEXT_MESSAGE' for='contactMessage'/>
-                  <textarea class='form-control' id='contactMessage' required='required' rows='4'/>
+                  <label class='form-label' data-i18n='TEXT_MESSAGE' for='contactMessage'></label>
+                  <textarea class='form-control' id='contactMessage' required='required' rows='4'></textarea>
                 </div>
 
                 <div class='d-none'>
@@ -310,10 +350,10 @@ a,
                 </div>
 
                 <button class='btn btn-primary mt-2' id='contactSubmit' type='submit'>
-                  <span data-i18n='TEXT_SEND_MESSAGE'/>
+                  <span data-i18n='TEXT_SEND_MESSAGE'></span>
                 </button>
 
-                <div class='mt-2 small text-muted' id='contactStatus'/>
+                <div class='mt-2 small text-muted' id='contactStatus'></div>
               </form>
             </div>
           </div>
@@ -326,14 +366,13 @@ a,
     <section id='testimonials-section'>
       <section class='py-5' id='testimonials'>
         <div class='container text-center'>
-
-          <h2 class='h3' data-i18n='TEXT_TESTIMONIALS'/>
-          <p class='text-muted' data-i18n='TEXT_TESTIMONIALS_SUBTITLE'/>
+          <h2 class='h3' data-i18n='TEXT_TESTIMONIALS'></h2>
+          <p class='text-muted' data-i18n='TEXT_TESTIMONIALS_SUBTITLE'></p>
 
           <div class='border rounded p-3 mt-4 mx-auto' style='max-width: 480px;'>
-            <p class='fst-italic' data-i18n='TEXT_TESTIMONIAL_SAMPLE'/>
+            <p class='fst-italic' data-i18n='TEXT_TESTIMONIAL_SAMPLE'></p>
             <div class='fw-semibold'>John Doe</div>
-            <div class='text-muted small' data-i18n='TEXT_TESTIMONIAL_ROLE'/>
+            <div class='text-muted small' data-i18n='TEXT_TESTIMONIAL_ROLE'></div>
           </div>
 
         </div>
@@ -344,28 +383,25 @@ a,
     <section id='pricing-section'>
       <section class='py-5 bg-light' id='pricing'>
         <div class='container text-center'>
-
-          <h2 class='h3' data-i18n='TEXT_PRICING'/>
-          <p class='text-muted' data-i18n='TEXT_PRICING_SUBTITLE'/>
+          <h2 class='h3' data-i18n='TEXT_PRICING'></h2>
+          <p class='text-muted' data-i18n='TEXT_PRICING_SUBTITLE'></p>
 
           <div class='card mt-4 mx-auto' style='max-width: 420px;'>
             <div class='card-body'>
-
-              <h5 data-i18n='TEXT_PLAN_BASIC'/>
-              <p class='text-muted' data-i18n='TEXT_PLAN_BASIC_SUBTITLE'/>
+              <h5 data-i18n='TEXT_PLAN_BASIC'></h5>
+              <p class='text-muted' data-i18n='TEXT_PLAN_BASIC_SUBTITLE'></p>
 
               <p class='display-6 fw-bold'>
-                29 <span data-setting='currency_symbol'/> /
-                <span data-i18n='TEXT_MONTH'/>
+                29 <span data-setting='currency_symbol'></span> /
+                <span data-i18n='TEXT_MONTH'></span>
               </p>
 
               <ul class='list-unstyled'>
-                <li data-i18n='TEXT_FEATURE_1'/>
-                <li data-i18n='TEXT_FEATURE_2'/>
+                <li data-i18n='TEXT_FEATURE_1'></li>
+                <li data-i18n='TEXT_FEATURE_2'></li>
               </ul>
 
-              <a class='btn btn-outline-primary' data-i18n='TEXT_CHOOSE_PLAN' href='#contact'/>
-
+              <a class='btn btn-outline-primary' data-i18n='TEXT_CHOOSE_PLAN' href='#contact'></a>
             </div>
           </div>
 
@@ -373,93 +409,60 @@ a,
       </section>
     </section>
 
-    
-        <!-- FLOATING ACTION BUTTONS (Cart, Wishlist, WhatsApp) -->
-    <!-- Floating Cart Button: opens the existing #cartModal -->
+    <!-- FLOATING ACTION BUTTONS (ONLY ONCE) -->
     <div class='floating-btn floating-cart' data-bs-target='#cartModal' data-bs-toggle='modal' id='floatingCart'>
-      <i class='bi bi-cart3'/>
+      <i class='bi bi-cart3'></i>
       <span class='icon-count' id='floatingCartCount'>0</span>
     </div>
 
-    <!-- Floating Wishlist Button: opens the existing #wishlistModal -->
     <div class='floating-btn floating-wishlist' data-bs-target='#wishlistModal' data-bs-toggle='modal' id='floatingWishlist'>
-      <i class='bi bi-heart-fill'/>
+      <i class='bi bi-heart-fill'></i>
       <span class='icon-count' id='floatingWishlistCount'>0</span>
     </div>
 
-    <!-- Floating WhatsApp Button: number comes from settings via {{WHATSAPP_NUMBER}} -->
-    <a class='floating-btn floating-whatsapp' href='https://wa.me/{{WHATSAPP_NUMBER}}' id='floatingWhatsapp' rel='noopener' target='_blank'>
-      <i class='bi bi-whatsapp'/>
+    <a class='floating-btn floating-whatsapp'
+       href='https://wa.me/&lt;?= (settings.contact_whatsapp || &#39;&#39;) ?&gt;'
+       id='floatingWhatsapp'
+       rel='noopener'
+       target='_blank'>
+      <i class='bi bi-whatsapp'></i>
     </a>
 
-    
     <!-- FOOTER -->
     <footer class='py-4 border-top bg-white'>
       <div class='container d-flex flex-wrap justify-content-between align-items-center gap-2'>
         <div class='small text-muted'>
-          &#169; <span id='footerYear'/>
-          <span data-setting='site_title'/> &#8211;
-          <span data-i18n='TEXT_ALL_RIGHTS_RESERVED'/>
+          &#169; <span id='footerYear'></span>
+          <span data-setting='site_title'></span> &#8211;
+          <span data-i18n='TEXT_ALL_RIGHTS_RESERVED'></span>
         </div>
 
         <div class='small'>
-          <a class='text-decoration-none me-2' data-i18n='TEXT_BACK_TO_TOP' href='#hero'/>
+          <a class='text-decoration-none me-2' data-i18n='TEXT_BACK_TO_TOP' href='#hero'></a>
           |
-          <a class='text-decoration-none mx-2' data-i18n='TEXT_PRIVACY' href='#'/>
+          <a class='text-decoration-none mx-2' data-i18n='TEXT_PRIVACY' href='#'></a>
           |
-          <a class='text-decoration-none ms-2' data-i18n='TEXT_TERMS' href='#'/>
+          <a class='text-decoration-none ms-2' data-i18n='TEXT_TERMS' href='#'></a>
         </div>
       </div>
     </footer>
 
-    <!-- PLACEHOLDER REPLACEMENT SCRIPT (SINGLE, CLEAN VERSION) -->
-    <script>
-    (function() {
-      function replacePlaceholders() {
-        if (!window.Runtime || !Runtime.settings) return;
-
-        const s = Runtime.settings;
-
-        const map = {
-          '{{CONTACT_PHONE}}': s.contact_phone || '',
-          '{{CONTACT_EMAIL}}': s.contact_email || '',
-          '{{WHATSAPP_NUMBER}}': s.contact_whatsapp || '',
-          '{{SITE_TITLE}}': s.site_title || '',
-          '{{CURRENCY_SYMBOL}}': s.currency_symbol || '',
-          '{{HERO_TITLE}}': s.hero_title || '',
-          '{{HERO_SUBTITLE}}': s.hero_subtitle || ''
-        };
-
-        let html = document.body.innerHTML;
-        for (const key in map) {
-          html = html.replace(new RegExp(key, 'g'), map[key]);
-        }
-        document.body.innerHTML = html;
-      }
-
-      // Run AFTER runtime has loaded settings
-      document.addEventListener("runtime_ready", replacePlaceholders);
-    })();
-    </script>
-
-    <!-- FOOTER YEAR SCRIPT -->
-    <script>
-    (function() {
-      var y = new Date().getFullYear();
-      var el = document.getElementById('footerYear');
-      if (el) el.textContent = y;
-    })();
-    </script>
-
     <!-- EXTERNAL SCRIPTS -->
     <script src='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js'></script>
 
+    <!-- Core runtime -->
     <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/runtime.js?v=3'></script>
+
+    <!-- Modules -->
     <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/products.js'></script>
+    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/quickview.js'></script>
+
     <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/variants.js'></script>
     <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/i18n.js'></script>
+
     <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/cart.js'></script>
     <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/wishlist.js'></script>
+
     <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/popup.js'></script>
     <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/currency.js'></script>
     <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/lazyload.js'></script>
@@ -467,24 +470,39 @@ a,
     <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/seo.js'></script>
     <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/gallery.js'></script>
 
-      <!-- FLOATING ACTION BUTTONS (Cart, Wishlist, WhatsApp) -->
+    <!-- Fix stuck gray overlay safely -->
+    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/modal-guard.js'></script>
 
-    <!-- Floating Cart Button: opens the existing #cartModal -->
-    <div class='floating-btn floating-cart' data-bs-target='#cartModal' data-bs-toggle='modal' id='floatingCart'>
-      <i class='bi bi-cart3'/>
-      <span class='icon-count' id='floatingCartCount'>0</span>
-    </div>
+    <!-- Small safe helpers (NO innerHTML replacement!) -->
+    <script>
+      (function () {
+        function setFooterYear() {
+          var el = document.getElementById('footerYear');
+          if (el) el.textContent = String(new Date().getFullYear());
+        }
 
-    <!-- Floating Wishlist Button: opens the existing #wishlistModal -->
-    <div class='floating-btn floating-wishlist' data-bs-target='#wishlistModal' data-bs-toggle='modal' id='floatingWishlist'>
-      <i class='bi bi-heart-fill'/>
-      <span class='icon-count' id='floatingWishlistCount'>0</span>
-    </div>
+        // Ensure WhatsApp href is correct after Runtime settings load
+        function fixWhatsappHref() {
+          var a = document.getElementById('floatingWhatsapp');
+          if (!a) return;
+          try {
+            var num = (window.Runtime && Runtime.settings && Runtime.settings.contact_whatsapp) ? String(Runtime.settings.contact_whatsapp) : '';
+            num = (num || '').replace(/[^\d+]/g, '');
+            if (num) a.setAttribute('href', 'https://wa.me/' + num);
+          } catch (e) {}
+        }
 
-    <!-- Floating WhatsApp Button: number comes from settings via {{WHATSAPP_NUMBER}} -->
-    <a class='floating-btn floating-whatsapp' href='https://wa.me/{{WHATSAPP_NUMBER}}' id='floatingWhatsapp' rel='noopener' target='_blank'>
-      <i class='bi bi-whatsapp'/>
-    </a>
+        document.addEventListener('DOMContentLoaded', function () {
+          setFooterYear();
+        });
+
+        document.addEventListener('runtime_ready', function () {
+          // No DOM rewriting here!
+          fixWhatsappHref();
+          setFooterYear();
+        });
+      })();
+    </script>
 
   </body>
 </html>
