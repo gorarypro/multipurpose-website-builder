@@ -2,6 +2,7 @@
  * Cart logic with localStorage
  * - Adds +/- controls
  * - Checkout saves detailed rows (per item) via Runtime.saveEntry()
+ * - UPDATED: Uses a form inside the modal instead of prompt() for checkout fields.
  */
 
 window.Cart = {
@@ -107,10 +108,14 @@ window.Cart = {
     var cont = document.getElementById('cartContent');
     var empty = document.getElementById('cartEmpty');
     var totalEl = document.getElementById('cartTotal');
+    var fieldsEl = document.getElementById('checkoutFields');
 
     if (!cont || !totalEl) return;
 
     cont.innerHTML = '';
+    
+    // Checkout fields visibility
+    if (fieldsEl) fieldsEl.style.display = this.items.length > 0 ? 'block' : 'none';
 
     if (!this.items.length) {
       if (empty) empty.classList.remove('d-none');
@@ -200,13 +205,17 @@ window.Cart = {
         alert("Checkout error: Runtime.saveEntry is not available.");
         return;
       }
-
-      var name = prompt("Name?");
-      if (name === null) return;
-
-      var email = prompt("Email? (optional)") || "";
-      var phone = prompt("Phone?") || "";
-      var message = prompt("Message / Address (optional)") || "";
+      
+      var nameEl = document.getElementById('checkoutName');
+      var emailEl = document.getElementById('checkoutEmail');
+      var phoneEl = document.getElementById('checkoutPhone');
+      var messageEl = document.getElementById('checkoutMessage');
+      
+      // Basic validation for name and phone
+      if (!nameEl.value.trim() || !phoneEl.value.trim()) {
+          alert('Please enter your Name and Phone Number.');
+          return;
+      }
 
       var ts = (new Date()).toISOString();
 
@@ -229,10 +238,10 @@ window.Cart = {
             qty: qty,
             price: price,
             total: parseFloat((price * qty).toFixed(2)),
-            name: String(name || ""),
-            email: String(email || ""),
-            phone: String(phone || ""),
-            message: String(message || "")
+            name: String(nameEl.value.trim() || ""),
+            email: String(emailEl.value.trim() || ""),
+            phone: String(phoneEl.value.trim() || ""),
+            message: String(messageEl.value.trim() || "")
           };
 
           await Runtime.saveEntry(entry);
@@ -241,6 +250,13 @@ window.Cart = {
         alert("Order submitted!");
         self.items = [];
         self.save();
+        
+        // Clear fields
+        nameEl.value = '';
+        emailEl.value = '';
+        phoneEl.value = '';
+        messageEl.value = '';
+
 
       } catch (e2) {
         console.error("Checkout failed:", e2);
