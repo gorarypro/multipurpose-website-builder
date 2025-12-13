@@ -98,22 +98,49 @@ window.Products = (function () {
     var btn = document.createElement("button");
     btn.className = "btn btn-sm btn-primary";
     btn.type = "button";
-    btn.textContent = "Add to cart";
-    btn.addEventListener("click", function (e) {
-      stopBtn(e);
-      if (typeof Cart !== "undefined" && Cart && typeof Cart.add === "function") {
-        Cart.add(product, 1);
-      } else {
-        console.log("Cart module not available. Product:", product);
-      }
-    });
+    
+    // Check for variants
+    var hasVariants = product.variants && Object.keys(product.variants).length > 0;
+    var btnText = (typeof I18n !== "undefined" && typeof I18n.t === "function") ? I18n.t("ADD_TO_CART") : "Add to cart";
+
+    if (hasVariants) {
+      // If variants exist, clicking the button should explicitly open the QuickView/Details modal.
+      btnText = (typeof I18n !== "undefined" && typeof I18n.t === "function") ? I18n.t("TEXT_DETAILS") || "View Details" : "View Details";
+      btn.textContent = btnText;
+      btn.addEventListener("click", function (e) {
+        stopBtn(e);
+        // Rely on quickview.js (or similar logic) to handle modal opening
+        if (typeof QuickView !== "undefined" && typeof QuickView.open === "function") {
+          QuickView.open(product, card);
+        } else {
+          // Fallback to direct add if modal system is missing (e.g., if quickview.js is commented out)
+          if (typeof Cart !== "undefined" && Cart && typeof Cart.add === "function") {
+            Cart.add(product, 1);
+          } else {
+            console.log("QuickView module not available, fallback Cart module not available. Product:", product);
+          }
+        }
+      });
+    } else {
+      // No variants, direct add to cart
+      btn.textContent = btnText;
+      btn.addEventListener("click", function (e) {
+        stopBtn(e);
+        if (typeof Cart !== "undefined" && Cart && typeof Cart.add === "function") {
+          Cart.add(product, 1);
+        } else {
+          console.log("Cart module not available. Product:", product);
+        }
+      });
+    }
+
     footer.appendChild(btn);
 
     if (typeof Wishlist !== "undefined" && Wishlist && typeof Wishlist.toggle === "function") {
       var wishBtn = document.createElement("button");
       wishBtn.className = "btn btn-sm btn-outline-secondary";
       wishBtn.type = "button";
-      wishBtn.textContent = "Wishlist";
+      wishBtn.textContent = (typeof I18n !== "undefined" && typeof I18n.t === "function") ? I18n.t("WISHLIST") : "Wishlist";
       wishBtn.addEventListener("click", function (e) {
         stopBtn(e);
         Wishlist.toggle(product);
@@ -188,6 +215,7 @@ window.Products = (function () {
 
       if (sortValue === "price-asc") {
         filtered.sort(function (a, b) {
+          // Assuming price is parsable
           return parseFloat(a.price || "0") - parseFloat(b.price || "0");
         });
       } else if (sortValue === "price-desc") {
