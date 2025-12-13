@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <base target="_top">
-    <meta charset="utf-8">
+    <base target="_top" />
+    <meta charset="utf-8" />
     <title>Multipurpose Website Builder</title>
 
     <!-- Bootstrap 5 -->
@@ -47,8 +47,16 @@
       .card-section {
         margin-bottom: 1.25rem;
       }
+      .mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+          "Liberation Mono", "Courier New", monospace;
+      }
+      textarea.mono {
+        white-space: pre;
+      }
     </style>
   </head>
+
   <body>
     <div class="container">
       <!-- HEADER -->
@@ -79,6 +87,7 @@
               <div class="fw-semibold">1. Branding</div>
               <small class="text-muted">Site title, logo, main color</small>
             </button>
+
             <button
               type="button"
               class="list-group-item list-group-item-action"
@@ -87,6 +96,7 @@
               <div class="fw-semibold">2. Language & Currency</div>
               <small class="text-muted">Locales & currency symbol</small>
             </button>
+
             <button
               type="button"
               class="list-group-item list-group-item-action"
@@ -95,6 +105,7 @@
               <div class="fw-semibold">3. Components & Data</div>
               <small class="text-muted">Sections, data source, contact</small>
             </button>
+
             <button
               type="button"
               class="list-group-item list-group-item-action"
@@ -108,9 +119,7 @@
 
         <!-- RIGHT: STEP CONTENT -->
         <div class="col-md-9">
-          <div id="stepIndicator" class="step-indicator mb-3">
-            Step 1 of 4
-          </div>
+          <div id="stepIndicator" class="step-indicator mb-3">Step 1 of 4</div>
 
           <!-- ================================ -->
           <!-- STEP 1 — BRANDING               -->
@@ -119,6 +128,7 @@
             <div class="card card-section">
               <div class="card-body">
                 <div class="form-section-title">Brand Basics</div>
+
                 <div class="mb-3">
                   <label class="form-label">Site Title</label>
                   <input
@@ -128,6 +138,7 @@
                     placeholder="My Store"
                   />
                 </div>
+
                 <div class="mb-3">
                   <label class="form-label">Logo Text</label>
                   <input
@@ -137,6 +148,7 @@
                     placeholder="MyBrand"
                   />
                 </div>
+
                 <div class="mb-3">
                   <label class="form-label">Primary Color (HEX)</label>
                   <div class="input-group">
@@ -158,6 +170,7 @@
             <div class="card card-section">
               <div class="card-body">
                 <div class="form-section-title">Hero Section</div>
+
                 <div class="mb-3">
                   <label class="form-label">Hero Title</label>
                   <input
@@ -167,6 +180,7 @@
                     placeholder="Delicious Event Sushi Delivered"
                   />
                 </div>
+
                 <div class="mb-3">
                   <label class="form-label">Hero Subtitle</label>
                   <textarea
@@ -176,6 +190,7 @@
                     placeholder="Catering, events, and platters made fresh."
                   ></textarea>
                 </div>
+
                 <div class="mb-3">
                   <label class="form-label">Hero Image URL</label>
                   <input
@@ -196,6 +211,7 @@
             <div class="card card-section">
               <div class="card-body">
                 <div class="form-section-title">Languages</div>
+
                 <div class="mb-3">
                   <label class="form-label">Language Mode</label>
                   <select id="languageMode" class="form-select">
@@ -207,6 +223,7 @@
                     to define translations.
                   </div>
                 </div>
+
                 <div class="mb-3">
                   <label class="form-label">Default Language</label>
                   <select id="defaultLanguage" class="form-select">
@@ -221,6 +238,7 @@
             <div class="card card-section">
               <div class="card-body">
                 <div class="form-section-title">Currency</div>
+
                 <div class="mb-3">
                   <label class="form-label">Currency Symbol</label>
                   <input
@@ -246,77 +264,40 @@
                 <div class="form-section-title">Page Components</div>
 
                 <div class="form-check form-switch mb-2">
-                  <input
-                    class="form-check-input"
-                    type="checkbox"
-                    id="navbarIncluded"
-                    checked
-                  />
-                  <label class="form-check-label" for="navbarIncluded">
-                    Include Navbar
-                  </label>
+                  <input class="form-check-input" type="checkbox" id="navbarIncluded" checked />
+                  <label class="form-check-label" for="navbarIncluded">Include Navbar</label>
                 </div>
 
                 <div class="form-check form-switch mb-2">
-                  <input
-                    class="form-check-input"
-                    type="checkbox"
-                    id="heroIncluded"
-                    checked
-                  />
-                  <label class="form-check-label" for="heroIncluded">
-                    Include Hero Section
-                  </label>
+                  <input class="form-check-input" type="checkbox" id="heroIncluded" checked />
+                  <label class="form-check-label" for="heroIncluded">Include Hero Section</label>
                 </div>
 
                 <div class="form-check form-switch mb-2">
-                  <input
-                    class="form-check-input"
-                    type="checkbox"
-                    id="formsIncluded"
-                    checked
-                  />
+                  <input class="form-check-input" type="checkbox" id="formsIncluded" checked />
                   <label class="form-check-label" for="formsIncluded">
                     Include Contact / Lead Form
                   </label>
                 </div>
 
                 <div class="form-check form-switch mb-2">
-                  <input
-                    class="form-check-input"
-                    type="checkbox"
-                    id="testimonialsIncluded"
-                    checked
-                  />
+                  <input class="form-check-input" type="checkbox" id="testimonialsIncluded" checked />
                   <label class="form-check-label" for="testimonialsIncluded">
                     Include Testimonials Section
                   </label>
                 </div>
 
                 <div class="form-check form-switch mb-2">
-                  <input
-                    class="form-check-input"
-                    type="checkbox"
-                    id="pricingIncluded"
-                    checked
-                  />
-                  <label class="form-check-label" for="pricingIncluded">
-                    Include Pricing Section
-                  </label>
+                  <input class="form-check-input" type="checkbox" id="pricingIncluded" checked />
+                  <label class="form-check-label" for="pricingIncluded">Include Pricing Section</label>
                 </div>
 
                 <div class="form-check form-switch mb-2">
-                  <input
-                    class="form-check-input"
-                    type="checkbox"
-                    id="popupIncluded"
-                  />
-                  <label class="form-check-label" for="popupIncluded">
-                    Include Timed Popup
-                  </label>
+                  <input class="form-check-input" type="checkbox" id="popupIncluded" />
+                  <label class="form-check-label" for="popupIncluded">Include Timed Popup</label>
                 </div>
 
-                <div id="popupOptions" class="mt-3" style="display:none;">
+                <div id="popupOptions" class="mt-3" style="display: none">
                   <div class="mb-3">
                     <label class="form-label">Popup Delay (seconds)</label>
                     <input
@@ -344,37 +325,41 @@
                 <div class="form-section-title">E-commerce</div>
 
                 <div class="form-check form-switch mb-2">
-                  <input
-                    class="form-check-input"
-                    type="checkbox"
-                    id="ecommerceIncluded"
-                  />
+                  <input class="form-check-input" type="checkbox" id="ecommerceIncluded" />
                   <label class="form-check-label" for="ecommerceIncluded">
-                    Enable E-commerce Features (cart, wishlist)
+                    Enable E-commerce Features (cart, wishlist, quickview)
                   </label>
                 </div>
 
-                <div id="ecommerceOptions" style="display:none;">
+                <div id="ecommerceOptions" style="display: none">
                   <div class="form-check form-switch mb-2">
-                    <input
-                      class="form-check-input"
-                      type="checkbox"
-                      id="cartIncluded"
-                    />
-                    <label class="form-check-label" for="cartIncluded">
-                      Include Cart
+                    <input class="form-check-input" type="checkbox" id="cartIncluded" />
+                    <label class="form-check-label" for="cartIncluded">Include Cart</label>
+                  </div>
+
+                  <div class="form-check form-switch mb-2">
+                    <input class="form-check-input" type="checkbox" id="wishlistIncluded" />
+                    <label class="form-check-label" for="wishlistIncluded">Include Wishlist</label>
+                  </div>
+
+                  <!-- NEW (safe): optional toggles if your theme/template reads them -->
+                  <div class="form-check form-switch mb-2">
+                    <input class="form-check-input" type="checkbox" id="quickviewIncluded" checked />
+                    <label class="form-check-label" for="quickviewIncluded">
+                      Enable Quick View (product modal)
                     </label>
                   </div>
+
                   <div class="form-check form-switch mb-2">
-                    <input
-                      class="form-check-input"
-                      type="checkbox"
-                      id="wishlistIncluded"
-                    />
-                    <label class="form-check-label" for="wishlistIncluded">
-                      Include Wishlist
+                    <input class="form-check-input" type="checkbox" id="floatingButtonsIncluded" checked />
+                    <label class="form-check-label" for="floatingButtonsIncluded">
+                      Show Floating Buttons (cart/wishlist/WhatsApp)
                     </label>
                   </div>
+                </div>
+
+                <div class="form-text mt-2">
+                  If your theme doesn’t use these toggles yet, they are harmless (saved in Settings).
                 </div>
               </div>
             </div>
@@ -436,6 +421,7 @@
                     placeholder="you@example.com"
                   />
                 </div>
+
                 <div class="mb-3">
                   <label class="form-label">Contact Phone</label>
                   <input
@@ -445,6 +431,7 @@
                     placeholder="+212 6 00 00 00 00"
                   />
                 </div>
+
                 <div class="mb-3">
                   <label class="form-label">WhatsApp Number</label>
                   <input
@@ -454,6 +441,7 @@
                     placeholder="+212 6 00 00 00 00"
                   />
                 </div>
+
                 <div class="mb-3">
                   <label class="form-label">Privacy Policy URL</label>
                   <input
@@ -463,6 +451,7 @@
                     placeholder="https://example.com/privacy"
                   />
                 </div>
+
                 <div class="mb-3">
                   <label class="form-label">Terms & Conditions URL</label>
                   <input
@@ -478,6 +467,7 @@
             <div class="card card-section">
               <div class="card-body">
                 <div class="form-section-title">Analytics</div>
+
                 <div class="mb-3">
                   <label class="form-label">Google Analytics / GA4 ID</label>
                   <input
@@ -498,11 +488,11 @@
             <div class="card card-section mb-3">
               <div class="card-body">
                 <div class="form-section-title">Theme Export</div>
+
                 <p class="text-muted mb-3">
-                  Choose a unique theme name. We’ll generate the Blogger theme
-                  XML and store it in the <strong>Themes</strong> sheet.
-                  If GitHub is enabled in the Settings sheet, you can push it
-                  automatically.
+                  Choose a unique theme name. We’ll generate the Blogger theme XML and store it
+                  in the <strong>Themes</strong> sheet. If GitHub is enabled in the Settings sheet,
+                  you can push it automatically.
                 </p>
 
                 <div class="mb-3">
@@ -516,14 +506,9 @@
                 </div>
 
                 <div class="form-check my-2">
-                  <input
-                    class="form-check-input"
-                    type="checkbox"
-                    id="pushGithub"
-                  />
+                  <input class="form-check-input" type="checkbox" id="pushGithub" />
                   <label class="form-check-label" for="pushGithub">
-                    Also push to GitHub (requires <code>github_* </code>settings
-                    in the Settings sheet)
+                    Also push to GitHub (requires <code>github_*</code> settings in the Settings sheet)
                   </label>
                 </div>
 
@@ -533,20 +518,40 @@
                 </button>
 
                 <div id="exportStatus" class="small text-muted mt-3"></div>
+
+                <!-- OPTIONAL: show generated XML for copy/download -->
+                <div class="mt-3">
+                  <label class="form-label fw-semibold">Generated theme.xml (preview)</label>
+                  <textarea
+                    id="themeXmlPreview"
+                    class="form-control mono"
+                    rows="10"
+                    placeholder="Click “Generate Theme” to see XML here..."
+                    readonly
+                  ></textarea>
+                  <div class="d-flex gap-2 mt-2">
+                    <button class="btn btn-outline-secondary btn-sm" id="copyXmlBtn" type="button">
+                      <i class="bi bi-clipboard"></i> Copy XML
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm" id="downloadXmlBtn" type="button">
+                      <i class="bi bi-download"></i> Download theme.xml
+                    </button>
+                  </div>
+                  <div class="small text-muted mt-2">
+                    (Optional) This doesn’t replace saving to Sheets/GitHub — it’s just for quick copy/download.
+                  </div>
+                </div>
               </div>
             </div>
 
             <div class="card card-section">
               <div class="card-body">
                 <div class="form-section-title">GitHub Configuration (Sheet)</div>
+
                 <p class="small text-muted mb-2">
-                  These values are stored in the <strong>Settings</strong> sheet
-                  (keys:
-                  <code>github_repo</code>,
-                  <code>github_branch</code>,
-                  <code>github_token</code>).
-                  You can edit them directly in Sheets or here and click
-                  <strong>Save</strong>.
+                  These values are stored in the <strong>Settings</strong> sheet (keys:
+                  <code>github_repo</code>, <code>github_branch</code>, <code>github_token</code>).
+                  You can edit them directly in Sheets or here and click <strong>Save</strong>.
                 </p>
 
                 <div class="mb-3">
@@ -578,8 +583,7 @@
                     placeholder="ghp_xxx..."
                   />
                   <div class="form-text">
-                    The token must have <code>repo</code> scope and rights to
-                    push to the repository.
+                    The token must have <code>repo</code> scope and rights to push to the repository.
                   </div>
                 </div>
               </div>
@@ -588,14 +592,14 @@
 
           <!-- GLOBAL FOOTER BUTTONS -->
           <div class="d-flex justify-content-between mt-4">
-            <button class="btn btn-outline-secondary" id="prevBtn">
+            <button class="btn btn-outline-secondary" id="prevBtn" type="button">
               <i class="bi bi-arrow-left"></i> Previous
             </button>
             <div>
-              <button class="btn btn-secondary me-2" id="saveBtn">
+              <button class="btn btn-secondary me-2" id="saveBtn" type="button">
                 <i class="bi bi-save"></i> Save Settings
               </button>
-              <button class="btn btn-primary" id="nextBtn">
+              <button class="btn btn-primary" id="nextBtn" type="button">
                 Next <i class="bi bi-arrow-right"></i>
               </button>
             </div>
@@ -606,7 +610,7 @@
       </div>
     </div>
 
-    <!-- Bootstrap JS (for any future use, modals, etc.) -->
+    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
@@ -620,214 +624,127 @@
         });
 
         // Update sidebar active state
-        document.querySelectorAll("#stepNav .list-group-item").forEach(
-          function (btn) {
-            btn.classList.toggle(
-              "active",
-              Number(btn.getAttribute("data-step")) === step
-            );
-          }
-        );
+        document.querySelectorAll("#stepNav .list-group-item").forEach(function (btn) {
+          btn.classList.toggle("active", Number(btn.getAttribute("data-step")) === step);
+        });
 
         const indicator = document.getElementById("stepIndicator");
         indicator.textContent = "Step " + step + " of " + maxStep;
 
         document.getElementById("prevBtn").disabled = step === 1;
-        document.getElementById("nextBtn").textContent =
-          step === maxStep ? "Finish" : "Next";
+        document.getElementById("nextBtn").textContent = step === maxStep ? "Finish" : "Next";
       }
 
       function collectState() {
         // Step 1
         state.site_title = document.getElementById("siteTitle").value || "";
         state.logo_text = document.getElementById("logoText").value || "";
-        state.primary_color =
-          document.getElementById("primaryColor").value || "";
+        state.primary_color = document.getElementById("primaryColor").value || "";
 
         state.hero_title = document.getElementById("heroTitle").value || "";
-        state.hero_subtitle =
-          document.getElementById("heroSubtitle").value || "";
-        state.hero_image_url =
-          document.getElementById("heroImageUrl").value || "";
+        state.hero_subtitle = document.getElementById("heroSubtitle").value || "";
+        state.hero_image_url = document.getElementById("heroImageUrl").value || "";
 
         // Step 2
-        state.language_mode =
-          document.getElementById("languageMode").value || "single";
-        state.default_language =
-          document.getElementById("defaultLanguage").value || "en";
-        state.currency_symbol =
-          document.getElementById("currencySymbol").value || "$";
+        state.language_mode = document.getElementById("languageMode").value || "single";
+        state.default_language = document.getElementById("defaultLanguage").value || "en";
+        state.currency_symbol = document.getElementById("currencySymbol").value || "$";
 
         // Step 3 – components
-        state.navbar_included = document.getElementById("navbarIncluded")
-          .checked
-          ? "yes"
-          : "no";
-        state.hero_included = document.getElementById("heroIncluded").checked
-          ? "yes"
-          : "no";
-        state.forms_included = document.getElementById("formsIncluded").checked
-          ? "yes"
-          : "no";
-        state.testimonials_included = document.getElementById(
-          "testimonialsIncluded"
-        ).checked
-          ? "yes"
-          : "no";
-        state.pricing_included = document.getElementById("pricingIncluded")
-          .checked
-          ? "yes"
-          : "no";
+        state.navbar_included = document.getElementById("navbarIncluded").checked ? "yes" : "no";
+        state.hero_included = document.getElementById("heroIncluded").checked ? "yes" : "no";
+        state.forms_included = document.getElementById("formsIncluded").checked ? "yes" : "no";
+        state.testimonials_included = document.getElementById("testimonialsIncluded").checked ? "yes" : "no";
+        state.pricing_included = document.getElementById("pricingIncluded").checked ? "yes" : "no";
 
-        state.popup_included = document.getElementById("popupIncluded")
-          .checked
-          ? "yes"
-          : "no";
-        state.popup_delay_seconds =
-          document.getElementById("popupDelaySeconds").value || "";
+        state.popup_included = document.getElementById("popupIncluded").checked ? "yes" : "no";
+        state.popup_delay_seconds = document.getElementById("popupDelaySeconds").value || "";
         state.popup_html = document.getElementById("popupHtml").value || "";
 
         // E-commerce
-        state.ecommerce_included = document.getElementById("ecommerceIncluded")
-          .checked
-          ? "yes"
-          : "no";
-        state.cart_included = document.getElementById("cartIncluded").checked
-          ? "yes"
-          : "no";
-        state.wishlist_included = document.getElementById(
-          "wishlistIncluded"
-        ).checked
-          ? "yes"
-          : "no";
+        state.ecommerce_included = document.getElementById("ecommerceIncluded").checked ? "yes" : "no";
+        state.cart_included = document.getElementById("cartIncluded").checked ? "yes" : "no";
+        state.wishlist_included = document.getElementById("wishlistIncluded").checked ? "yes" : "no";
+
+        // NEW optional toggles
+        state.quickview_included = document.getElementById("quickviewIncluded").checked ? "yes" : "no";
+        state.floating_buttons_included = document.getElementById("floatingButtonsIncluded").checked ? "yes" : "no";
 
         // Data source
-        state.product_source =
-          document.getElementById("productSource").value || "blogger";
-        state.blogger_feed_url =
-          document.getElementById("bloggerFeedUrl").value || "";
+        state.product_source = document.getElementById("productSource").value || "blogger";
+        state.blogger_feed_url = document.getElementById("bloggerFeedUrl").value || "";
         state.wp_api_url = document.getElementById("wpApiUrl").value || "";
         state.wp_auth_key = document.getElementById("wpAuthKey").value || "";
 
         // Contact & legal
-        state.contact_email =
-          document.getElementById("contactEmail").value || "";
-        state.contact_phone =
-          document.getElementById("contactPhone").value || "";
-        state.contact_whatsapp =
-          document.getElementById("contactWhatsapp").value || "";
-        state.privacy_url =
-          document.getElementById("privacyUrl").value || "";
+        state.contact_email = document.getElementById("contactEmail").value || "";
+        state.contact_phone = document.getElementById("contactPhone").value || "";
+        state.contact_whatsapp = document.getElementById("contactWhatsapp").value || "";
+        state.privacy_url = document.getElementById("privacyUrl").value || "";
         state.terms_url = document.getElementById("termsUrl").value || "";
 
         // Analytics
         state.ga_id = document.getElementById("gaId").value || "";
 
         // GitHub (stored in Settings sheet)
-        state.github_repo =
-          document.getElementById("githubRepo").value || "";
-        state.github_branch =
-          document.getElementById("githubBranch").value || "";
-        state.github_token =
-          document.getElementById("githubToken").value || "";
+        state.github_repo = document.getElementById("githubRepo").value || "";
+        state.github_branch = document.getElementById("githubBranch").value || "";
+        state.github_token = document.getElementById("githubToken").value || "";
       }
 
       function applySettings(settings) {
         if (!settings) return;
 
         // Step 1
-        if (settings.site_title)
-          document.getElementById("siteTitle").value = settings.site_title;
-        if (settings.logo_text)
-          document.getElementById("logoText").value = settings.logo_text;
-        if (settings.primary_color)
-          document.getElementById("primaryColor").value =
-            settings.primary_color;
+        if (settings.site_title) document.getElementById("siteTitle").value = settings.site_title;
+        if (settings.logo_text) document.getElementById("logoText").value = settings.logo_text;
+        if (settings.primary_color) document.getElementById("primaryColor").value = settings.primary_color;
 
-        if (settings.hero_title)
-          document.getElementById("heroTitle").value = settings.hero_title;
-        if (settings.hero_subtitle)
-          document.getElementById("heroSubtitle").value =
-            settings.hero_subtitle;
-        if (settings.hero_image_url)
-          document.getElementById("heroImageUrl").value =
-            settings.hero_image_url;
+        if (settings.hero_title) document.getElementById("heroTitle").value = settings.hero_title;
+        if (settings.hero_subtitle) document.getElementById("heroSubtitle").value = settings.hero_subtitle;
+        if (settings.hero_image_url) document.getElementById("heroImageUrl").value = settings.hero_image_url;
 
         // Step 2
-        if (settings.language_mode)
-          document.getElementById("languageMode").value =
-            settings.language_mode;
-        if (settings.default_language)
-          document.getElementById("defaultLanguage").value =
-            settings.default_language;
-        if (settings.currency_symbol)
-          document.getElementById("currencySymbol").value =
-            settings.currency_symbol;
+        if (settings.language_mode) document.getElementById("languageMode").value = settings.language_mode;
+        if (settings.default_language) document.getElementById("defaultLanguage").value = settings.default_language;
+        if (settings.currency_symbol) document.getElementById("currencySymbol").value = settings.currency_symbol;
 
         // Step 3 – components
-        document.getElementById("navbarIncluded").checked =
-          (settings.navbar_included || "yes") === "yes";
-        document.getElementById("heroIncluded").checked =
-          (settings.hero_included || "yes") === "yes";
-        document.getElementById("formsIncluded").checked =
-          (settings.forms_included || "yes") === "yes";
-        document.getElementById("testimonialsIncluded").checked =
-          (settings.testimonials_included || "yes") === "yes";
-        document.getElementById("pricingIncluded").checked =
-          (settings.pricing_included || "yes") === "yes";
+        document.getElementById("navbarIncluded").checked = (settings.navbar_included || "yes") === "yes";
+        document.getElementById("heroIncluded").checked = (settings.hero_included || "yes") === "yes";
+        document.getElementById("formsIncluded").checked = (settings.forms_included || "yes") === "yes";
+        document.getElementById("testimonialsIncluded").checked = (settings.testimonials_included || "yes") === "yes";
+        document.getElementById("pricingIncluded").checked = (settings.pricing_included || "yes") === "yes";
 
-        document.getElementById("popupIncluded").checked =
-          (settings.popup_included || "no") === "yes";
-        if (settings.popup_delay_seconds)
-          document.getElementById("popupDelaySeconds").value =
-            settings.popup_delay_seconds;
-        if (settings.popup_html)
-          document.getElementById("popupHtml").value = settings.popup_html;
+        document.getElementById("popupIncluded").checked = (settings.popup_included || "no") === "yes";
+        if (settings.popup_delay_seconds) document.getElementById("popupDelaySeconds").value = settings.popup_delay_seconds;
+        if (settings.popup_html) document.getElementById("popupHtml").value = settings.popup_html;
 
-        document.getElementById("ecommerceIncluded").checked =
-          (settings.ecommerce_included || "no") === "yes";
-        document.getElementById("cartIncluded").checked =
-          (settings.cart_included || "no") === "yes";
-        document.getElementById("wishlistIncluded").checked =
-          (settings.wishlist_included || "no") === "yes";
+        document.getElementById("ecommerceIncluded").checked = (settings.ecommerce_included || "no") === "yes";
+        document.getElementById("cartIncluded").checked = (settings.cart_included || "no") === "yes";
+        document.getElementById("wishlistIncluded").checked = (settings.wishlist_included || "no") === "yes";
 
-        if (settings.product_source)
-          document.getElementById("productSource").value =
-            settings.product_source;
-        if (settings.blogger_feed_url)
-          document.getElementById("bloggerFeedUrl").value =
-            settings.blogger_feed_url;
-        if (settings.wp_api_url)
-          document.getElementById("wpApiUrl").value = settings.wp_api_url;
-        if (settings.wp_auth_key)
-          document.getElementById("wpAuthKey").value = settings.wp_auth_key;
+        // NEW optional toggles (default yes in UI)
+        document.getElementById("quickviewIncluded").checked = (settings.quickview_included || "yes") === "yes";
+        document.getElementById("floatingButtonsIncluded").checked = (settings.floating_buttons_included || "yes") === "yes";
 
-        if (settings.contact_email)
-          document.getElementById("contactEmail").value =
-            settings.contact_email;
-        if (settings.contact_phone)
-          document.getElementById("contactPhone").value =
-            settings.contact_phone;
-        if (settings.contact_whatsapp)
-          document.getElementById("contactWhatsapp").value =
-            settings.contact_whatsapp;
-        if (settings.privacy_url)
-          document.getElementById("privacyUrl").value = settings.privacy_url;
-        if (settings.terms_url)
-          document.getElementById("termsUrl").value = settings.terms_url;
+        if (settings.product_source) document.getElementById("productSource").value = settings.product_source;
+        if (settings.blogger_feed_url) document.getElementById("bloggerFeedUrl").value = settings.blogger_feed_url;
+        if (settings.wp_api_url) document.getElementById("wpApiUrl").value = settings.wp_api_url;
+        if (settings.wp_auth_key) document.getElementById("wpAuthKey").value = settings.wp_auth_key;
 
-        if (settings.ga_id)
-          document.getElementById("gaId").value = settings.ga_id;
+        if (settings.contact_email) document.getElementById("contactEmail").value = settings.contact_email;
+        if (settings.contact_phone) document.getElementById("contactPhone").value = settings.contact_phone;
+        if (settings.contact_whatsapp) document.getElementById("contactWhatsapp").value = settings.contact_whatsapp;
+        if (settings.privacy_url) document.getElementById("privacyUrl").value = settings.privacy_url;
+        if (settings.terms_url) document.getElementById("termsUrl").value = settings.terms_url;
+
+        if (settings.ga_id) document.getElementById("gaId").value = settings.ga_id;
 
         // GitHub
-        if (settings.github_repo)
-          document.getElementById("githubRepo").value = settings.github_repo;
-        if (settings.github_branch)
-          document.getElementById("githubBranch").value =
-            settings.github_branch;
-        if (settings.github_token)
-          document.getElementById("githubToken").value =
-            settings.github_token;
+        if (settings.github_repo) document.getElementById("githubRepo").value = settings.github_repo;
+        if (settings.github_branch) document.getElementById("githubBranch").value = settings.github_branch;
+        if (settings.github_token) document.getElementById("githubToken").value = settings.github_token;
 
         // Toggle dependent panels
         toggleEcommerceOptions();
@@ -841,11 +758,8 @@
 
         google.script.run
           .withSuccessHandler(function (res) {
-            if (res && res.status === "ok") {
-              statusEl.textContent = "✅ Settings saved.";
-            } else {
-              statusEl.textContent = "⚠️ Save returned an unexpected result.";
-            }
+            if (res && res.status === "ok") statusEl.textContent = "✅ Settings saved.";
+            else statusEl.textContent = "⚠️ Save returned an unexpected result.";
           })
           .withFailureHandler(function (err) {
             statusEl.textContent = "❌ Error: " + err.message;
@@ -874,64 +788,47 @@
 
       function toggleEcommerceOptions() {
         const checked = document.getElementById("ecommerceIncluded").checked;
-        document.getElementById("ecommerceOptions").style.display = checked
-          ? "block"
-          : "none";
+        document.getElementById("ecommerceOptions").style.display = checked ? "block" : "none";
       }
 
       function togglePopupOptions() {
         const checked = document.getElementById("popupIncluded").checked;
-        document.getElementById("popupOptions").style.display = checked
-          ? "block"
-          : "none";
+        document.getElementById("popupOptions").style.display = checked ? "block" : "none";
       }
 
       function initBuilder() {
         // Sidebar step navigation
-        document
-          .querySelectorAll("#stepNav .list-group-item")
-          .forEach(function (btn) {
-            btn.addEventListener("click", function () {
-              const step = Number(btn.getAttribute("data-step"));
-              currentStep = step;
-              showStep(currentStep);
-            });
+        document.querySelectorAll("#stepNav .list-group-item").forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            currentStep = Number(btn.getAttribute("data-step"));
+            showStep(currentStep);
           });
+        });
 
-        document
-          .getElementById("nextBtn")
-          .addEventListener("click", function () {
-            if (currentStep < maxStep) {
-              currentStep++;
-              showStep(currentStep);
-            } else {
-              // On last step, just save settings
-              saveSettings();
-            }
-          });
-
-        document
-          .getElementById("prevBtn")
-          .addEventListener("click", function () {
-            if (currentStep > 1) {
-              currentStep--;
-              showStep(currentStep);
-            }
-          });
-
-        document
-          .getElementById("saveBtn")
-          .addEventListener("click", function () {
+        document.getElementById("nextBtn").addEventListener("click", function () {
+          if (currentStep < maxStep) {
+            currentStep++;
+            showStep(currentStep);
+          } else {
+            // On last step, just save settings
             saveSettings();
-          });
+          }
+        });
+
+        document.getElementById("prevBtn").addEventListener("click", function () {
+          if (currentStep > 1) {
+            currentStep--;
+            showStep(currentStep);
+          }
+        });
+
+        document.getElementById("saveBtn").addEventListener("click", function () {
+          saveSettings();
+        });
 
         // Toggles
-        document
-          .getElementById("ecommerceIncluded")
-          .addEventListener("change", toggleEcommerceOptions);
-        document
-          .getElementById("popupIncluded")
-          .addEventListener("change", togglePopupOptions);
+        document.getElementById("ecommerceIncluded").addEventListener("change", toggleEcommerceOptions);
+        document.getElementById("popupIncluded").addEventListener("change", togglePopupOptions);
 
         // Initial state
         toggleEcommerceOptions();
@@ -940,16 +837,60 @@
         loadSettingsOnStart();
       }
 
-      // ================================
-      // STEP 4 — Theme Export & GitHub
-      // ================================
+      // ===== Helpers for Step 4 Preview =====
+      function setThemePreviewXml(xmlText, themeName) {
+        const ta = document.getElementById("themeXmlPreview");
+        if (ta) ta.value = xmlText || "";
+        const dlBtn = document.getElementById("downloadXmlBtn");
+        if (dlBtn) dlBtn.dataset.filename = (themeName || "theme") + ".xml";
+      }
+
+      function downloadTextFile(filename, text) {
+        const blob = new Blob([text], { type: "application/xml;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename || "theme.xml";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+      }
+
       document.addEventListener("DOMContentLoaded", function () {
         initBuilder();
 
         const exportBtn = document.getElementById("exportThemeBtn");
-        if (!exportBtn) return;
-
         const status = document.getElementById("exportStatus");
+        const copyBtn = document.getElementById("copyXmlBtn");
+        const downloadBtn = document.getElementById("downloadXmlBtn");
+
+        if (copyBtn) {
+          copyBtn.addEventListener("click", async function () {
+            const ta = document.getElementById("themeXmlPreview");
+            if (!ta || !ta.value) return;
+            try {
+              await navigator.clipboard.writeText(ta.value);
+              status.textContent = "✅ XML copied to clipboard.";
+            } catch (e) {
+              ta.focus();
+              ta.select();
+              document.execCommand("copy");
+              status.textContent = "✅ XML copied (fallback).";
+            }
+          });
+        }
+
+        if (downloadBtn) {
+          downloadBtn.addEventListener("click", function () {
+            const ta = document.getElementById("themeXmlPreview");
+            if (!ta || !ta.value) return;
+            const filename = downloadBtn.dataset.filename || "theme.xml";
+            downloadTextFile(filename, ta.value);
+          });
+        }
+
+        if (!exportBtn) return;
 
         exportBtn.addEventListener("click", function () {
           const name = document.getElementById("themeName").value.trim();
@@ -962,13 +903,12 @@
 
           // 1) SAVE SETTINGS FIRST (including github_* from Step 4)
           status.textContent = "💾 Saving settings before export...";
-          collectState(); // fills the global `state` object
+          collectState();
 
           google.script.run
             .withSuccessHandler(function (saveRes) {
               if (!saveRes || saveRes.status !== "ok") {
-                status.textContent =
-                  "⚠️ Settings save may have failed, continuing anyway...";
+                status.textContent = "⚠️ Settings save may have failed, continuing anyway...";
               } else {
                 status.textContent = "⏳ Generating theme...";
               }
@@ -984,41 +924,38 @@
                   // Decode Base64 XML
                   var xml = atob(res.xml);
 
+                  // Show preview
+                  setThemePreviewXml(xml, name);
+
                   // 3) SAVE THEME XML TO SHEET
                   status.textContent = "⏳ Saving theme to sheet...";
 
                   google.script.run
                     .withSuccessHandler(function (r2) {
                       if (!r2 || r2.status !== "ok") {
-                        status.textContent =
-                          "❌ Save failed: " + (r2 && r2.message);
+                        status.textContent = "❌ Save failed: " + (r2 && r2.message);
                         return;
                       }
 
                       if (!push) {
-                        status.textContent =
-                          "✅ Theme saved to sheet as: " + name;
+                        status.textContent = "✅ Theme saved to sheet as: " + name;
                         return;
                       }
 
                       // 4) OPTIONAL: PUSH TO GITHUB
-                      status.textContent =
-                        "⏳ Saved. Pushing to GitHub (check permissions)...";
+                      status.textContent = "⏳ Saved. Pushing to GitHub (check permissions)...";
 
                       google.script.run
                         .withSuccessHandler(function (r3) {
                           if (r3 && r3.status === "ok") {
-                            status.textContent =
-                              "✅ Theme saved & pushed to GitHub: " + r3.path;
+                            status.textContent = "✅ Theme saved & pushed to GitHub: " + r3.path;
                           } else {
                             status.textContent =
-                              "⚠️ Saved locally but GitHub push failed: " +
-                              (r3 && r3.message);
+                              "⚠️ Saved locally but GitHub push failed: " + (r3 && r3.message);
                           }
                         })
                         .withFailureHandler(function (err) {
-                          status.textContent =
-                            "⚠️ GitHub push FAILED: " + err.message;
+                          status.textContent = "⚠️ GitHub push FAILED: " + err.message;
                         })
                         .pushThemeToGitHub(name);
                     })
@@ -1028,14 +965,12 @@
                     .saveThemeXml(name, xml);
                 })
                 .withFailureHandler(function (err) {
-                  status.textContent =
-                    "❌ Theme generation failed: " + err.message;
+                  status.textContent = "❌ Theme generation failed: " + err.message;
                 })
                 .generateTheme(name);
             })
             .withFailureHandler(function (err) {
-              status.textContent =
-                "❌ Could not save settings before export: " + err.message;
+              status.textContent = "❌ Could not save settings before export: " + err.message;
             })
             .saveSettings(JSON.stringify(state));
         });
