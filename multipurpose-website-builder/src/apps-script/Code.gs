@@ -265,28 +265,44 @@ function getTextMapping() {
  * SAVE ENTRIES (orders / forms)
  * ======================================================== */
 function saveEntry(entryJson) {
-  const entry = JSON.parse(entryJson);
+  const entry = JSON.parse(entryJson || '{}');
+
   const sheet = SpreadsheetApp
     .openById(SPREADSHEET_ID)
     .getSheetByName(ENTRIES_SHEET);
 
+  // Normalize / keep exact fields
+  const type      = entry.type || 'order';
+  const productId = entry.product_id || entry.productId || '';
+  const title     = entry.title || '';
+  const variants  = entry.variants ? JSON.stringify(entry.variants) : (entry.variants_json || '');
+  const qty       = entry.qty != null ? entry.qty : (entry.quantity != null ? entry.quantity : '');
+  const price     = entry.price != null ? entry.price : '';
+  const total     = entry.total != null ? entry.total : '';
+
+  const name    = entry.name || '';
+  const email   = entry.email || '';
+  const phone   = entry.phone || '';
+  const message = entry.message || '';
+
   sheet.appendRow([
-    new Date(),
-    entry.type      || '',
-    entry.productId || '',
-    entry.title     || '',
-    entry.variants  || '',
-    entry.quantity  || '',
-    entry.price     || '',
-    entry.total     || '',
-    entry.name      || '',
-    entry.email     || '',
-    entry.phone     || '',
-    entry.message   || ''
+    new Date(),     // timestamp
+    type,           // type
+    productId,      // product_id
+    title,          // title
+    variants,       // variants
+    qty,            // qty
+    price,          // price
+    total,          // total
+    name,           // name
+    email,          // email
+    phone,          // phone
+    message         // message
   ]);
 
   return { status: 'ok' };
 }
+
 
 /* ========================================================
  * THEME GENERATION — SAFE BASE64 VERSION
@@ -453,4 +469,3 @@ function debugGithubSettings() {
   Logger.log('github_branch = ' + s.github_branch);
   Logger.log('github_enabled = ' + s.github_enabled);
 }
-
