@@ -1,341 +1,927 @@
-<!DOCTYPE html>
-<html b:version='2' expr:dir='data:blog.languageDirection'>
+<?xml version="1.0" encoding="UTF-8" ?>
+<html b:version='2' expr:dir='data:blog.languageDirection' xmlns='http://www.w3.org/1999/xhtml' xmlns:b='http://www.google.com/2005/gml/b' xmlns:data='http://www.google.com/2005/gml/data' xmlns:expr='http://www.google.com/2005/gml/expr'>
+
   <head>
-    &lt;meta charset=&#34;utf-8&#34;&gt;
-&lt;title&gt;&amp;lt;?= settings.site_title || &amp;#39;My Website&amp;#39; ?&amp;gt;&lt;/title&gt;
-&lt;meta name=&#34;viewport&#34; content=&#34;width=device-width, initial-scale=1&#34;&gt;
-&lt;link href=&#34;https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css&#34; rel=&#34;stylesheet&#34;&gt;
-&lt;link href=&#34;https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css&#34; rel=&#34;stylesheet&#34;&gt;
+    <meta charset='utf-8'/>
+    <title><data:blog.pageTitle/></title>
+    <meta content='width=device-width, initial-scale=1' name='viewport'/>
 
+    <!-- Bootstrap + Icons -->
+    <link href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css' rel='stylesheet'/>
+    <link href='https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css' rel='stylesheet'/>
 
-&lt;link href=&#34;https://multipurpose-website-builder/assets/css/theme-base.css&#34; rel=&#34;stylesheet&#34;&gt;
-&lt;link href=&#34;https://multipurpose-website-builder/assets/css/rtl.css&#34; rel=&#34;stylesheet&#34; expr:if=&#39;data:blog.languageDirection == &#34;rtl&#34;&#39;&gt;
+    <!-- Builder base CSS -->
+    <link href='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/css/theme-base.css' rel='stylesheet'/>
+    <link expr:if='data:blog.languageDirection == &quot;rtl&quot;' href='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/css/rtl.css' rel='stylesheet'/>
 
-&lt;style&gt;
-  body.theme-body {
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, &#34;Segoe UI&#34;, sans-serif;
-  }
-  .hide-comp { display: none !important; }
-&lt;/style&gt;
+    <style>
+      body.theme-body {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;
+      }
+
+      .hide-comp { display: none !important; }
+
+      /* Product card styles for quickview */
+      .product-card {
+        cursor: pointer;
+        transition: transform 0.2s ease;
+      }
+      .product-card:hover { transform: translateY(-5px); }
+      .product-image { overflow: hidden; }
+      .product-image img { transition: transform 0.3s ease; }
+      .product-card:hover .product-image img { transform: scale(1.05); }
+
+      /* Floating action buttons (Cart, Wishlist, WhatsApp) */
+      .floating-btn {
+        position: fixed;
+        right: 16px;
+        z-index: 1050;
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #ffffff;
+        border: 1px solid rgba(0,0,0,0.08);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+        cursor: pointer;
+        transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+      }
+      .floating-btn i { font-size: 1.4rem; }
+      .floating-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 24px rgba(0,0,0,0.18);
+      }
+      .floating-cart { bottom: 112px; }
+      .floating-wishlist { bottom: 176px; }
+      .floating-whatsapp {
+        bottom: 48px;
+        background-color: #25D366;
+        color: #ffffff;
+        border: none;
+      }
+      .floating-whatsapp i { font-size: 1.6rem; }
+
+      /* Counter badge on floating buttons */
+      .floating-btn .icon-count {
+        position: absolute;
+        top: -6px;
+        right: -6px;
+        min-width: 20px;
+        height: 20px;
+        padding: 0 4px;
+        border-radius: 999px;
+        background-color: #dc3545;
+        color: #ffffff;
+        font-size: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* Keep QuickView centered */
+      #quickViewModal .modal-dialog {
+        max-width: 900px;
+      }
+
+      /* Side-drawer style for cart &amp; wishlist on desktop ONLY */
+      @media (min-width: 768px) {
+        #cartModal .modal-dialog,
+        #wishlistModal .modal-dialog {
+          margin: 0;
+          position: fixed;
+          right: 0;
+          top: 0;
+          height: 100%;
+          max-width: 420px;
+          transform: none;
+        }
+        #cartModal .modal-content,
+        #wishlistModal .modal-content {
+          height: 100%;
+          border-radius: 0;
+        }
+      }
+
+      /* Fix badge clipping (top padding a bit) */
+      .navbar .btn.position-relative .badge {
+        margin-top: 2px;
+      }
+    </style>
+
+    <!-- ONE (and only one) Blogger skin -->
+    <b:skin><![CDATA[
+/* ===== Blogger Required Skin Block ===== */
+
+body.theme-body {
+  margin: 0;
+  padding: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+/* Basic layout helpers */
+.hide-comp {
+  display: none !important;
+}
+    ]]></b:skin>
   </head>
-  <body class='theme-body lang-en'>
 
-    
-    <b:section id='navbar-section'>
-      &lt;nav class=&#34;navbar navbar-expand-lg navbar-light bg-white border-bottom sticky-top&#34;&gt;
-  &lt;div class=&#34;container&#34;&gt;
-    &lt;a class=&#34;navbar-brand fw-bold&#34; href=&#34;#top&#34; id=&#34;brandLogo&#34;&gt;
-      {{SITE_TITLE}}
-    &lt;/a&gt;
-    &lt;button class=&#34;navbar-toggler&#34; type=&#34;button&#34; data-bs-toggle=&#34;collapse&#34; data-bs-target=&#34;#mainNavbar&#34;
-      aria-controls=&#34;mainNavbar&#34; aria-expanded=&#34;false&#34; aria-label=&#34;Toggle navigation&#34;&gt;
-      &lt;span class=&#34;navbar-toggler-icon&#34;&gt;&lt;/span&gt;
-    &lt;/button&gt;
-    &lt;div class=&#34;collapse navbar-collapse&#34; id=&#34;mainNavbar&#34;&gt;
-      &lt;ul class=&#34;navbar-nav me-auto mb-2 mb-lg-0&#34; id=&#34;navLinks&#34;&gt;
-        &lt;li class=&#34;nav-item&#34;&gt;
-          &lt;a class=&#34;nav-link active&#34; aria-current=&#34;page&#34; href=&#34;#hero&#34;&gt;{{TEXT_HOME}}&lt;/a&gt;
-        &lt;/li&gt;
-        &lt;li class=&#34;nav-item&#34;&gt;
-          &lt;a class=&#34;nav-link&#34; href=&#34;#products&#34;&gt;{{TEXT_PRODUCTS}}&lt;/a&gt;
-        &lt;/li&gt;
-        &lt;li class=&#34;nav-item&#34;&gt;
-          &lt;a class=&#34;nav-link&#34; href=&#34;#contact&#34;&gt;{{TEXT_CONTACT}}&lt;/a&gt;
-        &lt;/li&gt;
-      &lt;/ul&gt;
-      &lt;div class=&#34;d-flex align-items-center gap-3&#34;&gt;
-        &lt;div id=&#34;langSwitcher&#34; class=&#34;d-none&#34;&gt;&lt;/div&gt;
-        &lt;button type=&#34;button&#34;
-                class=&#34;btn btn-sm btn-outline-secondary position-relative {{WISHLIST_INCLUDED}}&#34;
-                id=&#34;wishlistButton&#34;
-                data-bs-toggle=&#34;modal&#34; data-bs-target=&#34;#wishlistModal&#34;&gt;
-          &lt;i class=&#34;bi bi-heart&#34;&gt;&lt;/i&gt;
-          &lt;span class=&#34;position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger&#34;
-                id=&#34;wishlistCount&#34;&gt;0&lt;/span&gt;
-        &lt;/button&gt;
-        &lt;button type=&#34;button&#34;
-                class=&#34;btn btn-sm btn-primary position-relative {{CART_INCLUDED}}&#34;
-                id=&#34;cartButton&#34;
-                data-bs-toggle=&#34;modal&#34; data-bs-target=&#34;#cartModal&#34;&gt;
-          &lt;i class=&#34;bi bi-cart3&#34;&gt;&lt;/i&gt;
-          &lt;span class=&#34;position-absolute top-0 start-100 translate-middle badge rounded-pill bg-light text-dark&#34;
-                id=&#34;cartCount&#34;&gt;0&lt;/span&gt;
-        &lt;/button&gt;
-      &lt;/div&gt;
-    &lt;/div&gt;
-  &lt;/div&gt;
-&lt;/nav&gt;
-    </b:section>
+  <body class='theme-body'>
 
-    
-    <b:section id='hero-section'>
-      &lt;section id=&#34;hero&#34; class=&#34;py-5 py-md-6 bg-light&#34;&gt;
-  &lt;div class=&#34;container&#34;&gt;
-    &lt;div class=&#34;row align-items-center g-4&#34;&gt;
-      &lt;div class=&#34;col-lg-6&#34;&gt;
-        &lt;h1 class=&#34;display-5 fw-bold mb-3&#34; id=&#34;heroTitle&#34;&gt;
-          {{HERO_TITLE}}
-        &lt;/h1&gt;
-        &lt;p class=&#34;lead mb-4&#34; id=&#34;heroSubtitle&#34;&gt;
-          {{HERO_SUBTITLE}}
-        &lt;/p&gt;
-        &lt;div class=&#34;d-flex flex-wrap gap-2&#34;&gt;
-          &lt;a href=&#34;#products&#34; class=&#34;btn btn-primary btn-lg&#34;&gt;
-            {{TEXT_BROWSE_PRODUCTS}}
-          &lt;/a&gt;
-          &lt;a href=&#34;#contact&#34; class=&#34;btn btn-outline-secondary btn-lg&#34;&gt;
-            {{TEXT_CONTACT_US}}
-          &lt;/a&gt;
-        &lt;/div&gt;
-      &lt;/div&gt;
-      &lt;div class=&#34;col-lg-6 text-center&#34;&gt;
-        &lt;img src=&#34;{{HERO_IMAGE_URL}}&#34; id=&#34;heroImage&#34; alt=&#34;Hero&#34; class=&#34;img-fluid rounded shadow-sm&#34;&gt;
-      &lt;/div&gt;
-    &lt;/div&gt;
-  &lt;/div&gt;
-&lt;/section&gt;
-    </b:section>
+    <!-- SIMPLE NAVBAR WITH CART & WISHLIST -->
+    <nav class='navbar navbar-expand-lg navbar-light bg-white border-bottom mb-3'>
+      <div class='container'>
+        <a class='navbar-brand' href='#hero'>
+          <span data-setting='site_title'/>
+        </a>
 
-    
-    <section id="products-section">
-      &lt;section id=&#34;products&#34; class=&#34;py-5&#34;&gt;
-  &lt;div class=&#34;container&#34;&gt;
-    &lt;div class=&#34;d-flex justify-content-between align-items-center mb-4&#34;&gt;
-      &lt;h2 class=&#34;h3 mb-0&#34;&gt;{{TEXT_PRODUCTS}}&lt;/h2&gt;
-      &lt;div class=&#34;d-flex gap-2&#34;&gt;
-        &lt;select id=&#34;productFilter&#34; class=&#34;form-select form-select-sm&#34; style=&#34;width:auto;&#34;&gt;
-          &lt;option value=&#34;all&#34;&gt;{{TEXT_ALL}}&lt;/option&gt;
-        &lt;/select&gt;
-        &lt;select id=&#34;productSort&#34; class=&#34;form-select form-select-sm&#34; style=&#34;width:auto;&#34;&gt;
-          &lt;option value=&#34;latest&#34;&gt;{{TEXT_SORT_LATEST}}&lt;/option&gt;
-          &lt;option value=&#34;price-asc&#34;&gt;{{TEXT_SORT_PRICE_ASC}}&lt;/option&gt;
-          &lt;option value=&#34;price-desc&#34;&gt;{{TEXT_SORT_PRICE_DESC}}&lt;/option&gt;
-        &lt;/select&gt;
-      &lt;/div&gt;
-    &lt;/div&gt;
-    &lt;div id=&#34;productGrid&#34; class=&#34;row g-4&#34;&gt;
-      
-    &lt;/div&gt;
-    &lt;div id=&#34;productsEmpty&#34; class=&#34;text-center text-muted mt-4 d-none&#34;&gt;
-      {{TEXT_NO_PRODUCTS}}
-    &lt;/div&gt;
-  &lt;/div&gt;
-&lt;/section&gt;
+        <div class='ms-auto d-flex gap-2'>
+          <button class='btn btn-outline-secondary position-relative' data-bs-target='#cartModal' data-bs-toggle='modal' type='button'>
+            <i class='bi bi-cart'/>
+            <span class='position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger' id='cartCount'>0</span>
+          </button>
+
+          <button class='btn btn-outline-secondary position-relative' data-bs-target='#wishlistModal' data-bs-toggle='modal' type='button'>
+            <i class='bi bi-heart'/>
+            <span class='position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger' id='wishlistCount'>0</span>
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Builder sections -->
+    <b:section class='' id='navbar-section'/>
+    <b:section class='' id='hero-section'/>
+
+    <!-- PRODUCTS SECTION -->
+    <section class='' id='products-section'>
+      <section class='py-5' id='products'>
+        <div class='container'>
+          <div class='d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2'>
+            <h2 class='h3 mb-0' data-i18n='TEXT_PRODUCTS'/>
+            <div class='d-flex gap-2'>
+              <select class='form-select form-select-sm' id='productFilter'>
+                <option data-i18n='TEXT_ALL' value='all'/>
+              </select>
+              <select class='form-select form-select-sm' id='productSort'>
+                <option data-i18n='TEXT_SORT_LATEST' value='latest'/>
+                <option data-i18n='TEXT_SORT_PRICE_ASC' value='price-asc'/>
+                <option data-i18n='TEXT_SORT_PRICE_DESC' value='price-desc'/>
+              </select>
+            </div>
+          </div>
+
+          <!-- IMPORTANT: products.js renders inside this -->
+          <div class='row g-4' id='productGrid'/>
+
+          <div class='text-center text-muted mt-4 d-none' data-i18n='TEXT_NO_PRODUCTS' id='productsEmpty'/>
+        </div>
+      </section>
     </section>
 
-    
-    <section id="cart-section">
-      &lt;div class=&#34;modal fade&#34; id=&#34;cartModal&#34; tabindex=&#34;-1&#34; aria-labelledby=&#34;cartModalLabel&#34; aria-hidden=&#34;true&#34;&gt;
-  &lt;div class=&#34;modal-dialog modal-lg modal-dialog-scrollable&#34;&gt;
-    &lt;div class=&#34;modal-content&#34;&gt;
-      &lt;div class=&#34;modal-header&#34;&gt;
-        &lt;h5 class=&#34;modal-title&#34; id=&#34;cartModalLabel&#34;&gt;{{TEXT_CART}}&lt;/h5&gt;
-        &lt;button type=&#34;button&#34; class=&#34;btn-close&#34; data-bs-dismiss=&#34;modal&#34; aria-label=&#34;{{TEXT_CLOSE}}&#34;&gt;&lt;/button&gt;
-      &lt;/div&gt;
-      &lt;div class=&#34;modal-body&#34;&gt;
-        &lt;div id=&#34;cartContent&#34;&gt;&lt;/div&gt;
-        &lt;div id=&#34;cartEmpty&#34; class=&#34;text-center text-muted d-none&#34;&gt;
-          {{TEXT_CART_EMPTY}}
-        &lt;/div&gt;
-      &lt;/div&gt;
-      &lt;div class=&#34;modal-footer d-flex justify-content-between&#34;&gt;
-        &lt;div&gt;
-          &lt;span class=&#34;fw-semibold&#34;&gt;{{TEXT_TOTAL}}: &lt;/span&gt;
-          &lt;span id=&#34;cartTotal&#34;&gt;0 {{CURRENCY_SYMBOL}}&lt;/span&gt;
-        &lt;/div&gt;
-        &lt;div class=&#34;d-flex gap-2&#34;&gt;
-          &lt;button type=&#34;button&#34; class=&#34;btn btn-outline-secondary&#34; data-bs-dismiss=&#34;modal&#34;&gt;
-            {{TEXT_CONTINUE_SHOPPING}}
-          &lt;/button&gt;
-          &lt;button type=&#34;button&#34; class=&#34;btn btn-primary&#34; id=&#34;checkoutButton&#34;&gt;
-            {{TEXT_CHECKOUT}}
-          &lt;/button&gt;
-        &lt;/div&gt;
-      &lt;/div&gt;
-    &lt;/div&gt;
-  &lt;/div&gt;
-&lt;/div&gt;
+    <!-- QUICK VIEW MODAL (CENTERED) -->
+    <section id='quickview-section'>
+      <div aria-hidden='true' aria-labelledby='quickViewLabel' class='modal fade' id='quickViewModal' tabindex='-1'>
+        <div class='modal-dialog modal-dialog-centered modal-lg'>
+          <div class='modal-content'>
+            <div class='modal-header'>
+              <h5 class='modal-title' id='quickViewLabel'>Product</h5>
+              <button aria-label='Close' class='btn-close' data-bs-dismiss='modal' type='button'/>
+            </div>
+
+            <div class='modal-body'>
+              <div class='row g-4 align-items-start'>
+                <div class='col-md-6'>
+                  <img alt='' class='img-fluid rounded' id='quickViewImage'/>
+                </div>
+                <div class='col-md-6'>
+                  <div class='h4 mb-3' id='quickViewPrice'/>
+                  <div class='small text-muted mb-3' id='quickViewDescription'/>
+
+                  <button class='btn btn-primary me-2' id='quickViewAddToCart' type='button'>
+                    <i class='bi bi-cart-plus me-1'/>
+                    <span>Add to cart</span>
+                  </button>
+
+                  <button class='btn btn-outline-secondary' data-bs-dismiss='modal' type='button'>
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
     </section>
 
-    <section id="wishlist-section">
-      &lt;div class=&#34;modal fade&#34; id=&#34;wishlistModal&#34; tabindex=&#34;-1&#34; aria-labelledby=&#34;wishlistModalLabel&#34; aria-hidden=&#34;true&#34;&gt;
-  &lt;div class=&#34;modal-dialog modal-lg modal-dialog-scrollable&#34;&gt;
-    &lt;div class=&#34;modal-content&#34;&gt;
-      &lt;div class=&#34;modal-header&#34;&gt;
-        &lt;h5 class=&#34;modal-title&#34; id=&#34;wishlistModalLabel&#34;&gt;{{TEXT_WISHLIST}}&lt;/h5&gt;
-        &lt;button type=&#34;button&#34; class=&#34;btn-close&#34; data-bs-dismiss=&#34;modal&#34; aria-label=&#34;{{TEXT_CLOSE}}&#34;&gt;&lt;/button&gt;
-      &lt;/div&gt;
-      &lt;div class=&#34;modal-body&#34;&gt;
-        &lt;div id=&#34;wishlistContent&#34;&gt;&lt;/div&gt;
-        &lt;div id=&#34;wishlistEmpty&#34; class=&#34;text-center text-muted d-none&#34;&gt;
-          {{TEXT_WISHLIST_EMPTY}}
-        &lt;/div&gt;
-      &lt;/div&gt;
-      &lt;div class=&#34;modal-footer d-flex justify-content-between&#34;&gt;
-        &lt;button type=&#34;button&#34; class=&#34;btn btn-outline-secondary&#34; data-bs-dismiss=&#34;modal&#34;&gt;
-          {{TEXT_CLOSE}}
-        &lt;/button&gt;
-      &lt;/div&gt;
-    &lt;/div&gt;
-  &lt;/div&gt;
-&lt;/div&gt;
+    <!-- CART MODAL -->
+    <section class='' id='cart-section'>
+      <div aria-hidden='true' aria-labelledby='cartModalLabel' class='modal fade' id='cartModal' tabindex='-1'>
+        <div class='modal-dialog modal-lg modal-dialog-scrollable'>
+          <div class='modal-content'>
+
+            <div class='modal-header'>
+              <h5 class='modal-title' data-i18n='TEXT_CART' id='cartModalLabel'/>
+              <button aria-label='Close' class='btn-close' data-bs-dismiss='modal' type='button'/>
+            </div>
+
+            <div class='modal-body'>
+              <div id='cartContent'/>
+              <div class='text-center text-muted d-none' data-i18n='CART_EMPTY' id='cartEmpty'/>
+            </div>
+
+            <div class='modal-footer d-flex justify-content-between align-items-center'>
+              <div>
+                <span class='fw-semibold' data-i18n='TEXT_TOTAL'/>:
+                <span id='cartTotal'>0</span>
+              </div>
+              <div class='d-flex gap-2'>
+                <button class='btn btn-outline-secondary' data-bs-dismiss='modal' type='button'>
+                  <span data-i18n='TEXT_CONTINUE_SHOPPING'/>
+                </button>
+                <button class='btn btn-primary' id='checkoutButton' type='button'>
+                  <span data-i18n='CHECKOUT'/>
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
     </section>
 
-    
-    <section id="popup-section">
-      &lt;div class=&#34;modal fade&#34; id=&#34;timedPopup&#34; tabindex=&#34;-1&#34; aria-labelledby=&#34;timedPopupLabel&#34; aria-hidden=&#34;true&#34;&gt;
-  &lt;div class=&#34;modal-dialog modal-dialog-centered modal-lg&#34;&gt;
-    &lt;div class=&#34;modal-content&#34;&gt;
-      &lt;div class=&#34;modal-header border-0&#34;&gt;
-        &lt;h5 class=&#34;modal-title&#34; id=&#34;timedPopupLabel&#34;&gt;{{POPUP_TITLE}}&lt;/h5&gt;
-        &lt;button type=&#34;button&#34; class=&#34;btn-close&#34; data-bs-dismiss=&#34;modal&#34; aria-label=&#34;{{TEXT_CLOSE}}&#34;&gt;&lt;/button&gt;
-      &lt;/div&gt;
-      &lt;div class=&#34;modal-body&#34; id=&#34;timedPopupContent&#34;&gt;
-        {{{POPUP_HTML}}}
-      &lt;/div&gt;
-    &lt;/div&gt;
-  &lt;/div&gt;
-&lt;/div&gt;
+    <!-- WISHLIST MODAL -->
+    <section class='' id='wishlist-section'>
+      <div aria-hidden='true' aria-labelledby='wishlistModalLabel' class='modal fade' id='wishlistModal' tabindex='-1'>
+        <div class='modal-dialog modal-lg modal-dialog-scrollable'>
+          <div class='modal-content'>
+
+            <div class='modal-header'>
+              <h5 class='modal-title' data-i18n='TEXT_WISHLIST' id='wishlistModalLabel'/>
+              <button aria-label='Close' class='btn-close' data-bs-dismiss='modal' type='button'/>
+            </div>
+
+            <div class='modal-body'>
+              <div id='wishlistContent'/>
+              <div class='text-center text-muted d-none' data-i18n='TEXT_WISHLIST_EMPTY' id='wishlistEmpty'/>
+            </div>
+
+            <div class='modal-footer d-flex justify-content-between'>
+              <button class='btn btn-outline-secondary' data-bs-dismiss='modal' type='button'>
+                <span data-i18n='TEXT_CLOSE'/>
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </div>
     </section>
 
-    
-    <section id="contact-section">
-      &lt;section id=&#34;contact&#34; class=&#34;py-5 bg-light&#34;&gt;
-  &lt;div class=&#34;container&#34;&gt;
-    &lt;div class=&#34;row g-4&#34;&gt;
-      &lt;div class=&#34;col-lg-5&#34;&gt;
-        &lt;h2 class=&#34;h3 mb-3&#34;&gt;{{TEXT_CONTACT_US}}&lt;/h2&gt;
-        &lt;p class=&#34;text-muted&#34;&gt;{{TEXT_CONTACT_INTRO}}&lt;/p&gt;
-        &lt;ul class=&#34;list-unstyled small&#34;&gt;
-          &lt;li&gt;&lt;strong&gt;{{TEXT_PHONE}}:&lt;/strong&gt; {{CONTACT_PHONE}}&lt;/li&gt;
-          &lt;li&gt;&lt;strong&gt;{{TEXT_EMAIL}}:&lt;/strong&gt; {{CONTACT_EMAIL}}&lt;/li&gt;
-          &lt;li&gt;&lt;strong&gt;{{TEXT_WHATSAPP}}:&lt;/strong&gt; {{WHATSAPP_NUMBER}}&lt;/li&gt;
-        &lt;/ul&gt;
-      &lt;/div&gt;
-      &lt;div class=&#34;col-lg-7&#34;&gt;
-        &lt;form id=&#34;contactForm&#34; novalidate&gt;
-          &lt;div class=&#34;mb-3&#34;&gt;
-            &lt;label class=&#34;form-label&#34; for=&#34;contactName&#34;&gt;{{TEXT_NAME}}&lt;/label&gt;
-            &lt;input type=&#34;text&#34; class=&#34;form-control&#34; id=&#34;contactName&#34; required&gt;
-          &lt;/div&gt;
-          &lt;div class=&#34;mb-3&#34;&gt;
-            &lt;label class=&#34;form-label&#34; for=&#34;contactEmail&#34;&gt;{{TEXT_EMAIL}}&lt;/label&gt;
-            &lt;input type=&#34;email&#34; class=&#34;form-control&#34; id=&#34;contactEmail&#34; required&gt;
-          &lt;/div&gt;
-          &lt;div class=&#34;mb-3&#34;&gt;
-            &lt;label class=&#34;form-label&#34; for=&#34;contactMessage&#34;&gt;{{TEXT_MESSAGE}}&lt;/label&gt;
-            &lt;textarea class=&#34;form-control&#34; id=&#34;contactMessage&#34; rows=&#34;4&#34; required&gt;&lt;/textarea&gt;
-          &lt;/div&gt;
-          &lt;div class=&#34;d-none&#34;&gt;
-            &lt;input type=&#34;text&#34; id=&#34;contactHp&#34; autocomplete=&#34;off&#34;&gt;
-          &lt;/div&gt;
-          &lt;button type=&#34;submit&#34; class=&#34;btn btn-primary&#34; id=&#34;contactSubmit&#34;&gt;
-            {{TEXT_SEND_MESSAGE}}
-          &lt;/button&gt;
-          &lt;div id=&#34;contactStatus&#34; class=&#34;mt-2 small text-muted&#34;&gt;&lt;/div&gt;
-        &lt;/form&gt;
-      &lt;/div&gt;
-    &lt;/div&gt;
-  &lt;/div&gt;
-&lt;/section&gt;
+    <!-- POPUP SECTION -->
+    <section class='hide-comp' id='popup-section'>
+      <div aria-hidden='true' aria-labelledby='timedPopupLabel' class='modal fade' id='timedPopup' tabindex='-1'>
+        <div class='modal-dialog modal-dialog-centered modal-lg'>
+          <div class='modal-content'>
+            <div class='modal-header border-0'>
+              <h5 class='modal-title' data-setting='popup_title' id='timedPopupLabel'>Popup</h5>
+              <button aria-label='Close' class='btn-close' data-bs-dismiss='modal' type='button'/>
+            </div>
+            <div class='modal-body' data-setting='popup_html' id='timedPopupContent'/>
+          </div>
+        </div>
+      </div>
     </section>
 
-    
-    <section id="testimonials-section">
-      &lt;section id=&#34;testimonials&#34; class=&#34;py-5 bg-white&#34;&gt;
-  &lt;div class=&#34;container&#34;&gt;
-    &lt;div class=&#34;text-center mb-4&#34;&gt;
-      &lt;h2 class=&#34;h3&#34;&gt;{{TEXT_TESTIMONIALS}}&lt;/h2&gt;
-      &lt;p class=&#34;text-muted&#34;&gt;{{TEXT_TESTIMONIALS_SUBTITLE}}&lt;/p&gt;
-    &lt;/div&gt;
-    &lt;div class=&#34;row g-4&#34; id=&#34;testimonialsGrid&#34;&gt;
-      &lt;div class=&#34;col-md-4&#34;&gt;
-        &lt;div class=&#34;border rounded p-3 h-100&#34;&gt;
-          &lt;p class=&#34;mb-3 fst-italic&#34;&gt;
-            &#34;{{TEXT_TESTIMONIAL_SAMPLE}}&#34;
-          &lt;/p&gt;
-          &lt;div class=&#34;fw-semibold&#34;&gt;John Doe&lt;/div&gt;
-          &lt;div class=&#34;text-muted small&#34;&gt;{{TEXT_TESTIMONIAL_ROLE}}&lt;/div&gt;
-        &lt;/div&gt;
-      &lt;/div&gt;
-    &lt;/div&gt;
-  &lt;/div&gt;
-&lt;/section&gt;
+    <!-- CONTACT SECTION -->
+    <section id='contact-section'>
+      <section class='py-5 bg-light' id='contact'>
+        <div class='container'>
+
+          <h2 class='h3 mb-3' data-i18n='TEXT_CONTACT_US'/>
+          <p class='text-muted' data-i18n='TEXT_CONTACT_INTRO'/>
+
+          <div class='row g-4'>
+            <div class='col-lg-5'>
+              <ul class='list-unstyled small'>
+                <li>
+                  <strong data-i18n='TEXT_PHONE'/>:
+                  <span data-setting='contact_phone'/>
+                </li>
+                <li>
+                  <strong data-i18n='TEXT_EMAIL'/>:
+                  <span data-setting='contact_email'/>
+                </li>
+                <li>
+                  <strong data-i18n='TEXT_WHATSAPP'/>:
+                  <span data-setting='contact_whatsapp'/>
+                </li>
+              </ul>
+            </div>
+
+            <div class='col-lg-7'>
+              <form id='contactForm' novalidate='novalidate'>
+                <div class='mb-3'>
+                  <label class='form-label' data-i18n='TEXT_NAME' for='contactName'/>
+                  <input class='form-control' id='contactName' required='required' type='text'/>
+                </div>
+
+                <div class='mb-3'>
+                  <label class='form-label' data-i18n='TEXT_EMAIL' for='contactEmail'/>
+                  <input class='form-control' id='contactEmail' required='required' type='email'/>
+                </div>
+
+                <div class='mb-3'>
+                  <label class='form-label' data-i18n='TEXT_MESSAGE' for='contactMessage'/>
+                  <textarea class='form-control' id='contactMessage' required='required' rows='4'/>
+                </div>
+
+                <div class='d-none'>
+                  <input autocomplete='off' id='contactHp' type='text'/>
+                </div>
+
+                <button class='btn btn-primary mt-2' id='contactSubmit' type='submit'>
+                  <span data-i18n='TEXT_SEND_MESSAGE'/>
+                </button>
+
+                <div class='mt-2 small text-muted' id='contactStatus'/>
+              </form>
+            </div>
+          </div>
+
+        </div>
+      </section>
     </section>
 
-    
-    <section id="pricing-section">
-      &lt;section id=&#34;pricing&#34; class=&#34;py-5 bg-light&#34;&gt;
-  &lt;div class=&#34;container&#34;&gt;
-    &lt;div class=&#34;text-center mb-4&#34;&gt;
-      &lt;h2 class=&#34;h3&#34;&gt;{{TEXT_PRICING}}&lt;/h2&gt;
-      &lt;p class=&#34;text-muted&#34;&gt;{{TEXT_PRICING_SUBTITLE}}&lt;/p&gt;
-    &lt;/div&gt;
-    &lt;div class=&#34;row g-4&#34; id=&#34;pricingGrid&#34;&gt;
-      &lt;div class=&#34;col-md-4&#34;&gt;
-        &lt;div class=&#34;card h-100 border&#34;&gt;
-          &lt;div class=&#34;card-body d-flex flex-column&#34;&gt;
-            &lt;h5 class=&#34;card-title&#34;&gt;{{TEXT_PLAN_BASIC}}&lt;/h5&gt;
-            &lt;h6 class=&#34;card-subtitle mb-2 text-muted&#34;&gt;{{TEXT_PLAN_BASIC_SUBTITLE}}&lt;/h6&gt;
-            &lt;p class=&#34;display-6 fw-bold my-3&#34;&gt;
-              29 {{CURRENCY_SYMBOL}}&lt;small class=&#34;fs-6 text-muted&#34;&gt;/{{TEXT_MONTH}}&lt;/small&gt;
-            &lt;/p&gt;
-            &lt;ul class=&#34;list-unstyled small mb-4 flex-grow-1&#34;&gt;
-              &lt;li&gt;{{TEXT_FEATURE_1}}&lt;/li&gt;
-              &lt;li&gt;{{TEXT_FEATURE_2}}&lt;/li&gt;
-            &lt;/ul&gt;
-            &lt;a href=&#34;#contact&#34; class=&#34;btn btn-outline-primary mt-auto&#34;&gt;
-              {{TEXT_CHOOSE_PLAN}}
-            &lt;/a&gt;
-          &lt;/div&gt;
-        &lt;/div&gt;
-      &lt;/div&gt;
-    &lt;/div&gt;
-  &lt;/div&gt;
-&lt;/section&gt;
+    <!-- TESTIMONIALS SECTION -->
+    <section id='testimonials-section'>
+      <section class='py-5' id='testimonials'>
+        <div class='container text-center'>
+          <h2 class='h3' data-i18n='TEXT_TESTIMONIALS'/>
+          <p class='text-muted' data-i18n='TEXT_TESTIMONIALS_SUBTITLE'/>
+
+          <div class='border rounded p-3 mt-4 mx-auto' style='max-width: 480px;'>
+            <p class='fst-italic' data-i18n='TEXT_TESTIMONIAL_SAMPLE'/>
+            <div class='fw-semibold'>John Doe</div>
+            <div class='text-muted small' data-i18n='TEXT_TESTIMONIAL_ROLE'/>
+          </div>
+        </div>
+      </section>
     </section>
 
-    
-    <footer>
-      &lt;footer class=&#34;py-4 border-top bg-white&#34;&gt;
-  &lt;div class=&#34;container&#34;&gt;
-    &lt;div class=&#34;row g-3 align-items-center&#34;&gt;
-      &lt;div class=&#34;col-md-6&#34;&gt;
-        &lt;div class=&#34;small text-muted&#34;&gt;
-          ? &lt;span id=&#34;footerYear&#34;&gt;&lt;/span&gt; {{SITE_TITLE}} ? {{TEXT_ALL_RIGHTS_RESERVED}}
-        &lt;/div&gt;
-      &lt;/div&gt;
-      &lt;div class=&#34;col-md-6 text-md-end&#34;&gt;
-        &lt;a href=&#34;#hero&#34; class=&#34;small text-decoration-none me-3&#34;&gt;{{TEXT_BACK_TO_TOP}}&lt;/a&gt;
-        &lt;a href=&#34;{{PRIVACY_URL}}&#34; class=&#34;small text-decoration-none me-2&#34;&gt;{{TEXT_PRIVACY}}&lt;/a&gt;
-        &lt;a href=&#34;{{TERMS_URL}}&#34; class=&#34;small text-decoration-none&#34;&gt;{{TEXT_TERMS}}&lt;/a&gt;
-      &lt;/div&gt;
-    &lt;/div&gt;
-  &lt;/div&gt;
-&lt;/footer&gt;
-&lt;script&gt;
-  (function() {
-    var y = new Date().getFullYear();
-    var el = document.getElementById(&#39;footerYear&#39;);
-    if (el) el.textContent = y;
-  })();
-&lt;/script&gt;
+    <!-- PRICING SECTION -->
+    <section id='pricing-section'>
+      <section class='py-5 bg-light' id='pricing'>
+        <div class='container text-center'>
+          <h2 class='h3' data-i18n='TEXT_PRICING'/>
+          <p class='text-muted' data-i18n='TEXT_PRICING_SUBTITLE'/>
+
+          <div class='card mt-4 mx-auto' style='max-width: 420px;'>
+            <div class='card-body'>
+              <h5 data-i18n='TEXT_PLAN_BASIC'/>
+              <p class='text-muted' data-i18n='TEXT_PLAN_BASIC_SUBTITLE'/>
+
+              <p class='display-6 fw-bold'>
+                29 <span data-setting='currency_symbol'/> /
+                <span data-i18n='TEXT_MONTH'/>
+              </p>
+
+              <ul class='list-unstyled'>
+                <li data-i18n='TEXT_FEATURE_1'/>
+                <li data-i18n='TEXT_FEATURE_2'/>
+              </ul>
+
+              <a class='btn btn-outline-primary' data-i18n='TEXT_CHOOSE_PLAN' href='#contact'/>
+            </div>
+          </div>
+
+        </div>
+      </section>
+    </section>
+
+    <!-- FLOATING ACTION BUTTONS -->
+    <div class='floating-btn floating-cart' data-bs-target='#cartModal' data-bs-toggle='modal' id='floatingCart'>
+      <i class='bi bi-cart3'/>
+      <span class='icon-count' id='floatingCartCount'>0</span>
+    </div>
+
+    <div class='floating-btn floating-wishlist' data-bs-target='#wishlistModal' data-bs-toggle='modal' id='floatingWishlist'>
+      <i class='bi bi-heart-fill'/>
+      <span class='icon-count' id='floatingWishlistCount'>0</span>
+    </div>
+
+    <a class='floating-btn floating-whatsapp' href='#' id='floatingWhatsapp' rel='noopener' target='_blank'>
+      <i class='bi bi-whatsapp'/>
+    </a>
+
+    <!-- FOOTER -->
+    <footer class='py-4 border-top bg-white'>
+      <div class='container d-flex flex-wrap justify-content-between align-items-center gap-2'>
+        <div class='small text-muted'>
+          &#169; <span id='footerYear'/>
+          <span data-setting='site_title'/> &#8211;
+          <span data-i18n='TEXT_ALL_RIGHTS_RESERVED'/>
+        </div>
+
+        <div class='small'>
+          <a class='text-decoration-none me-2' data-i18n='TEXT_BACK_TO_TOP' href='#hero'/>
+          |
+          <a class='text-decoration-none mx-2' data-i18n='TEXT_PRIVACY' href='#'/>
+          |
+          <a class='text-decoration-none ms-2' data-i18n='TEXT_TERMS' href='#'/>
+        </div>
+      </div>
     </footer>
 
-    &lt;script src=&#34;https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js&#34;&gt;&lt;/script&gt;
+    <!-- Required empty Blogger main section -->
+    <b:section class='main' id='main' maxwidgets='1' showaddelement='no'>
+      <b:widget id='HTML1' locked='true' title='Blogger' type='HTML' version='1'>
+        <b:widget-settings>
+          <b:widget-setting name='content'/>
+        </b:widget-settings>
+        <b:includable id='main'/>
+      </b:widget>
+    </b:section>
+
+    <!-- EXTERNAL SCRIPTS (self-closed with a space as you requested) -->
+    <script src='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js'/>
+
+    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/runtime.js?v=3'/>
+    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/products.js'/>
+    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/variants.js'/>
+    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/i18n.js'/>
+    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/cart.js'/>
+    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/wishlist.js'/>
+    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/popup.js'/>
+    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/currency.js'/>
+    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/lazyload.js'/>
+    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/analytics.js'/>
+    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/seo.js'/>
+    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/gallery.js'/>
+
+    <!-- ONE INLINE FIX SCRIPT (QuickView + Cart +/- + stuck gray overlay + checkout fields) -->
+    <script>
+    // <![CDATA[
+    (function () {
+      "use strict";
+
+      function $(id) { return document.getElementById(id); }
+
+      function safeText(el) {
+        return (el && el.textContent) ? el.textContent.trim() : "";
+      }
+
+      function isoNow() {
+        try { return new Date().toISOString(); } catch (e) { return "" + Date.now(); }
+      }
+
+      function currencySymbol() {
+        try {
+          return (window.Runtime && Runtime.settings && Runtime.settings.currency_symbol) ? Runtime.settings.currency_symbol : "";
+        } catch (e) { return ""; }
+      }
+
+      function formatMoney(value) {
+        var n = parseFloat(value || 0);
+        if (isNaN(n)) n = 0;
+        return (currencySymbol() ? currencySymbol() + " " : "") + n.toFixed(2);
+      }
+
+      // -----------------------------
+      // FIX 1: Remove stuck bootstrap backdrops (gray screen)
+      // -----------------------------
+      function anyModalShown() {
+        return !!document.querySelector(".modal.show");
+      }
+
+      function removeAllBackdrops() {
+        var bds = document.querySelectorAll(".modal-backdrop");
+        for (var i = 0; i < bds.length; i++) {
+          if (bds[i] && bds[i].parentNode) bds[i].parentNode.removeChild(bds[i]);
+        }
+        document.body.classList.remove("modal-open");
+        document.body.style.overflow = "";
+        document.body.style.paddingRight = "";
+        if (document.activeElement && document.activeElement.blur) {
+          try { document.activeElement.blur(); } catch (e) {}
+        }
+      }
+
+      function cleanupIfStuck() {
+        var bds = document.querySelectorAll(".modal-backdrop");
+        if (bds.length > 0 && !anyModalShown()) removeAllBackdrops();
+      }
+
+      document.addEventListener("hidden.bs.modal", function () {
+        setTimeout(cleanupIfStuck, 50);
+      });
+      setInterval(cleanupIfStuck, 2000);
+
+      // -----------------------------
+      // FIX 2: Ensure WhatsApp floating button uses settings
+      // -----------------------------
+      function applyWhatsappLink() {
+        var a = $("floatingWhatsapp");
+        if (!a) return;
+        var num = "";
+        try { num = (window.Runtime && Runtime.settings && Runtime.settings.contact_whatsapp) ? String(Runtime.settings.contact_whatsapp) : ""; } catch (e) {}
+        num = (num || "").replace(/[^\d+]/g, "");
+        if (num) a.setAttribute("href", "https://wa.me/" + num);
+      }
+
+      // -----------------------------
+      // FIX 3: QuickView (works even if cards have no data-product-id)
+      // -----------------------------
+      var currentProduct = null;
+
+      function findProductById(pid) {
+        var list = (window.Runtime && Array.isArray(Runtime.products)) ? Runtime.products : [];
+        for (var i = 0; i < list.length; i++) {
+          if (String(list[i].id) === String(pid)) return list[i];
+        }
+        return null;
+      }
+
+      function findProductFromCard(card) {
+        if (!card) return null;
+
+        // Try data-product-id first
+        var pid = card.getAttribute("data-product-id") || "";
+        if (pid) {
+          var byId = findProductById(pid);
+          if (byId) return byId;
+        }
+
+        // Title match fallback
+        var title = safeText(card.querySelector(".card-title"));
+        if (!title) return null;
+
+        var list = (window.Runtime && Array.isArray(Runtime.products)) ? Runtime.products : [];
+        for (var i = 0; i < list.length; i++) {
+          if ((list[i].title || "").trim() === title) return list[i];
+        }
+        return null;
+      }
+
+      function openQuickView(product, card) {
+        var modalEl = $("quickViewModal");
+        if (!modalEl || !(window.bootstrap && bootstrap.Modal)) return;
+
+        currentProduct = product;
+
+        var title = product && product.title ? product.title : "Product";
+        var price = (product && product.price != null) ? formatMoney(product.price) : "";
+        var desc = product && product.content ? String(product.content) : "";
+
+        var label = $("quickViewLabel");
+        if (label) label.textContent = title;
+
+        var priceEl = $("quickViewPrice");
+        if (priceEl) priceEl.textContent = price;
+
+        var descEl = $("quickViewDescription");
+        if (descEl) descEl.textContent = desc.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+
+        var imgEl = $("quickViewImage");
+        if (imgEl) {
+          var img = "";
+          if (product && product.image) img = product.image;
+          if (!img && card) {
+            var cardImg = card.querySelector("img");
+            img = cardImg ? (cardImg.getAttribute("src") || "") : "";
+          }
+          if (img) {
+            imgEl.setAttribute("src", img);
+            imgEl.style.display = "";
+          } else {
+            imgEl.removeAttribute("src");
+            imgEl.style.display = "none";
+          }
+        }
+
+        modalEl.setAttribute("data-product-id", product && product.id ? String(product.id) : "");
+
+        var bs = bootstrap.Modal.getOrCreateInstance(modalEl, { backdrop: true, keyboard: true, focus: true });
+        bs.show();
+      }
+
+      function initQuickView() {
+        var grid = $("productGrid");
+        if (!grid) return;
+
+        // Do not let quickview steal button clicks
+        grid.addEventListener("click", function (e) {
+          var btn = e.target && e.target.closest ? e.target.closest("button") : null;
+          if (btn) return; // buttons are handled by products.js/cart.js/wishlist.js
+
+          var card = e.target && e.target.closest ? e.target.closest(".card") : null;
+          if (!card) return;
+
+          var product = findProductFromCard(card);
+          if (!product) return;
+
+          e.preventDefault();
+          openQuickView(product, card);
+        });
+      }
+
+      // QuickView "Add to cart"
+      function bindQuickViewAddToCart() {
+        var btn = $("quickViewAddToCart");
+        if (!btn) return;
+
+        btn.addEventListener("click", function () {
+          if (!currentProduct) return;
+          if (!window.Cart || typeof Cart.add !== "function") return;
+
+          Cart.add(currentProduct, 1);
+
+          var modalEl = $("quickViewModal");
+          if (modalEl && window.bootstrap && bootstrap.Modal) {
+            try { bootstrap.Modal.getOrCreateInstance(modalEl).hide(); } catch (e) {}
+          }
+        });
+      }
+
+      // -----------------------------
+      // FIX 4: Cart + / - and delete, and Checkout keeps your fields
+      // -----------------------------
+      function patchCart() {
+        if (!window.Cart || Cart.__patched_mpwb) return;
+        Cart.__patched_mpwb = true;
+
+        Cart.inc = function (productId) {
+          var id = String(productId);
+          for (var i = 0; i < Cart.items.length; i++) {
+            if (String(Cart.items[i].id) === id) {
+              Cart.items[i].qty = (parseInt(Cart.items[i].qty, 10) || 1) + 1;
+              break;
+            }
+          }
+          Cart.save();
+        };
+
+        Cart.dec = function (productId) {
+          var id = String(productId);
+          for (var i = 0; i < Cart.items.length; i++) {
+            if (String(Cart.items[i].id) === id) {
+              var q = (parseInt(Cart.items[i].qty, 10) || 1) - 1;
+              if (q < 1) q = 1;
+              Cart.items[i].qty = q;
+              break;
+            }
+          }
+          Cart.save();
+        };
+
+        Cart.removeById = function (productId) {
+          var id = String(productId);
+          Cart.items = Cart.items.filter(function (x) { return String(x.id) !== id; });
+          Cart.save();
+        };
+
+        var originalRender = Cart.renderModal ? Cart.renderModal.bind(Cart) : null;
+
+        Cart.renderModal = function () {
+          var cont = $("cartContent");
+          var empty = $("cartEmpty");
+          var totalEl = $("cartTotal");
+
+          if (!cont || !totalEl) {
+            if (originalRender) return originalRender();
+            return;
+          }
+
+          cont.innerHTML = "";
+
+          if (!Cart.items || !Cart.items.length) {
+            if (empty) empty.classList.remove("d-none");
+            totalEl.textContent = formatMoney(0);
+            return;
+          }
+
+          if (empty) empty.classList.add("d-none");
+
+          var table = document.createElement("table");
+          table.className = "table table-sm align-middle";
+          table.innerHTML =
+            "<thead>" +
+              "<tr>" +
+                "<th>Item</th>" +
+                "<th class='text-end'>Qty</th>" +
+                "<th class='text-end'>Price</th>" +
+                "<th class='text-end'>Total</th>" +
+                "<th class='text-end'></th>" +
+              "</tr>" +
+            "</thead>";
+
+          var tbody = document.createElement("tbody");
+
+          for (var i = 0; i < Cart.items.length; i++) {
+            var it = Cart.items[i];
+            var pid = String(it.id);
+            var priceNum = parseFloat(it.price || 0);
+            if (isNaN(priceNum)) priceNum = 0;
+
+            var qty = parseInt(it.qty, 10) || 1;
+            var lineTotal = priceNum * qty;
+
+            var tr = document.createElement("tr");
+            tr.innerHTML =
+              "<td>" + (it.title || "") + "</td>" +
+              "<td class='text-end'>" +
+                "<div class='d-inline-flex align-items-center gap-1'>" +
+                  "<button type='button' class='btn btn-sm btn-outline-secondary' data-act='dec' data-id='" + pid + "'>-</button>" +
+                  "<span class='px-2' data-role='qty' data-id='" + pid + "'>" + qty + "</span>" +
+                  "<button type='button' class='btn btn-sm btn-outline-secondary' data-act='inc' data-id='" + pid + "'>+</button>" +
+                "</div>" +
+              "</td>" +
+              "<td class='text-end'>" + formatMoney(priceNum) + "</td>" +
+              "<td class='text-end'>" + formatMoney(lineTotal) + "</td>" +
+              "<td class='text-end'>" +
+                "<button type='button' class='btn btn-sm btn-outline-danger' data-act='del' data-id='" + pid + "'>&#215;</button>" +
+              "</td>";
+
+            tbody.appendChild(tr);
+          }
+
+          table.appendChild(tbody);
+          cont.appendChild(table);
+
+          cont.onclick = function (ev) {
+            var btn = ev.target && ev.target.closest ? ev.target.closest("button[data-act]") : null;
+            if (!btn) return;
+
+            var act = btn.getAttribute("data-act");
+            var pid = btn.getAttribute("data-id");
+
+            ev.preventDefault();
+
+            if (act === "inc") Cart.inc(pid);
+            else if (act === "dec") Cart.dec(pid);
+            else if (act === "del") Cart.removeById(pid);
+          };
+
+          totalEl.textContent = formatMoney(Cart.total ? Cart.total() : 0);
+        };
+
+        // Checkout: keep ALL requested fields
+        Cart.bindCheckout = function () {
+          var btn = $("checkoutButton");
+          if (!btn) return;
+          if (btn.__bound_mpwb) return;
+          btn.__bound_mpwb = true;
+
+          btn.addEventListener("click", async function () {
+            if (!Cart.items || !Cart.items.length) return;
+            if (!window.Runtime || typeof Runtime.saveEntry !== "function") {
+              alert("Checkout error: Runtime.saveEntry is not available.");
+              return;
+            }
+
+            // Basic collection (you can replace with a form later)
+            var name = prompt("Your name?");
+            if (name === null) return;
+
+            var email = prompt("Your email? (optional)");
+            if (email === null) email = "";
+            email = email || "";
+
+            var phone = prompt("Your phone?");
+            if (phone === null) phone = "";
+            phone = phone || "";
+
+            var message = prompt("Message / address / notes (optional)");
+            if (message === null) message = "";
+            message = message || "";
+
+            var ts = isoNow();
+
+            try {
+              for (var i = 0; i < Cart.items.length; i++) {
+                var it = Cart.items[i];
+
+                var qty = parseInt(it.qty, 10) || 1;
+                var price = parseFloat(it.price || 0);
+                if (isNaN(price)) price = 0;
+
+                // variants: best effort
+                var variants = "";
+                try {
+                  if (it.variants) variants = JSON.stringify(it.variants);
+                } catch (e) { variants = ""; }
+
+                var entry = {
+                  timestamp: ts,
+                  type: "order",
+                  product_id: String(it.id || ""),
+                  title: String(it.title || ""),
+                  variants: variants,
+                  qty: qty,
+                  price: price,
+                  total: parseFloat((price * qty).toFixed(2)),
+                  name: String(name || ""),
+                  email: String(email || ""),
+                  phone: String(phone || ""),
+                  message: String(message || "")
+                };
+
+                await Runtime.saveEntry(entry);
+              }
+
+              alert("Order submitted!");
+              Cart.items = [];
+              Cart.save();
+
+              var cartModal = $("cartModal");
+              if (cartModal && window.bootstrap && bootstrap.Modal) {
+                try { bootstrap.Modal.getOrCreateInstance(cartModal).hide(); } catch (e2) {}
+              }
+              setTimeout(cleanupIfStuck, 200);
+
+            } catch (e3) {
+              console.error("Checkout failed:", e3);
+              alert("Could not submit order. Please try again.");
+            }
+          });
+        };
+      }
+
+      // -----------------------------
+      // Init sequence
+      // -----------------------------
+      function initAll() {
+        // footer year
+        var y = new Date().getFullYear();
+        var el = $("footerYear");
+        if (el) el.textContent = String(y);
+
+        applyWhatsappLink();
+        patchCart();
+        initQuickView();
+        bindQuickViewAddToCart();
+      }
+
+      document.addEventListener("DOMContentLoaded", initAll);
+      document.addEventListener("runtime_ready", function () {
+        setTimeout(function () {
+          applyWhatsappLink();
+          patchCart();
+          cleanupIfStuck();
+        }, 100);
+      });
+
+    })();
+    // ]]>
+    </script>
+    
+    <script>
+// <![CDATA[
+(function () {
+  function anyModalShown() {
+    return !!document.querySelector(".modal.show");
+  }
+
+  function cleanupBackdrops() {
+    // If a modal is open, DO NOT remove backdrops (would break UX)
+    if (anyModalShown()) return;
+
+    // Remove all leftover backdrops
+    var backdrops = document.querySelectorAll(".modal-backdrop");
+    for (var i = 0; i < backdrops.length; i++) {
+      if (backdrops[i] && backdrops[i].parentNode) {
+        backdrops[i].parentNode.removeChild(backdrops[i]);
+      }
+    }
+
+    // Reset body locks
+    document.body.classList.remove("modal-open");
+    document.body.style.overflow = "";
+    document.body.style.paddingRight = "";
+  }
+
+  // When any modal finishes hiding, cleanup leftovers
+  document.addEventListener("hidden.bs.modal", function () {
+    setTimeout(cleanupBackdrops, 50);
+  });
+
+  // Safety: if something goes wrong later, cleanup periodically
+  setInterval(function () {
+    // if there is a backdrop but no open modal => stuck overlay
+    var hasBackdrop = !!document.querySelector(".modal-backdrop");
+    if (hasBackdrop && !anyModalShown()) cleanupBackdrops();
+  }, 1500);
+
+  // Safety: click on gray overlay but no modal is open -> cleanup
+  document.addEventListener("click", function (e) {
+    var isBackdrop = e.target && e.target.classList && e.target.classList.contains("modal-backdrop");
+    if (isBackdrop && !anyModalShown()) cleanupBackdrops();
+  }, true);
+})();
+// ]]>
+</script>
 
 
-&lt;script src=&#34;https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder/assets/js/runtime.js&#34;&gt;&lt;/script&gt;
-&lt;script src=&#34;https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder/assets/js/products.js&#34;&gt;&lt;/script&gt;
-&lt;script src=&#34;https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder/assets/js/variants.js&#34;&gt;&lt;/script&gt;
-&lt;script src=&#34;https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder/assets/js/i18n.js&#34;&gt;&lt;/script&gt;
-&lt;script src=&#34;https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder/assets/js/cart.js&#34;&gt;&lt;/script&gt;
-&lt;script src=&#34;https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder/assets/js/wishlist.js&#34;&gt;&lt;/script&gt;
-&lt;script src=&#34;https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder/assets/js/popup.js&#34;&gt;&lt;/script&gt;
-&lt;script src=&#34;https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder/assets/js/currency.js&#34;&gt;&lt;/script&gt;
-&lt;script src=&#34;https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder/assets/js/lazyload.js&#34;&gt;&lt;/script&gt;
-&lt;script src=&#34;https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder/assets/js/analytics.js&#34;&gt;&lt;/script&gt;
-&lt;script src=&#34;https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder/assets/js/seo.js&#34;&gt;&lt;/script&gt;
-&lt;script src=&#34;https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder/assets/js/gallery.js&#34;&gt;&lt;/script&gt;
   </body>
 </html>
