@@ -4,32 +4,34 @@
  * - Checkout saves detailed rows (per item) via Runtime.saveEntry()
  * - The CART MODAL acts as the Checkout Popup (asking for info).
  * - FIX: Explicitly closes the modal to prevent stuck backdrops (gray overlay).
- * - FIX: Replaced validation alert() with integrated visual validation (scrolling + is-invalid class).
+ * - FIX: Implements a reliable Bootstrap alert modal instead of browser alert().
  */
 
 window.Cart = {
   key: 'mpwb_cart',
   items: [],
-  
-  // Add modal for alerts/messages
+
+  // Refactored Modal for alerts/messages
   alertModal: {
-    el: null,
-    titleEl: null,
-    messageEl: null,
-    okBtn: null,
-    show: function(message, title = "Message") {
-      if (!this.el) {
-        this.el = document.createElement('div');
-        this.el.className = 'modal fade';
-        this.el.id = 'alertModal';
-        this.el.innerHTML = `
-          <div class="modal-dialog">
+    _el: null,      // Stores the DOM element
+    _instance: null, // Stores the Bootstrap instance
+
+    getDom: function(title, message) {
+      if (!this._el) {
+        // --- 1. Create and append the DOM element once ---
+        this._el = document.createElement('div');
+        this._el.className = 'modal fade';
+        this._el.id = 'cartAlertModal';
+        this._el.setAttribute('tabindex', '-1');
+        this._el.setAttribute('aria-hidden', 'true');
+        this._el.innerHTML = `
+          <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
               <div class="modal-header">
-                <h5 class="modal-title">${title}</h5>
+                <h5 class="modal-title" id="cartAlertModalTitle">${title}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
               </div>
-              <div class="modal-body">
+              <div class="modal-body" id="cartAlertModalBody">
                 <p>${message}</p>
               </div>
               <div class="modal-footer">
@@ -38,16 +40,27 @@ window.Cart = {
             </div>
           </div>
         `;
-        document.body.appendChild(this.el);
+        document.body.appendChild(this._el);
         
-        // Initialize Bootstrap modal
-        this.el = new bootstrap.Modal(this.el);
+        // --- 2. Create the Bootstrap instance once ---
+        this._instance = new bootstrap.Modal(this._el);
       } else {
-        this.titleEl.textContent = title;
-        this.messageEl.textContent = message;
+        // --- 3. Update content on subsequent calls ---
+        this._el.querySelector('.modal-title').textContent = title;
+        this._el.querySelector('.modal-body p').innerHTML = message;
       }
-      
-      this.el.show();
+      return this._instance;
+    },
+    
+    show: function(message, title = "Message") {
+      if (!window.bootstrap || !window.bootstrap.Modal) {
+          // Fallback if Bootstrap is missing (e.g., if external scripts fail to load)
+          console.error("Bootstrap Modal library is missing.");
+          alert(title + ": " + message); 
+          return;
+      }
+      const modalInstance = this.getDom(title, message);
+      modalInstance.show();
     }
   },
 
@@ -307,7 +320,7 @@ window.Cart = {
           await Runtime.saveEntry(entry);
         }
 
-        // Use Bootstrap modal for submission confirmation instead of alert
+        // Use Bootstrap modal for submission confirmation
         self.alertModal.show("Order submitted successfully! We will contact you soon.", "Success");
         self.items = [];
         self.save();
