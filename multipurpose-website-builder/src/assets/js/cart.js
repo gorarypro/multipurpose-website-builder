@@ -4,6 +4,7 @@
  * - Checkout saves detailed rows (per item) via Runtime.saveEntry()
  * - The CART MODAL acts as the Checkout Popup (asking for info).
  * - FIX: Explicitly closes the modal to prevent stuck backdrops (gray overlay).
+ * - FIX: Replaced validation alert() with integrated visual validation (scrolling + is-invalid class).
  */
 
 window.Cart = {
@@ -211,13 +212,30 @@ window.Cart = {
       var phoneEl = document.getElementById('checkoutPhone');
       var emailEl = document.getElementById('checkoutEmail');
       var messageEl = document.getElementById('checkoutMessage');
-      
-      // --- MODIFIED VALIDATION ALERT FOR CLARITY ---
-      if (!nameEl || !nameEl.value.trim() || !phoneEl || !phoneEl.value.trim()) {
-          alert('Please fill out the "Name" and "Phone Number" fields visible below the items in this cart window before submitting.');
+      var modalBody = document.querySelector('#cartModal .modal-body');
+
+      // Clear previous validation classes
+      [nameEl, phoneEl].forEach(el => {
+          if (el) el.classList.remove('is-invalid');
+      });
+
+      var missingFields = [];
+      if (nameEl && !nameEl.value.trim()) missingFields.push(nameEl);
+      if (phoneEl && !phoneEl.value.trim()) missingFields.push(phoneEl);
+
+      if (missingFields.length > 0) {
+          // Add visual error cue
+          missingFields.forEach(el => el.classList.add('is-invalid'));
+          
+          // Scroll the modal body to the top of the form fields for visibility
+          if (modalBody && nameEl) {
+              modalBody.scrollTop = nameEl.offsetTop - modalBody.offsetTop;
+          }
+          
+          // Use console error instead of alert for better UX
+          console.error("Validation failed: Please fill required fields.");
           return;
       }
-      // ---------------------------------------------
 
       var ts = (new Date()).toISOString();
 
@@ -249,11 +267,12 @@ window.Cart = {
           await Runtime.saveEntry(entry);
         }
 
+        // Use standard alert for submission confirmation
         alert("Order submitted successfully! We will contact you soon.");
         self.items = [];
         self.save();
         
-        // --- FIX: Explicitly dismiss the cart modal after success (Solves stuck gray overlay) ---
+        // Fix: Explicitly dismiss the cart modal after success (Solves stuck gray overlay)
         var cartModalEl = document.getElementById('cartModal');
         if (cartModalEl && window.bootstrap && bootstrap.Modal) {
             var modalInstance = bootstrap.Modal.getInstance(cartModalEl);
@@ -261,7 +280,6 @@ window.Cart = {
                 modalInstance.hide();
             }
         }
-        // --- END FIX ---
         
         // Clear fields
         nameEl.value = '';
