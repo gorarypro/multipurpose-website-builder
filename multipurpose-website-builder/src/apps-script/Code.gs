@@ -1,17 +1,17 @@
 /** ========================================================
- *  Multipurpose Website Builder – Backend (Code.gs)
- *  SAFE VERSION — JSONP + Base64 theme XML
- *  ========================================================
+ * Multipurpose Website Builder – Backend (Code.gs)
+ * SAFE VERSION — JSONP + Base64 theme XML
+ * ========================================================
  *
- *  Frontend (runtime.js) calls this as JSONP:
- *    BASE_SCRIPT_URL?action=getSettings&callback=Runtime.__jsonp_cb_...
+ * Frontend (runtime.js) calls this as JSONP:
+ * BASE_SCRIPT_URL?action=getSettings&callback=Runtime.__jsonp_cb_...
  *
- *  doGet() detects ?callback=... and wraps JSON as:
- *    callback({...});
+ * doGet() detects ?callback=... and wraps JSON as:
+ * callback({...});
  */
 
 /* ========================================================
- *  GitHub Integration (optional)
+ * GitHub Integration (optional)
  * ======================================================== */
 // These constants are just defaults. In practice, we mainly
 // read github_* settings from the Settings sheet.
@@ -20,7 +20,7 @@ const GITHUB_REPO = 'gorarypro/multipurpose-website-builder';
 const GITHUB_BRANCH = 'main';
 
 /* ========================================================
- *  Sheets & Blogger constants
+ * Sheets & Blogger constants
  * ======================================================== */
 const SPREADSHEET_ID    = '1JEqIVnhjDaz7otgNAikpQj7Trw1SRG_0-iSfYMLQwtA';
 const SETTINGS_SHEET    = 'Settings';
@@ -29,13 +29,13 @@ const TEXTMAPPING_SHEET = 'TextMapping';
 const THEMES_SHEET      = 'Themes';
 
 // Fallback Blogger feed URL if none set in the Settings sheet
-const BLOG_FEED_URL     = 'https://eventsushi1.blogspot.com/feeds/posts/default?alt=json&max-results=50';
-
+const BLOG_FEED_URL     = 'https://eventsushi.blogspot.com/feeds/posts/default?alt=json&max-results=50';
 /* ========================================================
  * doGet — serves Builder UI or JSON/JSONP API
  * ======================================================== */
 function doGet(e) {
-  const params = e && e.parameter ? e.parameter : {};
+  const params = e && e.parameter ?
+    e.parameter : {};
   const action = params.action || '';
 
   // No action → serve the Builder UI
@@ -50,28 +50,23 @@ function doGet(e) {
   switch (action) {
     case 'getSettings':
       return json(getSettings(), e);
-
     case 'saveSettings':
       return json(saveSettings(params.config), e);
 
     case 'getProducts':
       return json(getProducts(), e);
-
     case 'getTextMap':
       return json(getTextMapping(), e);
 
     case 'saveEntry':
-      return json(saveEntry(params.entry), e);
+      return json(saveEntry(params.entry), e); // Dispatcher
 
     case 'generateTheme':
       return json(generateTheme(params.name), e);
-
     case 'saveThemeXml':
       return json(saveThemeXml(params.name, params.xml), e);
-
     case 'pushThemeToGitHub':
       return json(pushThemeToGitHub(params.name), e);
-
     default:
       return json(
         { status: 'error', message: 'Unknown action: ' + action },
@@ -88,11 +83,11 @@ function doGet(e) {
 function json(obj, e) {
   const callback =
     e && e.parameter && typeof e.parameter.callback === 'string'
-      ? e.parameter.callback
+      ?
+      e.parameter.callback
       : null;
 
   const text = JSON.stringify(obj);
-
   if (callback) {
     // JSONP
     return ContentService
@@ -106,16 +101,40 @@ function json(obj, e) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
+function getSpreadsheet_() {
+  return SpreadsheetApp.openById(SPREADSHEET_ID);
+}
+
+function getOrCreateSheet_(name) {
+  const ss = getSpreadsheet_();
+  let sheet = ss.getSheetByName(name);
+  if (!sheet) {
+    sheet = ss.insertSheet(name);
+  }
+  return sheet;
+}
+
+
+// --- NEW HELPER: Provides necessary default settings for new keys ---
+function getLoaderDefaults_() {
+  return {
+    loader_bg_color: '#1E2733',
+    loader_bg_text: 'Loading Website...',
+    // Define other system-critical defaults here if necessary
+    asset_base_url: 'https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets'
+  };
+}
+
+
 /* ========================================================
- * SETTINGS
+ * SETTINGS - MODIFIED TO INCLUDE NEW LOADER DEFAULTS
  * ======================================================== */
 function getSettings() {
-  const sheet = SpreadsheetApp
-    .openById(SPREADSHEET_ID)
-    .getSheetByName(SETTINGS_SHEET);
-
+  const sheet = getOrCreateSheet_(SETTINGS_SHEET);
   const rows = sheet.getDataRange().getValues();
-  const map = {};
+  
+  // Start with defaults for new or critical keys
+  const map = getLoaderDefaults_(); 
 
   // Row 0 = header, start from 1
   for (let i = 1; i < rows.length; i++) {
@@ -130,9 +149,8 @@ function getSettings() {
 function saveSettings(jsonConfig) {
   const config = JSON.parse(jsonConfig);
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-  const sheet = ss.getSheetByName(SETTINGS_SHEET);
+  const sheet = getOrCreateSheet_(SETTINGS_SHEET);
   const rows = sheet.getDataRange().getValues();
-
   const indexMap = {};
   for (let i = 1; i < rows.length; i++) {
     const key = rows[i][0];
@@ -148,7 +166,6 @@ function saveSettings(jsonConfig) {
       sheet.getRange(last, 2).setValue(config[key]);
     }
   });
-
   return { status: 'ok' };
 }
 
@@ -170,23 +187,27 @@ function getProducts() {
 /* ===== Blogger ===== */
 function fetchFromBlogger(settings) {
   // Prefer Settings sheet value, fallback to BLOG_FEED_URL constant
-  const feedUrl = settings.blogger_feed_url || BLOG_FEED_URL;
+  const feedUrl = settings.blogger_feed_url ||
+    BLOG_FEED_URL;
   if (!feedUrl) return [];
 
   const resp = UrlFetchApp.fetch(feedUrl);
   const data = JSON.parse(resp.getContentText());
 
-  const entries = (data.feed && data.feed.entry) || [];
+  const entries = (data.feed && data.feed.entry) ||
+    [];
   return entries.map(entry => normalizeBloggerEntry(entry));
 }
 
 function normalizeBloggerEntry(entry) {
-  const title   = entry.title  && entry.title.$t  ? entry.title.$t  : '';
+  const title   = entry.title  && entry.title.$t  ?
+    entry.title.$t  : '';
   const content = entry.content && entry.content.$t ? entry.content.$t : '';
   const labels  = (entry.category || []).map(c => c.term);
 
   return {
-    id      : entry.id && entry.id.$t ? entry.id.$t : '',
+    id      : entry.id && entry.id.$t ?
+      entry.id.$t : '',
     title   : title,
     content : content,
     labels  : labels,
@@ -216,7 +237,8 @@ function extractVariantsFromLabels(labels) {
     if (p > 0) {
       const group  = label.slice(0, p).trim();
       const option = label.slice(p + 1).trim();
-      if (!map[group]) map[group] = [];
+      if (!map[group]) map[group]
+        = [];
       if (!map[group].includes(option)) map[group].push(option);
     }
   });
@@ -237,14 +259,10 @@ function fetchFromWordPress(settings) {
  * TEXT MAPPING
  * ======================================================== */
 function getTextMapping() {
-  const sheet = SpreadsheetApp
-    .openById(SPREADSHEET_ID)
-    .getSheetByName(TEXTMAPPING_SHEET);
-
+  const sheet = getOrCreateSheet_(TEXTMAPPING_SHEET);
   const data = sheet.getDataRange().getValues();
   const headers = data.shift();  // first row = header
   const result = {};
-
   data.forEach(row => {
     const key = row[0];
     if (!key) return;
@@ -257,49 +275,65 @@ function getTextMapping() {
       }
     }
   });
-
   return { status: 'ok', map: result };
 }
 
 /* ========================================================
- * SAVE ENTRIES (orders / forms)
+ * SAVE ENTRIES (orders / forms) - Dispatcher
  * ======================================================== */
 function saveEntry(entryJson) {
-  const entry = JSON.parse(entryJson || '{}');
+  const entry = JSON.parse(entryJson);
+  const type = (entry.type || '').toLowerCase();
 
-  const sheet = SpreadsheetApp
-    .openById(SPREADSHEET_ID)
-    .getSheetByName(ENTRIES_SHEET);
+  switch (type) {
+    case 'order':
+      return saveOrderEntry(entry);
+    case 'contact':
+      return saveContactEntry(entry);
+    default:
+      // Fallback for unexpected types
+      return saveOrderEntry(entry);
+  }
+}
 
-  // Normalize / keep exact fields
-  const type      = entry.type || 'order';
-  const productId = entry.product_id || entry.productId || '';
-  const title     = entry.title || '';
-  const variants  = entry.variants ? JSON.stringify(entry.variants) : (entry.variants_json || '');
-  const qty       = entry.qty != null ? entry.qty : (entry.quantity != null ? entry.quantity : '');
-  const price     = entry.price != null ? entry.price : '';
-  const total     = entry.total != null ? entry.total : '';
-
-  const name    = entry.name || '';
-  const email   = entry.email || '';
-  const phone   = entry.phone || '';
-  const message = entry.message || '';
-
+function saveOrderEntry(entry) {
+  const sheet = getOrCreateSheet_(ENTRIES_SHEET);
+  // Log all available order fields
   sheet.appendRow([
-    new Date(),     // timestamp
-    type,           // type
-    productId,      // product_id
-    title,          // title
-    variants,       // variants
-    qty,            // qty
-    price,          // price
-    total,          // total
-    name,           // name
-    email,          // email
-    phone,          // phone
-    message         // message
+    new Date(),
+    entry.type      || '',
+    entry.product_id || '',
+    entry.title     || '',
+    entry.variants  || '',
+    entry.qty       || '',
+    entry.price     || '',
+    entry.total     || '',
+    entry.name      || '',
+    entry.email     || '',
+    entry.phone     || '',
+    entry.message   || ''
   ]);
+  return { status: 'ok' };
+}
 
+function saveContactEntry(entry) {
+  const sheet = getOrCreateSheet_(ENTRIES_SHEET);
+  // Log only relevant contact fields, leaving order fields blank
+  const row = [
+    new Date(),
+    entry.type      || 'contact', // type
+    '',                             // product_id
+    '',                             // title
+    '',                             // variants
+    '',                             // qty
+    '',                             // price
+    '',                             // total
+    entry.name      || '',          // name
+    entry.email     || '',          // email
+    entry.phone     || '',          // phone
+    entry.message   || ''           // message
+  ];
+  sheet.appendRow(row);
   return { status: 'ok' };
 }
 
@@ -310,20 +344,18 @@ function saveEntry(entryJson) {
 function generateTheme(name) {
   try {
     const template = HtmlService.createTemplateFromFile('ThemeTemplate');
-    template.settings = getSettings().settings;
+    // Use the comprehensive settings object
+    template.settings = getSettings().settings; 
 
     // Render full Blogger theme XML
     const xml = template.evaluate().getContent();
-
     // Encode before sending to frontend (IMPORTANT)
     const encoded = Utilities.base64Encode(xml);
-
     return {
       status: 'ok',
       xml   : encoded,
       name  : name
     };
-
   } catch (err) {
     return { status: 'error', message: err.toString() };
   }
@@ -344,7 +376,6 @@ function saveThemeXml(name, xmlPlain) {
 
     sheet.appendRow([name, xmlPlain, new Date()]);
     return { status: 'ok' };
-
   } catch (err) {
     return { status: 'error', message: err.toString() };
   }
@@ -356,7 +387,6 @@ function saveThemeXml(name, xmlPlain) {
 function pushThemeToGitHub(name) {
   try {
     const settings = getSettings().settings;
-
     // Prefer sheet settings; fallback to constants
     const enabledFlag = (settings.github_enabled || '').toString().toLowerCase();
     const repo   = settings.github_repo   || GITHUB_REPO;
@@ -381,15 +411,12 @@ function pushThemeToGitHub(name) {
 
     const xml  = row[1];
     const path = 'themes/' + name + '.xml';
-
     const url = 'https://api.github.com/repos/' + repo + '/contents/' + path;
-
     const body = {
       message: 'Upload Blogger theme XML',
       content: Utilities.base64Encode(xml),
       branch : branch
     };
-
     const options = {
       method : 'put',
       headers: {
@@ -399,7 +426,6 @@ function pushThemeToGitHub(name) {
       payload           : JSON.stringify(body),
       muteHttpExceptions: true
     };
-
     const resp = UrlFetchApp.fetch(url, options);
     const jsonResp = JSON.parse(resp.getContentText());
 
@@ -408,7 +434,6 @@ function pushThemeToGitHub(name) {
     }
 
     return { status: 'error', message: JSON.stringify(jsonResp) };
-
   } catch (err) {
     return { status: 'error', message: err.toString() };
   }
@@ -434,6 +459,7 @@ function escapeXml(str) {
   if (!str) return '';
   return String(str)
     .replace(/&/g, '&amp;')
+    .replace(/&&/g, '&amp;&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
@@ -443,8 +469,8 @@ function escapeXml(str) {
 /**
  * manualGithubAuth()
  * - Run once from the Script Editor to force:
- *   - external_request scope
- *   - https://api.github.com URL whitelist
+ * - external_request scope
+ * - https://api.github.com URL whitelist
  */
 function manualGithubAuth() {
   UrlFetchApp.fetch('https://api.github.com');
@@ -458,7 +484,8 @@ function manualGithubAuth() {
 function testBloggerFetch() {
   const settings = getSettings().settings;
   const feedUrl = settings.blogger_feed_url || BLOG_FEED_URL;
-  const resp = UrlFetchApp.fetch(feedUrl);
+  const resp
+    = UrlFetchApp.fetch(feedUrl);
   Logger.log(resp.getResponseCode());
 }
 
