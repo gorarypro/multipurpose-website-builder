@@ -3,6 +3,7 @@
  * - Adds +/- controls
  * - Checkout saves detailed rows (per item) via Runtime.saveEntry()
  * - UPDATED: Uses a form inside the modal instead of prompt() for checkout fields.
+ * - FIX: Explicitly closes the modal to prevent stuck backdrops (gray overlay).
  */
 
 window.Cart = {
@@ -207,13 +208,13 @@ window.Cart = {
       }
       
       var nameEl = document.getElementById('checkoutName');
-      var emailEl = document.getElementById('checkoutEmail');
       var phoneEl = document.getElementById('checkoutPhone');
+      var emailEl = document.getElementById('checkoutEmail');
       var messageEl = document.getElementById('checkoutMessage');
       
-      // Basic validation for name and phone
-      if (!nameEl.value.trim() || !phoneEl.value.trim()) {
-          alert('Please enter your Name and Phone Number.');
+      // Basic validation for name and phone (Assuming presence of these IDs from previous step)
+      if (!nameEl || !nameEl.value.trim() || !phoneEl || !phoneEl.value.trim()) {
+          alert('Please enter your Name and Phone Number in the form above.');
           return;
       }
 
@@ -247,9 +248,20 @@ window.Cart = {
           await Runtime.saveEntry(entry);
         }
 
-        alert("Order submitted!");
+        alert("Order submitted successfully! We will contact you soon.");
         self.items = [];
         self.save();
+        
+        // --- FIX: Explicitly dismiss the cart modal after success (Solves stuck gray overlay) ---
+        var cartModalEl = document.getElementById('cartModal');
+        if (cartModalEl && window.bootstrap && bootstrap.Modal) {
+            // Get the instance and hide it to trigger clean disposal/backdrop removal
+            var modalInstance = bootstrap.Modal.getInstance(cartModalEl);
+            if (modalInstance) {
+                modalInstance.hide();
+            }
+        }
+        // --- END FIX ---
         
         // Clear fields
         nameEl.value = '';
@@ -260,7 +272,7 @@ window.Cart = {
 
       } catch (e2) {
         console.error("Checkout failed:", e2);
-        alert("Could not submit order.");
+        alert("Could not submit order. Please try again.");
       }
     });
   }
