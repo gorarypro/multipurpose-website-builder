@@ -10,6 +10,46 @@
 window.Cart = {
   key: 'mpwb_cart',
   items: [],
+  
+  // Add modal for alerts/messages
+  alertModal: {
+    el: null,
+    titleEl: null,
+    messageEl: null,
+    okBtn: null,
+    show: function(message, title = "Message") {
+      if (!this.el) {
+        this.el = document.createElement('div');
+        this.el.className = 'modal fade';
+        this.el.id = 'alertModal';
+        this.el.innerHTML = `
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">${title}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <p>${message}</p>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+              </div>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(this.el);
+        
+        // Initialize Bootstrap modal
+        this.el = new bootstrap.Modal(this.el);
+      } else {
+        this.titleEl.textContent = title;
+        this.messageEl.textContent = message;
+      }
+      
+      this.el.show();
+    }
+  },
 
   init: function () {
     try {
@@ -204,7 +244,7 @@ window.Cart = {
       if (!self.items.length) return;
 
       if (!window.Runtime || typeof Runtime.saveEntry !== "function") {
-        alert("Checkout error: Runtime.saveEntry is not available.");
+        self.alertModal.show("Checkout error: Runtime.saveEntry is not available.", "Error");
         return;
       }
       
@@ -267,8 +307,8 @@ window.Cart = {
           await Runtime.saveEntry(entry);
         }
 
-        // Use standard alert for submission confirmation
-        alert("Order submitted successfully! We will contact you soon.");
+        // Use Bootstrap modal for submission confirmation instead of alert
+        self.alertModal.show("Order submitted successfully! We will contact you soon.", "Success");
         self.items = [];
         self.save();
         
@@ -290,7 +330,7 @@ window.Cart = {
 
       } catch (e2) {
         console.error("Checkout failed:", e2);
-        alert("Could not submit order. Please try again.");
+        self.alertModal.show("Could not submit order. Please try again.", "Error");
       }
     });
   }
