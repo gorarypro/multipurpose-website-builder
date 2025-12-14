@@ -212,7 +212,7 @@ window.Cart = {
       var emailEl = document.getElementById('checkoutEmail');
       var messageEl = document.getElementById('checkoutMessage');
       
-      // Basic validation for name and phone (Assuming presence of these IDs from previous step)
+      // Basic validation for name and phone (Requires fields to be present in cart.html)
       if (!nameEl || !nameEl.value.trim() || !phoneEl || !phoneEl.value.trim()) {
           alert('Please enter your Name and Phone Number in the form above.');
           return;
