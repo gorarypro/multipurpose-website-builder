@@ -12,13 +12,19 @@ window.Cart = {
   key: 'mpwb_cart',
   items: [],
 
-  // Refactored Modal for alerts/messages
+  // Refactored Modal for alerts/messages (Used for success/error popups)
   alertModal: {
     _el: null,      // Stores the DOM element
     _instance: null, // Stores the Bootstrap instance
 
     getDom: function(title, message) {
       if (!this._el) {
+        // Use document.querySelector to check if the main bootstrap JS library is loaded
+        if (!window.bootstrap || !window.bootstrap.Modal) {
+            console.error("Bootstrap Modal library is missing or not ready.");
+            return null; // Return null if dependencies aren't met
+        }
+        
         // --- 1. Create and append the DOM element once ---
         this._el = document.createElement('div');
         this._el.className = 'modal fade';
@@ -44,7 +50,6 @@ window.Cart = {
         document.body.appendChild(this._el);
         
         // --- 2. Create the Bootstrap instance once ---
-        // Using window.bootstrap here as it is guaranteed to be loaded before this script runs.
         this._instance = new bootstrap.Modal(this._el);
       } else {
         // --- 3. Update content on subsequent calls ---
@@ -55,14 +60,13 @@ window.Cart = {
     },
     
     show: function(message, title = "Message") {
-      if (!window.bootstrap || !window.bootstrap.Modal) {
-          // Fallback if Bootstrap is missing (e.g., if external scripts fail to load)
-          console.error("Bootstrap Modal library is missing.");
-          alert(title + ": " + message); 
-          return;
-      }
       const modalInstance = this.getDom(title, message);
-      modalInstance.show();
+      if (modalInstance) {
+        modalInstance.show();
+      } else {
+         // Fallback is essential if bootstrap failed to load
+         alert(title + ": " + message); 
+      }
     }
   },
 
@@ -287,8 +291,8 @@ window.Cart = {
               modalBody.scrollTop = nameEl.offsetTop - modalBody.offsetTop;
           }
           
-          // Use console error instead of alert for better UX
-          console.error("Validation failed: Please fill required fields.");
+          // Show error message via modal
+          self.alertModal.show("Please fill out the required Name and Phone Number fields in this cart window before submitting.", "Validation Failed");
           return;
       }
 
