@@ -2,7 +2,7 @@
  * Cart logic with localStorage
  * - Adds +/- controls
  * - Checkout saves detailed rows (per item) via Runtime.saveEntry()
- * - UPDATED: Uses a form inside the modal instead of prompt() for checkout fields.
+ * - The CART MODAL acts as the Checkout Popup (asking for info).
  * - FIX: Explicitly closes the modal to prevent stuck backdrops (gray overlay).
  */
 
