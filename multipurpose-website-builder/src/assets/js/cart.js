@@ -4,6 +4,7 @@
  * - Checkout saves detailed rows (per item) via Runtime.saveEntry()
  * - The CART MODAL acts as the Checkout Popup (asking for info).
  * - FIX: Explicitly closes the modal to prevent stuck backdrops (gray overlay).
+ * - FIX: Replaced validation alert() with integrated visual validation (scrolling + is-invalid class).
  * - FIX: Implements a reliable Bootstrap alert modal instead of browser alert().
  */
 
@@ -43,6 +44,7 @@ window.Cart = {
         document.body.appendChild(this._el);
         
         // --- 2. Create the Bootstrap instance once ---
+        // Using window.bootstrap here as it is guaranteed to be loaded before this script runs.
         this._instance = new bootstrap.Modal(this._el);
       } else {
         // --- 3. Update content on subsequent calls ---
