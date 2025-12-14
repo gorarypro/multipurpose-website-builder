@@ -212,11 +212,12 @@ window.Cart = {
       var emailEl = document.getElementById('checkoutEmail');
       var messageEl = document.getElementById('checkoutMessage');
       
-      // Basic validation for name and phone (Requires fields to be present in cart.html)
+      // --- MODIFIED VALIDATION ALERT FOR CLARITY ---
       if (!nameEl || !nameEl.value.trim() || !phoneEl || !phoneEl.value.trim()) {
-          alert('Please enter your Name and Phone Number in the form above.');
+          alert('Please fill out the "Name" and "Phone Number" fields visible below the items in this cart window before submitting.');
           return;
       }
+      // ---------------------------------------------
 
       var ts = (new Date()).toISOString();
 
@@ -255,7 +256,6 @@ window.Cart = {
         // --- FIX: Explicitly dismiss the cart modal after success (Solves stuck gray overlay) ---
         var cartModalEl = document.getElementById('cartModal');
         if (cartModalEl && window.bootstrap && bootstrap.Modal) {
-            // Get the instance and hide it to trigger clean disposal/backdrop removal
             var modalInstance = bootstrap.Modal.getInstance(cartModalEl);
             if (modalInstance) {
                 modalInstance.hide();
