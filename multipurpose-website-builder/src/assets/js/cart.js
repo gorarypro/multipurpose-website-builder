@@ -19,10 +19,10 @@ window.Cart = {
 
     getDom: function(title, message) {
       if (!this._el) {
-        // Use document.querySelector to check if the main bootstrap JS library is loaded
+        // Fallback check in case Bootstrap JS failed to load
         if (!window.bootstrap || !window.bootstrap.Modal) {
             console.error("Bootstrap Modal library is missing or not ready.");
-            return null; // Return null if dependencies aren't met
+            return null;
         }
         
         // --- 1. Create and append the DOM element once ---
@@ -64,7 +64,7 @@ window.Cart = {
       if (modalInstance) {
         modalInstance.show();
       } else {
-         // Fallback is essential if bootstrap failed to load
+         // Fallback to browser alert if Bootstrap failed to load
          alert(title + ": " + message); 
       }
     }
