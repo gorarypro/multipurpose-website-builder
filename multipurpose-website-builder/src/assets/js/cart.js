@@ -5,11 +5,70 @@
  * - The CART MODAL acts as the Checkout Popup (asking for info).
  * - FIX: Explicitly closes the modal to prevent stuck backdrops (gray overlay).
  * - FIX: Replaced validation alert() with integrated visual validation (scrolling + is-invalid class).
+ * - FIX: Implements a reliable Bootstrap alert modal instead of browser alert().
  */
 
 window.Cart = {
   key: 'mpwb_cart',
   items: [],
+
+  // Refactored Modal for alerts/messages (Used for success/error popups)
+  alertModal: {
+    _el: null,      // Stores the DOM element
+    _instance: null, // Stores the Bootstrap instance
+
+    getDom: function(title, message) {
+      if (!this._el) {
+        // Fallback check in case Bootstrap JS failed to load
+        if (!window.bootstrap || !window.bootstrap.Modal) {
+            console.error("Bootstrap Modal library is missing or not ready.");
+            return null;
+        }
+        
+        // --- 1. Create and append the DOM element once ---
+        this._el = document.createElement('div');
+        this._el.className = 'modal fade';
+        this._el.id = 'cartAlertModal';
+        this._el.setAttribute('tabindex', '-1');
+        this._el.setAttribute('aria-hidden', 'true');
+        this._el.innerHTML = `
+          <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="cartAlertModalTitle">${title}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body" id="cartAlertModalBody">
+                <p>${message}</p>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+              </div>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(this._el);
+        
+        // --- 2. Create the Bootstrap instance once ---
+        this._instance = new bootstrap.Modal(this._el);
+      } else {
+        // --- 3. Update content on subsequent calls ---
+        this._el.querySelector('.modal-title').textContent = title;
+        this._el.querySelector('.modal-body p').innerHTML = message;
+      }
+      return this._instance;
+    },
+    
+    show: function(message, title = "Message") {
+      const modalInstance = this.getDom(title, message);
+      if (modalInstance) {
+        modalInstance.show();
+      } else {
+         // Fallback to browser alert if Bootstrap failed to load
+         alert(title + ": " + message); 
+      }
+    }
+  },
 
   init: function () {
     try {
@@ -204,7 +263,7 @@ window.Cart = {
       if (!self.items.length) return;
 
       if (!window.Runtime || typeof Runtime.saveEntry !== "function") {
-        self.showAlert("Checkout error: Runtime.saveEntry is not available.", "Error");
+        self.alertModal.show("Checkout error: Runtime.saveEntry is not available.", "Error");
         return;
       }
       
@@ -232,8 +291,8 @@ window.Cart = {
               modalBody.scrollTop = nameEl.offsetTop - modalBody.offsetTop;
           }
           
-          // Use console error instead of alert for better UX
-          console.error("Validation failed: Please fill required fields.");
+          // Show error message via modal
+          self.alertModal.show("Please fill out the required Name and Phone Number fields in this cart window before submitting.", "Validation Failed");
           return;
       }
 
@@ -267,8 +326,8 @@ window.Cart = {
           await Runtime.saveEntry(entry);
         }
 
-        // Use Bootstrap modal for submission confirmation instead of alert
-        self.showAlert("Order submitted successfully! We will contact you soon.", "Success");
+        // Use Bootstrap modal for submission confirmation
+        self.alertModal.show("Order submitted successfully! We will contact you soon.", "Success");
         self.items = [];
         self.save();
         
@@ -290,27 +349,9 @@ window.Cart = {
 
       } catch (e2) {
         console.error("Checkout failed:", e2);
-        self.showAlert("Could not submit order. Please try again.", "Error");
+        self.alertModal.show("Could not submit order. Please try again.", "Error");
       }
     });
-  },
-
-  // Method to show alerts in Bootstrap modal
-  showAlert: function(message, title = "Message") {
-    var alertModal = document.getElementById('alertModal');
-    var alertTitle = document.getElementById('alertModalLabel');
-    var alertMessage = document.getElementById('alertModalMessage');
-    
-    if (alertModal && alertTitle && alertMessage) {
-      alertTitle.textContent = title;
-      alertMessage.textContent = message;
-      
-      var modal = new bootstrap.Modal(alertModal);
-      modal.show();
-    } else {
-      // Fallback to alert if modal elements don't exist
-      alert(message);
-    }
   }
 };
 
