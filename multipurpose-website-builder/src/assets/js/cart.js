@@ -14,7 +14,7 @@ window.Cart = {
 
   // Refactored Modal for alerts/messages (Used for success/error popups)
   alertModal: {
-    _el: null,      // Stores the DOM element
+    _el: null,       // Stores the DOM element
     _instance: null, // Stores the Bootstrap instance
 
     getDom: function(title, message) {
@@ -64,8 +64,8 @@ window.Cart = {
       if (modalInstance) {
         modalInstance.show();
       } else {
-         // Fallback to browser alert if Bootstrap failed to load
-         alert(title + ": " + message); 
+          // Fallback to browser alert if Bootstrap failed to load
+          alert(title + ": " + message); 
       }
     }
   },
@@ -336,8 +336,17 @@ window.Cart = {
         if (cartModalEl && window.bootstrap && bootstrap.Modal) {
             var modalInstance = bootstrap.Modal.getInstance(cartModalEl);
             if (modalInstance) {
+                // Attempt to hide the instance normally
                 modalInstance.hide();
             }
+            
+            // NEW: Manual cleanup as a Failsafe (CRITICAL FIX)
+            cartModalEl.classList.remove('show');
+            cartModalEl.style.display = 'none';
+            document.body.classList.remove('modal-open');
+            document.querySelectorAll('.modal-backdrop').forEach(function(backdrop) {
+                backdrop.remove();
+            });
         }
         
         // Clear fields
