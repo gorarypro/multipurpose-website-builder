@@ -113,10 +113,25 @@ window.QuickView = (function () {
         if (window.Cart && typeof Cart.add === "function") {
           Cart.add(currentProduct, 1);
         }
-        // close modal
+        
+        // close modal with robust cleanup
         var modalEl = $("quickViewModal");
         if (modalEl && window.bootstrap && bootstrap.Modal) {
-          try { bootstrap.Modal.getOrCreateInstance(modalEl).hide(); } catch (e) {}
+          try { 
+            // 1. Attempt to hide the instance normally
+            bootstrap.Modal.getOrCreateInstance(modalEl).hide(); 
+          } catch (e) {
+            // 2. If hiding fails, manually remove the modal artifacts
+            console.warn("QuickView hide failed. Manual cleanup initiated.", e);
+            modalEl.classList.remove('show');
+            modalEl.style.display = 'none';
+            
+            // Manual backdrop cleanup (CRITICAL FIX)
+            document.body.classList.remove('modal-open');
+            document.querySelectorAll('.modal-backdrop').forEach(function(backdrop) {
+              backdrop.remove();
+            });
+          }
         }
       });
     }
