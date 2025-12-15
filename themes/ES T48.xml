@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html b:version='2' expr:dir='data:blog.languageDirection'
+      xmlns='http://www.w3.org/1999/xhtml'
+      xmlns:b='http://www.google.com/2005/gml/b'
+      xmlns:data='http://www.google.com/2005/gml/data'
+      xmlns:expr='http://www.google.com/2005/gml/expr'>
+
+  <head>
+    <meta charset='utf-8'/>
+    <title>ES T48</title>
+    <meta content='width=device-width, initial-scale=1' name='viewport'/>
+
+        
+    
+    <link href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css' rel='stylesheet'/>
+    <link href='https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css' rel='stylesheet'/>
+
+    <link href='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/css/theme-base.css' rel='stylesheet'/>
+    <link expr:if='data:blog.languageDirection == "rtl"'
+          href='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/css/rtl.css'
+          rel='stylesheet'/>
+
+    <style>
+       
+      :root {
+          --loader-base-color: #1E2733;
+      }
+      
+      #initial-loader {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: var(--loader-base-color);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        opacity: 1;
+        transition: opacity 0.8s ease-out;
+        animation: pulse-bg 4s infinite alternate;
+      }
+
+      #initial-loader.hidden {
+        opacity: 0;
+        visibility: hidden;
+      }
+      
+       
+      .loader-spinner {
+        display: block;
+        width: 50px;
+        height: 50px;
+        margin: 10px auto;
+        border: 4px solid rgba(255, 255, 255, 0.3);
+        border-top: 4px solid #ffffff;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      
+      .loader-text {
+        font-size: 1.2rem;
+        font-weight: 500;
+        color: #ffffff;
+        margin-top: 20px;
+        animation: pulse-text 1.5s infinite;
+      }
+
+      @keyframes pulse-text {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+      }
+      
+      @keyframes pulse-bg {
+        0%   { background-color: var(--loader-base-color); }
+        50%  { background-color: #354558; } 
+        100% { background-color: var(--loader-base-color); }
+      }
+    </style>
+    <style>
+       
+      
+       
+      :root, html, body {
+           
+          --bs-primary: #fd0df1 !important; 
+          --bs-primary-rgb: 253, 13, 241 !important;
+          
+          --bs-secondary: #6c757d !important;
+          --bs-secondary-rgb: 108, 117, 125 !important;
+          
+           
+          --bs-body-bg: #ffffff !important;
+          --bs-body-color: #212529 !important;
+          --bs-bg-light: #f8f9fa !important;
+          --bs-bg-white: #ffffff !important;
+          --bs-card-bg: var(--bs-bg-light) !important; 
+          --bs-text-muted: #6c757d !important;
+          --bs-link-color: var(--bs-primary) !important;
+      }
+      
+       
+      body.theme-body {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background-color: var(--bs-body-bg) !important;
+        color: var(--bs-body-color) !important;
+      }
+      
+       
+      
+       
+      .bg-white, .navbar.bg-white, footer.bg-white {
+          background-color: var(--bs-bg-white) !important;
+      }
+      .bg-light {
+          background-color: var(--bs-bg-light) !important;
+      }
+
+       
+      .bg-white, .bg-light, footer.bg-white, .navbar.bg-white {
+          color: var(--bs-body-color) !important;
+      }
+      
+       
+      
+       
+      #checkoutFields h6 {
+          color: var(--bs-body-color) !important;
+      }
+      
+       
+      .modal-body .form-control {
+          color: var(--bs-body-color) !important;
+          background-color: var(--bs-body-bg) !important;
+          border-color: var(--bs-text-muted) !important;
+      }
+      
+       
+      .modal-body .form-control::placeholder {
+          color: var(--bs-text-muted) !important;
+          opacity: 0.8;
+      }
+      
+       
+      #cartModal #cartContent th, 
+      #cartModal #cartContent td {
+          color: var(--bs-body-color) !important;
+          border-color: var(--bs-text-muted) !important;
+      }
+
+
+       
+      
+       
+      .btn-primary, .bg-primary, .text-primary, .border-primary, a {
+          --bs-btn-bg: var(--bs-primary) !important;
+          --bs-btn-border-color: var(--bs-primary) !important;
+          --bs-text-opacity: 1 !important;
+          color: var(--bs-primary) !important;  
+      }
+      
+       
+      .btn-primary {
+          color: #ffffff !important; 
+          --bs-btn-color: #ffffff !important;
+          --bs-btn-hover-color: #ffffff !important;
+      }
+      
+      .bg-primary {
+          background-color: var(--bs-primary) !important;
+      }
+      
+       
+      .btn-secondary, .bg-secondary, .text-secondary {
+          --bs-btn-bg: var(--bs-secondary) !important;
+          --bs-btn-border-color: var(--bs-secondary) !important;
+      }
+
+       
+      .btn-secondary {
+          color: var(--bs-body-color) !important; 
+          --bs-btn-color: var(--bs-body-color) !important;
+          --bs-btn-hover-color: var(--bs-body-color) !important;
+      }
+
+      .bg-secondary {
+          background-color: var(--bs-secondary) !important;
+      }
+       
+      
+      .hide-comp { display: none !important; }
+
+       
+      .product-card { 
+          cursor: pointer; 
+          transition: transform 0.2s ease;
+          background-color: var(--bs-card-bg) !important;  
+      }
+      .product-card:hover { transform: translateY(-5px); }
+      .product-image { overflow: hidden; }
+      .product-image img { transition: transform 0.3s ease; }
+      .product-card:hover .product-image img { transform: scale(1.05); }
+
+       
+      .floating-btn {
+        position: fixed;
+        right: 16px;
+        z-index: 1050;
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #ffffff;
+        border: 1px solid rgba(0,0,0,0.08);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+        cursor: pointer;
+        transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+        text-decoration: none;
+      }
+      
+       
+      .floating-btn i { 
+          font-size: 1.4rem;
+          color: #212529 !important;
+      }
+
+      .floating-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 24px rgba(0,0,0,0.18);
+      }
+
+       
+      .floating-whatsapp {
+        bottom: 48px;
+        background-color: #25D366;
+        color: #ffffff;
+        border: none;
+      }
+      .floating-whatsapp i { font-size: 1.6rem; }
+
+       
+      .floating-btn .icon-count {
+        position: absolute;
+        top: -6px;
+        right: -6px;
+        min-width: 20px;
+        height: 20px;
+        padding: 0 4px;
+        border-radius: 999px;
+        background-color: #dc3545;
+        color: #ffffff;
+        font-size: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+       
+      #quickViewModal .modal-dialog { max-width: 900px; }
+
+       
+      @media (min-width: 768px) {
+        #cartModal .modal-dialog,
+        #wishlistModal .modal-dialog {
+          margin: 0;
+          position: fixed;
+          right: 0;
+          top: 0;
+          height: 100%;
+          max-width: 420px;
+          transform: none;
+        }
+        #cartModal .modal-content,
+        #wishlistModal .modal-content {
+          background-color: var(--bs-card-bg) !important;
+          color: var(--bs-body-color) !important;
+          height: 100%;
+          border-radius: 0;
+        }
+      }
+
+       
+      .navbar .btn.position-relative .badge { 
+          margin-top: 10px !important;  
+          margin-right: -2px !important; 
+      }
+
+       
+       
+      .navbar .btn-outline-secondary i {
+          color: var(--bs-body-color) !important;
+      }
+    </style>
+    <b:skin>
+/* ===== Blogger Required Skin Block ===== */
+body.theme-body {
+  margin: 0;
+  padding: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+.hide-comp { display: none !important; }
+    </b:skin>
+  </head>
+
+  <body class='theme-body lang-en'>
+
+    <div id="initial-loader">
+      <span class="loader-spinner"></span>
+      <span class="loader-text">
+        Ohayo ^^      </span>
+    </div>
+
+    <nav class='navbar navbar-expand-lg navbar-light bg-white border-bottom mb-3'>
+      <div class='container'>
+        <a class='navbar-brand' href='#hero'>
+          <span>ES T48</span>
+        </a>
+        <div class='ms-auto d-flex gap-2'>
+          <button class='btn btn-outline-secondary position-relative' data-bs-target='#cartModal' data-bs-toggle='modal' type='button'>
+            <i class='bi bi-cart'></i>
+            <span class='position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger' id='cartCount'>0</span>
+          </button>
+          <button class='btn btn-outline-secondary position-relative' data-bs-target='#wishlistModal' data-bs-toggle='modal' type='button'>
+            <i class='bi bi-heart'></i>
+            <span class='position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger' id='wishlistCount'>0</span>
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <b:section class='' id='navbar-section'></b:section>
+    <b:section class='' id='hero-section'></b:section>
+
+    <section class='' id='products-section'>
+      <section class='py-5' id='products'>
+        <div class='container'>
+          <div class='d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2'>
+            <h2 class='h3 mb-0'>Products</h2>
+            <div class='d-flex gap-2'>
+              <select class='form-select form-select-sm' id='productFilter'>
+                <option>All</option>
+              </select>
+              <select class='form-select form-select-sm' id='productSort'>
+                <option>Latest</option>
+                <option>Price (low to high)</option>
+                <option>Price (high to low)</option>
+              </select>
+            </div>
+          </div>
+          <div class='row g-4' id='productGrid'></div>
+          <div class='text-center text-muted mt-4 d-none'>No products found</div>
+        </div>
+      </section>
+    </section>
+
+    <section id='quickview-section'>
+      <div aria-hidden='true' aria-labelledby='quickViewLabel' class='modal fade' id='quickViewModal' tabindex='-1'>
+        <div class='modal-dialog modal-dialog-centered modal-lg'>
+          <div class='modal-content'>
+            <div class='modal-header'>
+              <h5 class='modal-title' id='quickViewLabel'>Product</h5>
+              <button aria-label='Close' class='btn-close' data-bs-dismiss='modal' type='button'></button>
+            </div>
+            <div class='modal-body'>
+              <div class='row g-4 align-items-start'>
+                <div class='col-md-6'>
+                  <img alt='' class='img-fluid rounded' id='quickViewImage' />
+                </div>
+                <div class='col-md-6'>
+                  <div class='h4 mb-3' id='quickViewPrice'></div>
+                  <div class='small text-muted mb-3' id='quickViewDescription'></div>
+                  <button class='btn btn-primary me-2' id='quickViewAddToCart' type='button'>
+                    <i class='bi bi-cart-plus me-1'></i>
+                    <span>Add to cart</span>
+                  </button>
+                    <button class='btn btn-outline-secondary' data-bs-dismiss='modal' type='button'>
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class='' id='cart-section'>
+      <div aria-hidden='true' aria-labelledby='cartModalLabel' class='modal fade' id='cartModal' tabindex='-1'>
+        <div class='modal-dialog modal-lg modal-dialog-scrollable'>
+          <div class='modal-content'>
+            <div class='modal-header'>
+              <h5 class='modal-title'>Cart</h5>
+              <button aria-label='Close' class='btn-close' data-bs-dismiss='modal' type='button'></button>
+            </div>
+            <div class='modal-body'>
+              <div id='cartContent'></div>
+              <div class='text-center text-muted d-none'>Your cart is empty</div>
+
+              <div class='mt-4' id='checkoutFields' style='display:none;'>
+                <h6>Contact &amp; Delivery Details</h6>
+                <div class='mb-2'>
+                  <input class='form-control form-control-sm' id='checkoutName' placeholder='Your Name (Required)' required='required' type='text'/>
+                </div>
+                <div class='mb-2'>
+                  <input class='form-control form-control-sm' id='checkoutPhone' placeholder='Phone Number (Required)' required='required' type='tel'/>
+                </div>
+                <div class='mb-2'>
+                  <input class='form-control form-control-sm' id='checkoutEmail' placeholder='Email (Optional)' type='email'/>
+                </div>
+                <div class='mb-2'>
+                  <textarea class='form-control form-control-sm' id='checkoutMessage' placeholder='Address / Notes (Required for Delivery)' rows='2'/>
+                &lt;/div&gt;
+              &lt;/div&gt;
+            &lt;/div&gt;
+            &lt;div class=&#39;modal-footer d-flex justify-content-between align-items-center&#39;&gt;
+              &lt;div&gt;
+                &lt;span class=&#39;fw-semibold&#39;&gt;Total:&lt;/span&gt;
+                &lt;span id=&#39;cartTotal&#39;&gt;0&lt;/span&gt;
+              &lt;/div&gt;
+              &lt;div class=&#39;d-flex gap-2&#39;&gt;
+                &lt;button class=&#39;btn btn-outline-secondary&#39; data-bs-dismiss=&#39;modal&#39;&gt;
+                  &lt;span&gt;Continue shopping&lt;/span&gt;
+                &lt;/button&gt;
+                &lt;button class=&#39;btn btn-primary&#39; id=&#39;checkoutButton&#39;&gt;
+                  &lt;span&gt;Checkout&lt;/span&gt;
+                &lt;/button&gt;
+              &lt;/div&gt;
+            &lt;/div&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/section&gt;
+
+    &lt;section class=&#39;&#39; id=&#39;wishlist-section&#39;&gt;
+      &lt;div aria-hidden=&#39;true&#39; aria-labelledby=&#39;wishlistModalLabel&#39; class=&#39;modal fade&#39; id=&#39;wishlistModal&#39; tabindex=&#39;-1&#39;&gt;
+        &lt;div class=&#39;modal-dialog modal-lg modal-dialog-scrollable&#39;&gt;
+          &lt;div class=&#39;modal-content&#39;&gt;
+            &lt;div class=&#39;modal-header&#39;&gt;
+              &lt;h5 class=&#39;modal-title&#39;&gt;Wishlist&lt;/h5&gt;
+              &lt;button aria-label=&#39;Close&#39; class=&#39;btn-close&#39; data-bs-dismiss=&#39;modal&#39; type=&#39;button&#39;&gt;&lt;/button&gt;
+            &lt;/div&gt;
+            &lt;div class=&#39;modal-body&#39;&gt;
+              &lt;div id=&#39;wishlistContent&#39;&gt;&lt;/div&gt;
+              &lt;div class=&#39;text-center text-muted d-none&#39;&gt;Your wishlist is empty&lt;/div&gt;
+            &lt;/div&gt;
+            &lt;div class=&#39;modal-footer d-flex justify-content-between&#39;&gt;
+              &lt;button class=&#39;btn btn-outline-secondary&#39; data-bs-dismiss=&#39;modal&#39;&gt;
+                &lt;span&gt;Close&lt;/span&gt;
+              &lt;/button&gt;
+            &lt;/div&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/section&gt;
+
+    &lt;section class=&#39;hide-comp&#39; id=&#39;popup-section&#39;&gt;
+      &lt;div aria-hidden=&#39;true&#39; aria-labelledby=&#39;timedPopupLabel&#39; class=&#39;modal fade&#39; id=&#39;timedPopup&#39; tabindex=&#39;-1&#39;&gt;
+        &lt;div class=&#39;modal-dialog modal-dialog-centered modal-lg&#39;&gt;
+          &lt;div class=&#39;modal-content&#39;&gt;
+            &lt;div class=&#39;modal-header border-0&#39;&gt;
+              &lt;h5 class=&#39;modal-title&#39; id=&#39;timedPopupLabel&#39;&gt;
+                              &lt;/h5&gt;
+              &lt;button aria-label=&#39;Close&#39; class=&#39;btn-close&#39; data-bs-dismiss=&#39;modal&#39; type=&#39;button&#39;&gt;&lt;/button&gt;
+            &lt;/div&gt;
+            &lt;div class=&#39;modal-body&#39; id=&#39;timedPopupContent&#39;&gt;
+                          &lt;/div&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/section&gt;
+
+
+    &lt;section id=&#39;contact-section&#39;&gt;
+      &lt;section class=&#39;py-5 bg-light&#39; id=&#39;contact&#39;&gt;
+        &lt;div class=&#39;container&#39;&gt;
+          &lt;h2 class=&#39;h3 mb-3&#39;&gt;Contact us&lt;/h2&gt;
+          &lt;p class=&#39;text-muted&#39;&gt;Send us a message&lt;/p&gt;
+        &lt;/div&gt;
+      &lt;/section&gt;
+    &lt;/section&gt;
+
+
+    &lt;section id=&#39;testimonials-section&#39;&gt;
+      &lt;section class=&#39;py-5&#39; id=&#39;testimonials&#39;&gt;
+        &lt;div class=&#39;container text-center&#39;&gt;
+          &lt;h2 class=&#39;h3&#39;&gt;Testimonials&lt;/h2&gt;
+        &lt;/div&gt;
+      &lt;/section&gt;
+    &lt;/section&gt;
+
+
+    &lt;section id=&#39;pricing-section&#39;&gt;
+      &lt;section class=&#39;py-5 bg-light&#39; id=&#39;pricing&#39;&gt;
+        &lt;div class=&#39;container text-center&#39;&gt;
+          &lt;h2 class=&#39;h3&#39;&gt;Pricing&lt;/h2&gt;
+        &lt;/div&gt;
+      &lt;/section&gt;
+    &lt;/section&gt;
+
+
+    &lt;div class=&#39;floating-btn floating-cart&#39; data-bs-target=&#39;#cartModal&#39; data-bs-toggle=&#39;modal&#39; id=&#39;floatingCart&#39;&gt;
+      &lt;i class=&#39;bi bi-cart3&#39;&gt;&lt;/i&gt;
+      &lt;span class=&#39;icon-count&#39; id=&#39;floatingCartCount&#39;&gt;0&lt;/span&gt;
+    &lt;/div&gt;
+
+    &lt;div class=&#39;floating-btn floating-wishlist&#39; data-bs-target=&#39;#wishlistModal&#39; data-bs-toggle=&#39;modal&#39; id=&#39;floatingWishlist&#39;&gt;
+      &lt;i class=&#39;bi bi-heart-fill&#39;&gt;&lt;/i&gt;
+      &lt;span class=&#39;icon-count&#39; id=&#39;floatingWishlistCount&#39;&gt;0&lt;/span&gt;
+    &lt;/div&gt;
+
+    &lt;a class=&#39;floating-btn floating-whatsapp&#39;
+       href=&#39;https://wa.me/212664070513&#39;
+       id=&#39;floatingWhatsapp&#39;
+       rel=&#39;noopener&#39;
+       target=&#39;_blank&#39;&gt;
+      &lt;i class=&#39;bi bi-whatsapp&#39;&gt;&lt;/i&gt;
+    &lt;/a&gt;
+
+    &lt;footer&gt;
+      &lt;footer class=&#39;py-4 border-top bg-white&#39;&gt;
+        &lt;div class=&#39;container d-flex flex-wrap justify-content-between align-items-center gap-2&#39;&gt;
+          &lt;div class=&#39;small text-muted&#39;&gt;
+            &#169; &lt;span id=&#39;footerYear&#39;&gt;&lt;/span&gt;
+            &lt;span&gt;ES T48&lt;/span&gt; &#8211;
+            &lt;span&gt;All rights reserved&lt;/span&gt;
+          &lt;/div&gt;
+
+          &lt;div class=&#39;small&#39;&gt;
+            &lt;a class=&#39;text-decoration-none me-2&#39; href=&#39;#hero&#39;&gt;Back to top&lt;/a&gt;
+            |
+            &lt;a class=&#39;text-decoration-none mx-2&#39; href=&#39;#&#39;&gt;Privacy policy&lt;/a&gt;
+            |
+            &lt;a class=&#39;text-decoration-none ms-2&#39; href=&#39;#&#39;&gt;Terms&lt;/a&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+
+      &lt;/footer&gt;
+    &lt;/footer&gt;
+
+
+    &lt;script&gt;
+      // Inject the current web app URL dynamically before loading runtime.js
+      window.BASE_SCRIPT_URL = &#39;https://script.google.com/macros/s/AKfycbwyzCNs3LoUus8PpPCz8Zko-7PWN0-ivzTTLvXwxDs47wAyDi2w8NVJv_PrJqq3kFRGyA/exec&#39;;
+    &lt;/script&gt;
+
+
+    &lt;script src=&#39;https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js&#39;&gt;&lt;/script&gt;
+
+
+    &lt;script src=&#39;https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/runtime.js?v=3&#39;&gt;&lt;/script&gt;
+
+
+    &lt;script src=&#39;https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/products.js&#39;&gt;&lt;/script&gt;
+    &lt;script src=&#39;https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/quickview.js&#39;&gt;&lt;/script&gt;
+    &lt;script src=&#39;https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/variants.js&#39;&gt;&lt;/script&gt;
+    &lt;script src=&#39;https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/i18n.js&#39;&gt;&lt;/script&gt;
+
+
+    &lt;script src=&#39;https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/cart.js&#39;&gt;&lt;/script&gt;
+    &lt;script src=&#39;https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/wishlist.js&#39;&gt;&lt;/script&gt;
+
+
+    &lt;script src=&#39;https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/popup.js&#39;&gt;&lt;/script&gt;
+    &lt;script src=&#39;https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/currency.js&#39;&gt;&lt;/script&gt;
+    &lt;script src=&#39;https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/lazyload.js&#39;&gt;&lt;/script&gt;
+    &lt;script src=&#39;https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/analytics.js&#39;&gt;&lt;/script&gt;
+    &lt;script src=&#39;https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/seo.js&#39;&gt;&lt;/script&gt;
+    &lt;script src=&#39;https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/gallery.js&#39;&gt;&lt;/script&gt;
+
+
+    &lt;script src=&#39;https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/modal-guard.js&#39;&gt;&lt;/script&gt;
+
+
+    &lt;script&gt;
+      (function () {
+        function setFooterYear() {
+          var el = document.getElementById(&#39;footerYear&#39;);
+          if (el) el.textContent = String(new Date().getFullYear());
+        }
+
+
+        // --- HIDE LOADER FUNCTION ---
+        function hideLoader() {
+          var loader = document.getElementById(&#39;initial-loader&#39;);
+          if (loader) {
+            loader.classList.add(&#39;hidden&#39;);
+            // Remove element from DOM after transition
+            setTimeout(function() {
+              loader.remove();
+            }, 800); // Wait for the 0.8s transition to finish
+          }
+          
+          // CRITICAL FIX: Aggressively remove any rogue Bootstrap backdrops after hiding loader
+          cleanBootstrapBackdrops();
+        }
+        
+        // CRITICAL FIX: Function to remove the transparent backdrop element
+        function cleanBootstrapBackdrops() {
+             document.querySelectorAll(&#39;.modal-backdrop&#39;).forEach(backdrop =&gt; {
+                 backdrop.remove();
+             });
+             // Also ensure the body class is reset in case Bootstrap left it there
+             document.body.classList.remove(&#39;modal-open&#39;);
+             document.body.style.overflow = &#39;&#39;;
+             document.body.style.paddingRight = &#39;&#39;;
+        }
+
+
+        function fixWhatsappHref() {
+          var a = document.getElementById(&#39;floatingWhatsapp&#39;);
+          if (!a) return;
+          try {
+            var num = (window.Runtime && Runtime.settings && Runtime.settings.contact_whatsapp) ? String(Runtime.settings.contact_whatsapp) : &#39;&#39;;
+            num = (num || &#39;&#39;).replace(/[^\d&#43;]/g, &#39;&#39;);
+            if (num) a.setAttribute(&#39;href&#39;, &#39;https://wa.me/&#39; &#43; num);
+          } catch (e) {}
+        }
+
+
+        document.addEventListener(&#39;DOMContentLoaded&#39;, function () {
+          setFooterYear();
+          // NO setInterval: We rely on the single cleanup within hideLoader to prevent runtime conflicts.
+        });
+
+
+        document.addEventListener(&#39;runtime_ready&#39;, function () {
+          fixWhatsappHref();
+          setFooterYear();
+          // --- HIDE THE LOADER WHEN RUNTIME IS READY ---
+          hideLoader();
+        });
+
+
+        // Safety net in case runtime_ready fails to fire (e.g., script error)
+        window.addEventListener(&#39;load&#39;, function() {
+          setTimeout(hideLoader, 5000); // Hide after a max 5 second wait
+        });
+
+
+      })();
+    &lt;/script&gt;
+
+
+  &lt;/body&gt;
+&lt;/html&gt;
