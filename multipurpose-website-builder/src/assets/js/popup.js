@@ -9,8 +9,12 @@ window.Popup = {
     setTimeout(() => {
       const el = document.getElementById('timedPopup');
       if (!el) return;
-      const modal = new bootstrap.Modal(el);
-      modal.show();
+      try {
+        const modal = new bootstrap.Modal(el);
+        modal.show();
+      } catch (e) {
+        console.error("Failed to show timed popup modal:", e);
+      }
     }, delay);
   }
 };
