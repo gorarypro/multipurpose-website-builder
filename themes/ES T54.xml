@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html b:version='2' expr:dir='data:blog.languageDirection'
+      xmlns='http://www.w3.org/1999/xhtml'
+      xmlns:b='http://www.google.com/2005/gml/b'
+      xmlns:data='http://www.google.com/2005/gml/data'
+      xmlns:expr='http://www.google.com/2005/gml/expr'>
+
+  <head>
+    <meta charset='utf-8'/>
+    <title>ES T54</title>
+    <meta content='width=device-width, initial-scale=1' name='viewport'/>
+    <b:skin> body { margin:0; } </b:skin>
+  </head>
+
+  <body class='theme-body'>
+    
+    <link href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css' rel='stylesheet'/>
+    <link href='https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css' rel='stylesheet'/>
+
+        <style>
+      :root {
+          --bs-primary: #fd0df1; 
+          --bs-body-bg: #ffffff;
+          --bs-body-color: #212529;
+      }
+      body { 
+        font-family: system-ui, sans-serif; 
+        background-color: var(--bs-body-bg); 
+        color: var(--bs-body-color);
+        padding: 0; margin: 0;
+      }
+      .btn-primary { background-color: var(--bs-primary); border-color: var(--bs-primary); color: #fff; }
+      .product-card { border: 1px solid #eee; transition: 0.2s; }
+      .product-card:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+      .product-image { height: 200px; background: #f8f9fa; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+      .product-image img { max-height: 100%; max-width: 100%; object-fit: cover; }
+      .hide-comp { display: none !important; }
+      
+       
+      .floating-btn {
+        position: fixed; right: 16px; z-index: 1050; width: 50px; height: 50px;
+        border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        background: #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.2); color: #333; text-decoration: none;
+      }
+      .floating-whatsapp { bottom: 40px; background: #25D366; color: #fff; }
+      .icon-count { position: absolute; top: -5px; right: -5px; background: red; color: white; font-size: 10px; padding: 2px 5px; border-radius: 10px; }
+      
+       
+      [dir="rtl"] body { text-align: right; direction: rtl; }
+    </style>
+
+    <div id="initial-loader" style="position:fixed;top:0;left:0;width:100%;height:100%;background:#1E2733;z-index:9999;display:flex;align-items:center;justify-content:center;color:white;">
+      Loading...
+    </div>
+
+    <nav class='navbar navbar-expand-lg navbar-light bg-white border-bottom mb-3'>
+      <div class='container'>
+        <a class='navbar-brand fw-bold' href='#hero'><span data-setting='site_title'></span></a>
+        
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navContent">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navContent">
+                      <form class="d-flex mx-auto my-2" onsubmit="return false;">
+              <input class="form-control bg-light" type="search" id="searchInput" placeholder="Search..." />
+            </form>
+                    
+          <div class='ms-auto d-flex gap-2'>
+            <button class='btn btn-outline-secondary position-relative' data-bs-target='#cartModal' data-bs-toggle='modal'>
+              <i class='bi bi-cart'></i> <span class='icon-count' id='cartCount'>0</span>
+            </button>
+            <button class='btn btn-outline-secondary position-relative' data-bs-target='#wishlistModal' data-bs-toggle='modal'>
+              <i class='bi bi-heart'></i> <span class='icon-count' id='wishlistCount'>0</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <b:section class='' id='hero-section'></b:section>
+    
+    <section class='py-5' id='products-section'>
+      <div class='container'>
+         <div class='d-flex justify-content-between mb-4'>
+            <h3>Products</h3>
+            <select class='form-select w-auto' id='productFilter'><option value='all'>All</option></select>
+         </div>
+         <div class='row g-4' id='productGrid'></div>
+         <div class='text-center mt-5 d-none' id='productsEmpty'>No products found.</div>
+      </div>
+    </section>
+
+    <div class="modal fade" id="cartModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Cart</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div id="cartContent"></div><div id="checkoutFields" style="display:none;" class="mt-3"><input id="checkoutName" class="form-control mb-2" placeholder="Name"/><input id="checkoutPhone" class="form-control" placeholder="Phone"/></div></div><div class="modal-footer"><button id="checkoutButton" class="btn btn-primary">Checkout</button></div></div></div></div>
+    
+    <div class="modal fade" id="wishlistModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Wishlist</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body" id="wishlistContent"></div></div></div></div>
+
+    <div class="modal fade" id="quickViewModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quickViewLabel"></h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="row"><div class="col-md-6"><img id="quickViewImage" class="img-fluid"/></div><div class="col-md-6"><h4 id="quickViewPrice"></h4><p id="quickViewDescription"></p><button id="quickViewAddToCart" class="btn btn-primary">Add</button></div></div></div></div></div></div>
+
+    <div class='floating-btn' style='bottom:100px;' data-bs-target='#cartModal' data-bs-toggle='modal'><i class='bi bi-cart'></i><span class='icon-count' id='floatingCartCount'>0</span></div>
+    <div class='floating-btn' style='bottom:160px;' data-bs-target='#wishlistModal' data-bs-toggle='modal'><i class='bi bi-heart'></i><span class='icon-count' id='floatingWishlistCount'>0</span></div>
+    <a class='floating-btn floating-whatsapp' href='#' id='floatingWhatsapp' target='_blank'><i class='bi bi-whatsapp'></i></a>
+
+    <footer class='py-4 border-top bg-white mt-5 text-center small text-muted'>
+       &copy; <span id='footerYear'></span> <span data-setting='site_title'></span>
+    </footer>
+
+    <script>window.BASE_SCRIPT_URL = 'https:\/\/script.google.com\/macros\/s\/AKfycbySV9PbNWxQTSdwrZ-1TOgJWI_LUTLlNgX3IO2ovLWjxt4vU13RAo-Sc0CLmzaVNVgc0w\/exec';</script>
+    <script src='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js'></script>
+        <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/runtime.js'></script>
+    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/products.js'></script>
+     <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/search.js'></script>     <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/quickview.js'></script>
+    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/variants.js'></script>
+    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/i18n.js'></script>
+    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/cart.js'></script>
+    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/wishlist.js'></script>
+    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/popup.js'></script>
+    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/currency.js'></script>
+    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/lazyload.js'></script>
+    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/analytics.js'></script>
+    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/seo.js'></script>
+    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/gallery.js'></script>
+    <script src='https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets/js/modal-guard.js'></script>
+
+    <script>
+      (function() {
+        function cleanup() {
+           document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
+           document.body.classList.remove('modal-open');
+        }
+        function hide() {
+           var l=document.getElementById('initial-loader');
+           if(l) { l.style.opacity='0'; setTimeout(()=>l.remove(),800); }
+           cleanup();
+        }
+        function fixWA() {
+           var a=document.getElementById('floatingWhatsapp');
+           if(a && window.Runtime && Runtime.settings && Runtime.settings.contact_whatsapp) {
+              a.href = 'https://wa.me/' + String(Runtime.settings.contact_whatsapp).replace(/[^\d]/g,'');
+           }
+        }
+        document.addEventListener('runtime_ready', function(){
+           document.getElementById('footerYear').textContent = new Date().getFullYear();
+           fixWA();
+           hide();
+        });
+        window.addEventListener('load', function(){ setTimeout(hide, 4000); });
+        setInterval(cleanup, 5000);
+      })();
+    </script>
+  </body>
+</html>
