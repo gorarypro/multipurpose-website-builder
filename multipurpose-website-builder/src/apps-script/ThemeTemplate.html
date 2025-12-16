@@ -11,25 +11,178 @@
     <meta content='width=device-width, initial-scale=1' name='viewport'/>
 
     <? var ASSET_URL = settings.asset_base_url || 'https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets'; ?>
+    <? var CACHE_BUSTER = new Date().getTime(); // Cache buster ?>
     
-    <link href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css' rel='stylesheet'/>
-    <link href='https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css' rel='stylesheet'/>
+    <? var THEME_COLORS = calculateThemeColors(settings); ?>
 
-    <link href='<?= ASSET_URL ?>/css/theme-base.css' rel='stylesheet'/>
+    <link href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css?v=<?= CACHE_BUSTER ?>' rel='stylesheet'/>
+    <link href='https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css?v=<?= CACHE_BUSTER ?>' rel='stylesheet'/>
+
+    <link href='<?= ASSET_URL ?>/css/theme-base.css?v=<?= CACHE_BUSTER ?>' rel='stylesheet'/>
     <link expr:if='data:blog.languageDirection == &quot;rtl&quot;'
-          href='<?= ASSET_URL ?>/css/rtl.css'
+          href='<?= ASSET_URL ?>/css/rtl.css?v=<?= CACHE_BUSTER ?>'
           rel='stylesheet'/>
 
     <style>
-      /* Styles block remains as in your working monolithic version */
-      body.theme-body {
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      /* Variables needed for the loader */
+      :root {
+          --loader-base-color: <?= escapeXml(settings.loader_bg_color || '#1E2733') ?>;
+      }
+      
+      #initial-loader {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: var(--loader-base-color);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        opacity: 1;
+        transition: opacity 0.8s ease-out;
+        animation: pulse-bg 4s infinite alternate;
       }
 
+      #initial-loader.hidden {
+        opacity: 0;
+        visibility: hidden;
+      }
+      
+      /* Loader content styles */
+      .loader-spinner {
+        display: block;
+        width: 50px;
+        height: 50px;
+        margin: 10px auto;
+        border: 4px solid rgba(255, 255, 255, 0.3);
+        border-top: 4px solid #ffffff;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      
+      .loader-text {
+        font-size: 1.2rem;
+        font-weight: 500;
+        color: #ffffff;
+        margin-top: 20px;
+        animation: pulse-text 1.5s infinite;
+      }
+
+      @keyframes pulse-text {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+      }
+      
+      @keyframes pulse-bg {
+        0%   { background-color: var(--loader-base-color); }
+        50%  { background-color: #354558; } 
+        100% { background-color: var(--loader-base-color); }
+      }
+    </style>
+    <style>
+      /* --- DYNAMIC THEME COLOR INJECTION (Primary, Secondary, and Dark Mode) --- */
+      
+      /* Target :root, html, AND body for setting variables */
+      :root, html, body {
+          /* 1. PRIMARY & SECONDARY COLORS */
+          --bs-primary: #<?= escapeXml(THEME_COLORS.PRIMARY_HEX) ?> !important; 
+          --bs-primary-rgb: <?= THEME_COLORS.PRIMARY_RGB ?> !important;
+          
+          --bs-secondary: #<?= escapeXml(THEME_COLORS.SECONDARY_HEX) ?> !important;
+          --bs-secondary-rgb: <?= THEME_COLORS.SECONDARY_RGB ?> !important;
+          
+          /* 2. GLOBAL DARK MODE OVERRIDES */
+          --bs-body-bg: <?= THEME_COLORS.THEME_BG ?> !important;
+          --bs-body-color: <?= THEME_COLORS.THEME_TEXT ?> !important;
+          
+          /* Bootstrap variable overrides for dark mode consistency */
+          --bs-card-bg: <?= THEME_COLORS.THEME_BG ?> !important;
+          --bs-body-bg-rgb: <?= hexToRgb_(THEME_COLORS.THEME_BG) ?> !important; 
+      }
+      
+      /* 3. BASE BODY OVERRIDE: Applies Dark/Light Mode Background and Text */
+      body.theme-body {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background-color: var(--bs-body-bg) !important;
+        color: var(--bs-body-color) !important;
+      }
+      
+      /* 4. UTILITY CLASS REMAPPING */
+      /* If Dark Mode is active, force "bg-white" and "bg-light" to respect the theme background */
+      <? if ((settings.color_mode || 'light') == 'dark') { ?>
+         .bg-white, .navbar.bg-white, footer.bg-white, .bg-light {
+             background-color: var(--bs-body-bg) !important;
+             color: var(--bs-body-color) !important;
+         }
+         .card {
+             background-color: var(--bs-body-bg) !important;
+             color: var(--bs-body-color) !important;
+             border-color: rgba(255,255,255, 0.1);
+         }
+         .modal-content {
+             background-color: #2c3034 !important; /* Slightly lighter gray for modals */
+             color: #fff !important;
+         }
+         .form-control, .form-select {
+             background-color: #2c3034 !important;
+             color: #fff !important;
+             border-color: #495057 !important;
+         }
+      <? } ?>
+
+      /* 6. FORCE PRIMARY COLOR UTILITIES */
+      .btn-primary, .bg-primary, .text-primary, .border-primary, a {
+          --bs-btn-bg: var(--bs-primary) !important;
+          --bs-btn-border-color: var(--bs-primary) !important;
+          --bs-text-opacity: 1 !important;
+          color: var(--bs-primary) !important; /* For text utilities */
+      }
+      
+      /* CRITICAL FIX: Ensure primary buttons have white text for contrast */
+      .btn-primary {
+          color: #ffffff !important; 
+          --bs-btn-color: #ffffff !important;
+          --bs-btn-hover-color: #ffffff !important;
+      }
+      
+      .bg-primary {
+          background-color: var(--bs-primary) !important;
+      }
+      
+      /* Secondary Utilities */
+      .btn-secondary, .bg-secondary, .text-secondary {
+          --bs-btn-bg: var(--bs-secondary) !important;
+          --bs-btn-border-color: var(--bs-secondary) !important;
+      }
+
+      /* Secondary Buttons (Text color based on theme mode) */
+      .btn-secondary {
+          color: var(--bs-body-color) !important; 
+          --bs-btn-color: var(--bs-body-color) !important;
+          --bs-btn-hover-color: var(--bs-body-color) !important;
+      }
+
+      .bg-secondary {
+          background-color: var(--bs-secondary) !important;
+      }
+      /* ------------------------------------------------ */
+      
       .hide-comp { display: none !important; }
 
       /* Product card styles for quickview */
-      .product-card { cursor: pointer; transition: transform 0.2s ease; }
+      .product-card { 
+          cursor: pointer; 
+          transition: transform 0.2s ease;
+      }
       .product-card:hover { transform: translateY(-5px); }
       .product-image { overflow: hidden; }
       .product-image img { transition: transform 0.3s ease; }
@@ -53,17 +206,19 @@
         transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
         text-decoration: none;
       }
-
-      .floating-btn i { font-size: 1.4rem; }
+      
+      /* Force floating icons to be dark for contrast against their white background */
+      .floating-btn i { 
+          font-size: 1.4rem;
+          color: #212529 !important;
+      }
 
       .floating-btn:hover {
         transform: translateY(-2px);
         box-shadow: 0 10px 24px rgba(0,0,0,0.18);
       }
 
-      .floating-cart { bottom: 112px; }
-      .floating-wishlist { bottom: 176px; }
-
+      /* WhatsApp button color is fixed green/white */
       .floating-whatsapp {
         bottom: 48px;
         background-color: #25D366;
@@ -111,79 +266,18 @@
         }
       }
 
-      /* Fix badge clipping */
-      .navbar .btn.position-relative .badge { margin-top: 2px; }
-
-
-      /* --- NEW DYNAMIC LOADER STYLES --- */
-
-      #initial-loader {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        /* Dynamic background color */
-        background-color: <?= settings.loader_bg_color || '#1E2733' ?>;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        z-index: 9999;
-        opacity: 1;
-        /* Smooth fade-out */
-        transition: opacity 0.8s ease-out;
-        /* NEW: Continuous background color pulse effect */
-        animation: pulse-bg 4s infinite alternate;
+      /* Fix badge clipping (ADJUSTED MARGIN) */
+      .navbar .btn.position-relative .badge { 
+          margin-top: 10px !important; /* User's preferred value */
+          margin-right: -2px !important; 
       }
 
-      #initial-loader.hidden {
-        opacity: 0;
-        visibility: hidden;
+      /* Navbar Icon Visibility Fix (REMOVED HARD WHITE OVERRIDE) */
+      /* These buttons use btn-outline-secondary, which inherits body text color. */
+      .navbar .btn-outline-secondary i {
+          color: var(--bs-body-color) !important;
       }
-
-      /* Defines the color cycling animation */
-      @keyframes pulse-bg {
-        0%   { background-color: <?= settings.loader_bg_color || '#1E2733' ?>; }
-        50%  { background-color: #354558; } /* Slightly lighter shade for pulse */
-        100% { background-color: <?= settings.loader_bg_color || '#1E2733' ?>; }
-      }
-
-      /* Simple CSS spinner for animation */
-      .loader-spinner {
-        display: block;
-        width: 50px;
-        height: 50px;
-        margin: 10px auto;
-        border: 4px solid rgba(255, 255, 255, 0.3);
-        border-top: 4px solid #ffffff;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-      }
-
-      @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-      }
-
-      .loader-text {
-        font-size: 1.2rem;
-        font-weight: 500;
-        color: #ffffff; /* White text for contrast on dark background */
-        margin-top: 20px;
-        animation: pulse-text 1.5s infinite;
-      }
-
-      @keyframes pulse-text {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.05); }
-        100% { transform: scale(1); }
-      }
-      /* --- END NEW DYNAMIC LOADER STYLES --- */
-
-
     </style>
-
     <b:skin><![CDATA[
 /* ===== Blogger Required Skin Block ===== */
 body.theme-body {
@@ -209,15 +303,33 @@ body.theme-body {
         <a class='navbar-brand' href='#hero'>
           <span data-setting='site_title'></span>
         </a>
-        <div class='ms-auto d-flex gap-2'>
-          <button class='btn btn-outline-secondary position-relative' data-bs-target='#cartModal' data-bs-toggle='modal' type='button'>
-            <i class='bi bi-cart'></i>
-            <span class='position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger' id='cartCount'>0</span>
-          </button>
-          <button class='btn btn-outline-secondary position-relative' data-bs-target='#wishlistModal' data-bs-toggle='modal' type='button'>
-            <i class='bi bi-heart'></i>
-            <span class='position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger' id='wishlistCount'>0</span>
-          </button>
+        
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarContent">
+          
+          <? if (settings.search_included == 'yes') { ?>
+            <form class="d-flex mx-auto my-2 my-lg-0" role="search" onsubmit="return false;">
+              <div class="input-group">
+                <span class="input-group-text bg-light border-end-0">
+                  <i class="bi bi-search"></i>
+                </span>
+                <input class="form-control border-start-0 bg-light" type="search" id="searchInput" placeholder="Search..." aria-label="Search">
+              </div>
+            </form>
+          <? } ?>
+          <div class='ms-auto d-flex gap-2'>
+            <button class='btn btn-outline-secondary position-relative' data-bs-target='#cartModal' data-bs-toggle='modal' type='button'>
+              <i class='bi bi-cart'></i>
+              <span class='position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger' id='cartCount'>0</span>
+            </button>
+            <button class='btn btn-outline-secondary position-relative' data-bs-target='#wishlistModal' data-bs-toggle='modal' type='button'>
+              <i class='bi bi-heart'></i>
+              <span class='position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger' id='wishlistCount'>0</span>
+            </button>
+          </div>
         </div>
       </div>
     </nav>
@@ -267,7 +379,7 @@ body.theme-body {
                     <i class='bi bi-cart-plus me-1'></i>
                     <span>Add to cart</span>
                   </button>
-                  <button class='btn btn-outline-secondary' data-bs-dismiss='modal' type='button'>
+                    <button class='btn btn-outline-secondary' data-bs-dismiss='modal' type='button'>
                     Close
                   </button>
                 </div>
@@ -315,7 +427,7 @@ body.theme-body {
                 <button type='button' class='btn btn-outline-secondary' data-bs-dismiss='modal'>
                   <span data-i18n='TEXT_CONTINUE_SHOPPING'></span>
                 </button>
-                <button type='button' class='btn btn-primary' id='checkoutButton'>
+                <button class='btn btn-primary' id='checkoutButton' type='button'>
                   <span data-i18n='CHECKOUT'></span>
                 </button>
               </div>
@@ -443,28 +555,33 @@ body.theme-body {
     <script src='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js'></script>
 
 
-    <script src='<?= ASSET_URL ?>/js/runtime.js?v=3'></script>
+    <script src='<?= ASSET_URL ?>/js/runtime.js?v=3&cache=<?= CACHE_BUSTER ?>'></script>
 
 
-    <script src='<?= ASSET_URL ?>/js/products.js'></script>
-    <script src='<?= ASSET_URL ?>/js/quickview.js'></script>
-    <script src='<?= ASSET_URL ?>/js/variants.js'></script>
-    <script src='<?= ASSET_URL ?>/js/i18n.js'></script>
+    <script src='<?= ASSET_URL ?>/js/products.js?cache=<?= CACHE_BUSTER ?>'></script>
+    
+    <? if (settings.search_included == 'yes') { ?>
+      <script src='<?= ASSET_URL ?>/js/search.js?cache=<?= CACHE_BUSTER ?>'></script>
+    <? } ?>
+
+    <script src='<?= ASSET_URL ?>/js/quickview.js?cache=<?= CACHE_BUSTER ?>'></script>
+    <script src='<?= ASSET_URL ?>/js/variants.js?cache=<?= CACHE_BUSTER ?>'></script>
+    <script src='<?= ASSET_URL ?>/js/i18n.js?cache=<?= CACHE_BUSTER ?>'></script>
 
 
-    <script src='<?= ASSET_URL ?>/js/cart.js'></script>
-    <script src='<?= ASSET_URL ?>/js/wishlist.js'></script>
+    <script src='<?= ASSET_URL ?>/js/cart.js?cache=<?= CACHE_BUSTER ?>'></script>
+    <script src='<?= ASSET_URL ?>/js/wishlist.js?cache=<?= CACHE_BUSTER ?>'></script>
 
 
-    <script src='<?= ASSET_URL ?>/js/popup.js'></script>
-    <script src='<?= ASSET_URL ?>/js/currency.js'></script>
-    <script src='<?= ASSET_URL ?>/js/lazyload.js'></script>
-    <script src='<?= ASSET_URL ?>/js/analytics.js'></script>
-    <script src='<?= ASSET_URL ?>/js/seo.js'></script>
-    <script src='<?= ASSET_URL ?>/js/gallery.js'></script>
+    <script src='<?= ASSET_URL ?>/js/popup.js?cache=<?= CACHE_BUSTER ?>'></script>
+    <script src='<?= ASSET_URL ?>/js/currency.js?cache=<?= CACHE_BUSTER ?>'></script>
+    <script src='<?= ASSET_URL ?>/js/lazyload.js?cache=<?= CACHE_BUSTER ?>'></script>
+    <script src='<?= ASSET_URL ?>/js/analytics.js?cache=<?= CACHE_BUSTER ?>'></script>
+    <script src='<?= ASSET_URL ?>/js/seo.js?cache=<?= CACHE_BUSTER ?>'></script>
+    <script src='<?= ASSET_URL ?>/js/gallery.js?cache=<?= CACHE_BUSTER ?>'></script>
 
 
-    <script src='<?= ASSET_URL ?>/js/modal-guard.js'></script>
+    <script src='<?= ASSET_URL ?>/js/modal-guard.js?cache=<?= CACHE_BUSTER ?>'></script>
 
 
     <script>
@@ -485,6 +602,20 @@ body.theme-body {
               loader.remove();
             }, 800); // Wait for the 0.8s transition to finish
           }
+          
+          // CRITICAL FIX: Aggressively remove any rogue Bootstrap backdrops after hiding loader
+          cleanBootstrapBackdrops();
+        }
+        
+        // CRITICAL FIX: Function to remove the transparent backdrop element
+        function cleanBootstrapBackdrops() {
+             document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
+                 backdrop.remove();
+             });
+             // Also ensure the body class is reset in case Bootstrap left it there
+             document.body.classList.remove('modal-open');
+             document.body.style.overflow = '';
+             document.body.style.paddingRight = '';
         }
 
 
@@ -492,8 +623,7 @@ body.theme-body {
           var a = document.getElementById('floatingWhatsapp');
           if (!a) return;
           try {
-            // RESTORED ESCAPING FROM YOUR WORKING CODE
-            var num = (window.Runtime &amp;&amp; Runtime.settings &amp;&amp; Runtime.settings.contact_whatsapp) ? String(Runtime.settings.contact_whatsapp) : '';
+            var num = (window.Runtime && Runtime.settings && Runtime.settings.contact_whatsapp) ? String(Runtime.settings.contact_whatsapp) : '';
             num = (num || '').replace(/[^\d+]/g, '');
             if (num) a.setAttribute('href', 'https://wa.me/' + num);
           } catch (e) {}
@@ -502,6 +632,8 @@ body.theme-body {
 
         document.addEventListener('DOMContentLoaded', function () {
           setFooterYear();
+          // Fix: Start the periodic cleanup right away to catch modal bugs
+          setInterval(cleanBootstrapBackdrops, 5000); // Check every 5 seconds
         });
 
 
