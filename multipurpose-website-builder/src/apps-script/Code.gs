@@ -2,34 +2,25 @@
  * Multipurpose Website Builder – Backend (Code.gs)
  * SAFE VERSION — JSONP + Base64 theme XML
  * ========================================================
- *
- * Frontend (runtime.js) calls this as JSONP:
- * BASE_SCRIPT_URL?action=getSettings&callback=Runtime.__jsonp_cb_...
- *
- * doGet() detects ?callback=... and wraps JSON as:
- * callback({...});
  */
 
-/* ========================================================
- * GitHub Integration (optional)
- * ======================================================== */
-// These constants are just defaults. In practice, we mainly
-// read github_* settings from the Settings sheet.
-const GITHUB_ENABLED = true;
-const GITHUB_REPO = 'gorarypro/multipurpose-website-builder';
-const GITHUB_BRANCH = 'main';
-
-/* ========================================================
- * Sheets & Blogger constants
- * ======================================================== */
+// --- CONFIGURATION CONSTANTS (Adjust these if necessary) ---
 const SPREADSHEET_ID    = '1JEqIVnhjDaz7otgNAikpQj7Trw1SRG_0-iSfYMLQwtA';
 const SETTINGS_SHEET    = 'Settings';
 const ENTRIES_SHEET     = 'Entries';
 const TEXTMAPPING_SHEET = 'TextMapping';
 const THEMES_SHEET      = 'Themes';
 
-// Fallback Blogger feed URL if none set in the Settings sheet
+// GitHub Defaults (Settings sheet values override these)
+const GITHUB_REPO       = 'gorarypro/multipurpose-website-builder';
+const GITHUB_BRANCH     = 'main';
+const GITHUB_ENABLED    = true;
+
+// Fallback Blogger feed URL
 const BLOG_FEED_URL     = 'https://eventsushi.blogspot.com/feeds/posts/default?alt=json&max-results=50';
+// -------------------------------------------------------------
+
+
 /* ========================================================
  * doGet — serves Builder UI or JSON/JSONP API
  * ======================================================== */
@@ -101,6 +92,7 @@ function json(obj, e) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
+// --- Sheet Helpers ---
 function getSpreadsheet_() {
   return SpreadsheetApp.openById(SPREADSHEET_ID);
 }
@@ -114,26 +106,83 @@ function getOrCreateSheet_(name) {
   return sheet;
 }
 
+/**
+ * Helper to convert HEX color string (without #) to R, G, B string for CSS variables.
+ * @param {string} hex The 6-digit hex string (e.g., "ff0000" or "#ff0000").
+ * @returns {string} The RGB string (e.g., "255, 0, 0").
+ */
+function hexToRgb_(hex) {
+  // Ensure we only use 6 characters
+  const h = (String(hex) || '000000').replace(/^#/, '');
 
-// --- NEW HELPER: Provides necessary default settings for new keys ---
+  if (h.length !== 6) {
+    // Fallback to Bootstrap default blue RGB if input is invalid
+    return '13, 110, 253'; 
+  }
+
+  const r = parseInt(h.substring(0, 2), 16);
+  const g = parseInt(h.substring(2, 4), 16);
+  const b = parseInt(h.substring(4, 6), 16);
+
+  return r + ', ' + g + ', ' + b;
+}
+
+/**
+ * Provides necessary default settings for new keys.
+ */
 function getLoaderDefaults_() {
   return {
+    primary_color: '0d6efd',
+    secondary_color: '6c757d', // Default Bootstrap Secondary
+    color_mode: 'light',       // NEW: Default to Light mode
     loader_bg_color: '#1E2733',
     loader_bg_text: 'Loading Website...',
-    // Define other system-critical defaults here if necessary
     asset_base_url: 'https://cdn.jsdelivr.net/gh/gorarypro/multipurpose-website-builder@main/multipurpose-website-builder/src/assets'
   };
 }
 
+/**
+ * Calculates primary, secondary, and general theme colors based on settings.
+ * Note: This function is called by ThemeTemplate.html.
+ */
+function calculateThemeColors(settings) {
+  // Get values from settings, using defaults if necessary
+  const primaryHex = (settings.primary_color || '0d6efd').replace(/^#/, '');
+  const secondaryHex = (settings.secondary_color || '6c757d').replace(/^#/, ''); 
+  const mode = (settings.color_mode || 'light').toLowerCase();
+
+  const colors = {
+    // Primary
+    PRIMARY_HEX: primaryHex,
+    PRIMARY_RGB: hexToRgb_(primaryHex),
+    
+    // Secondary
+    SECONDARY_HEX: secondaryHex,
+    SECONDARY_RGB: hexToRgb_(secondaryHex),
+    
+    // Theme Mode Overrides (for background and text)
+    THEME_BG: '#ffffff',
+    THEME_TEXT: '#212529'
+  };
+
+  if (mode === 'dark') {
+    colors.THEME_BG = '#212529'; // Dark gray background
+    colors.THEME_TEXT = '#f8f9fa'; // Light text (Bootstrap white)
+  }
+  
+  // Pass all calculated colors to the template
+  return colors;
+}
+
 
 /* ========================================================
- * SETTINGS - MODIFIED TO INCLUDE NEW LOADER DEFAULTS
+ * SETTINGS
  * ======================================================== */
 function getSettings() {
   const sheet = getOrCreateSheet_(SETTINGS_SHEET);
   const rows = sheet.getDataRange().getValues();
   
-  // Start with defaults for new or critical keys
+  // Start with defaults to ensure new keys exist
   const map = getLoaderDefaults_(); 
 
   // Row 0 = header, start from 1
@@ -184,7 +233,6 @@ function getProducts() {
   return { status: 'ok', items: fetchFromBlogger(settings) };
 }
 
-/* ===== Blogger ===== */
 function fetchFromBlogger(settings) {
   // Prefer Settings sheet value, fallback to BLOG_FEED_URL constant
   const feedUrl = settings.blogger_feed_url ||
@@ -245,13 +293,8 @@ function extractVariantsFromLabels(labels) {
   return map;
 }
 
-/* ===== WordPress (placeholder) ===== */
 function fetchFromWordPress(settings) {
-  // Example:
-  // const url  = settings.wp_api_url;
-  // if (!url) return [];
-  // const json = UrlFetchApp.fetch(url).getContentText();
-  // return JSON.parse(json).map(item => normalizeWordPress(item));
+  // Placeholder for WordPress fetching logic
   return [];
 }
 
@@ -344,8 +387,7 @@ function saveContactEntry(entry) {
 function generateTheme(name) {
   try {
     const template = HtmlService.createTemplateFromFile('ThemeTemplate');
-    // Use the comprehensive settings object
-    template.settings = getSettings().settings; 
+    template.settings = getSettings().settings;
 
     // Render full Blogger theme XML
     const xml = template.evaluate().getContent();
@@ -382,7 +424,7 @@ function saveThemeXml(name, xmlPlain) {
 }
 
 /* ========================================================
- * PUSH THEME TO GITHUB (optional)
+ * PUSH THEME TO GITHUB (SHA LOOKUP ADDED)
  * ======================================================== */
 function pushThemeToGitHub(name) {
   try {
@@ -412,11 +454,43 @@ function pushThemeToGitHub(name) {
     const xml  = row[1];
     const path = 'themes/' + name + '.xml';
     const url = 'https://api.github.com/repos/' + repo + '/contents/' + path;
+    
+    // --- STEP 1: Check for existing file and retrieve SHA ---
+    let currentSha = null;
+    try {
+      const getOptions = {
+        method: 'get',
+        headers: {
+          Authorization: 'token ' + token,
+          Accept: 'application/vnd.github.v3+json'
+        },
+        // We mute exceptions to handle 404 (file not found) gracefully
+        muteHttpExceptions: true 
+      };
+      // Fetch the file metadata on the target branch
+      const existingFileResp = UrlFetchApp.fetch(url + '?ref=' + branch, getOptions);
+      const existingFileData = JSON.parse(existingFileResp.getContentText());
+
+      // If the file exists (status 200) and has a sha, store it
+      if (existingFileResp.getResponseCode() === 200 && existingFileData.sha) {
+        currentSha = existingFileData.sha;
+      }
+    } catch (e) {
+      Logger.log('Error during SHA retrieval: ' + e.toString());
+    }
+    
+    // --- STEP 2: Prepare PUT Request Body ---
     const body = {
-      message: 'Upload Blogger theme XML',
+      message: currentSha ? 'Update existing Blogger theme XML: ' + name : 'Initial upload Blogger theme XML: ' + name,
       content: Utilities.base64Encode(xml),
       branch : branch
     };
+    
+    // CRITICAL: Add SHA only if we found an existing file
+    if (currentSha) {
+      body.sha = currentSha;
+    }
+
     const options = {
       method : 'put',
       headers: {
@@ -426,14 +500,22 @@ function pushThemeToGitHub(name) {
       payload           : JSON.stringify(body),
       muteHttpExceptions: true
     };
+    
+    // --- STEP 3: Execute PUT Request ---
     const resp = UrlFetchApp.fetch(url, options);
     const jsonResp = JSON.parse(resp.getContentText());
 
     if (jsonResp.content && jsonResp.content.path) {
       return { status: 'ok', path: jsonResp.content.path };
     }
-
-    return { status: 'error', message: JSON.stringify(jsonResp) };
+    
+    // Return GitHub error details for client debugging
+    return { 
+      status: 'error', 
+      message: JSON.stringify(jsonResp),
+      github_status: jsonResp.status
+    };
+    
   } catch (err) {
     return { status: 'error', message: err.toString() };
   }
@@ -447,16 +529,17 @@ function include(filename) {
 }
 
 /* ========================================================
- * Helpers
+ * Helpers (Provided for context/debugging)
  * ======================================================== */
 
 /**
  * escapeXml(str)
  * Safely escape user / settings content before injecting into XML.
- * Use this INSIDE ThemeTemplate.html where needed via <?= escapeXml(...) ?>.
  */
 function escapeXml(str) {
   if (!str) return '';
+  // Note: Your original working template code implies this function is used
+  // to escape sensitive user input.
   return String(str)
     .replace(/&/g, '&amp;')
     .replace(/&&/g, '&amp;&amp;')
@@ -466,21 +549,10 @@ function escapeXml(str) {
     .replace(/'/g, '&#39;');
 }
 
-/**
- * manualGithubAuth()
- * - Run once from the Script Editor to force:
- * - external_request scope
- * - https://api.github.com URL whitelist
- */
 function manualGithubAuth() {
   UrlFetchApp.fetch('https://api.github.com');
 }
 
-/**
- * testBloggerFetch()
- * - Optional helper to test BLOG_FEED_URL / settings.blogger_feed_url.
- * - Run manually from the Script Editor. Check the Logs for the status.
- */
 function testBloggerFetch() {
   const settings = getSettings().settings;
   const feedUrl = settings.blogger_feed_url || BLOG_FEED_URL;
