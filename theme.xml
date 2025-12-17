@@ -9,56 +9,33 @@
   <link href='https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css' rel='stylesheet'/>
 
   <b:skin><![CDATA[
-    :root {
-      --primary: #01fe2b;
-      --bg: #0d0d0d;
-      --card: #181818;
-      --text: #ffffff;
-    }
-    body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', Roboto, sans-serif; margin: 0; overflow-x: hidden; }
-    
-    /* Sticky Navbar */
+    :root { --primary: #01fe2b; --bg: #0d0d0d; --card: #181818; --text: #ffffff; }
+    body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', Roboto, sans-serif; margin: 0; }
     .navbar { background: rgba(0,0,0,0.9); backdrop-filter: blur(10px); border-bottom: 1px solid #333; position: sticky; top: 0; z-index: 1000; }
     .navbar-brand { color: var(--primary) !important; font-weight: 800; text-transform: uppercase; }
-    
-    /* Hero Section */
-    #hero { 
-      background: linear-gradient(180deg, var(--primary), #000); 
-      padding: 80px 20px; text-align: center; border-radius: 0 0 50px 50px; 
-    }
-
-    /* Filter Bar */
+    #hero { background: linear-gradient(180deg, var(--primary), #000); padding: 80px 20px; text-align: center; border-radius: 0 0 50px 50px; }
     .filter-bar { display: flex; justify-content: center; gap: 10px; padding: 20px; flex-wrap: wrap; }
-    .filter-btn { border: 2px solid var(--primary); background: transparent; color: var(--primary); border-radius: 30px; padding: 8px 20px; font-weight: 600; transition: 0.3s; }
-    .filter-btn.active, .filter-btn:hover { background: var(--primary); color: #000; }
-
-    /* Menu Grid */
-    .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px; padding: 20px; max-width: 1200px; margin: 0 auto; }
-    .menu-item { background: var(--card); border-radius: 20px; overflow: hidden; border: 1px solid #333; transition: 0.3s; height: 100%; display: flex; flex-direction: column; }
-    .menu-item:hover { transform: translateY(-5px); border-color: var(--primary); }
-    .card-img { width: 100%; height: 220px; object-fit: cover; }
-    .price { color: var(--primary); font-weight: 800; font-size: 1.4rem; }
-    .order-btn { background: var(--primary); color: #000; border: none; width: 100%; padding: 12px; border-radius: 12px; font-weight: 800; text-transform: uppercase; }
-
-    /* Floating Cart Drawer */
+    .filter-btn { border: 2px solid var(--primary); background: transparent; color: var(--primary); border-radius: 30px; padding: 6px 16px; font-weight: 600; cursor: pointer; transition: 0.3s; }
+    .filter-btn.active { background: var(--primary); color: #000; }
+    .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; padding: 20px; max-width: 1200px; margin: 0 auto; }
+    .menu-item { background: var(--card); border-radius: 20px; overflow: hidden; border: 1px solid #333; transition: 0.3s; display: flex; flex-direction: column; }
+    .card-img { width: 100%; height: 200px; object-fit: cover; }
+    .price { color: var(--primary); font-weight: 800; font-size: 1.3rem; }
+    .order-btn { background: var(--primary); color: #000; border: none; width: 100%; padding: 10px; border-radius: 12px; font-weight: 800; }
     .cart-drawer { position: fixed; top: 0; right: -400px; width: 100%; max-width: 400px; height: 100vh; background: var(--card); z-index: 2000; transition: 0.4s; box-shadow: -10px 0 30px rgba(0,0,0,0.5); display: flex; flex-direction: column; }
     .cart-drawer.open { right: 0; }
-    .cart-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1500; display: none; }
-    .cart-overlay.show { display: block; }
-    
     #Blog1 { display: none !important; }
   ]]></b:skin>
 </head>
 <body>
-  <div class="cart-overlay" id="cartOverlay" onclick="toggleCart()"></div>
   <div class="cart-drawer" id="cartDrawer">
     <div class="p-4 bg-dark d-flex justify-content-between align-items-center">
-      <h3 class="m-0 fw-bold">My Selection</h3>
+      <h4 class="m-0 fw-bold">My Selection</h4>
       <button class="btn-close btn-close-white" onclick="toggleCart()"></button>
     </div>
     <div class="p-4 flex-grow-1 overflow-auto" id="cartItems"></div>
     <div class="p-4 border-top border-secondary">
-      <div class="d-flex justify-content-between mb-3 fs-4 fw-bold">
+      <div class="d-flex justify-content-between mb-3 fs-5 fw-bold">
         <span>Total:</span><span id="cartTotal">0 DH</span>
       </div>
       <button class="order-btn w-100" onclick="checkout()">Checkout to WhatsApp</button>
@@ -67,21 +44,21 @@
 
   <nav class="navbar navbar-dark px-4">
     <a class="navbar-brand" href="#"><data:blog.title/></a>
-    <div class="position-relative" onclick="toggleCart()" style="cursor:pointer">
+    <div onclick="toggleCart()" style="cursor:pointer" class="position-relative">
       <i class="bi bi-bag-heart fs-3 text-primary"></i>
       <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="cartCount">0</span>
     </div>
   </nav>
 
   <header id="hero">
-    <h1 class="display-3 fw-bold text-white">Event Sushi</h1>
+    <h1 class="display-4 fw-bold text-white">Event Sushi</h1>
     <p class="lead text-white opacity-75">Fresh. Authentic.</p>
   </header>
 
   <div class="filter-bar" id="filterBar"></div>
 
   <div id="shopContent" class="menu-grid">
-    <div class="text-center w-100 py-5">
+    <div class="text-center w-100 py-5" id="loader">
       <div class="spinner-border text-primary" role="status"></div>
       <p class="mt-3">Loading Japanese Delights...</p>
     </div>
@@ -92,39 +69,62 @@
   <script>
   //<![CDATA[
     const CONFIG = {
-      baseUrl: 'https://eventsushi.blogspot.com',
+      baseUrl: 'https://[[BASE_URL]]',
       whatsapp: '212664070513'
     };
 
     let allProducts = [];
-    let cart = [];
 
     function fetchProducts() {
+      console.log("Connecting to: " + CONFIG.baseUrl);
       const script = document.createElement('script');
+      // alt=json is required to get the data format we need
       script.src = CONFIG.baseUrl + '/feeds/posts/default?alt=json&amp;max-results=50&amp;callback=handleFeed';
+      script.onerror = function() {
+        document.getElementById('shopContent').innerHTML = '<div class="alert alert-danger">Error: Blogger Feed is not accessible. Check Settings > Site Feed > Full.</div>';
+      };
       document.body.appendChild(script);
     }
 
     window.handleFeed = function(json) {
       const entries = json.feed.entry || [];
+      console.log("Found " + entries.length + " posts.");
+      
+      const container = document.getElementById('shopContent');
+      if (entries.length === 0) {
+        container.innerHTML = '<div class="alert alert-warning">Connected to Blog, but 0 posts found. Ensure your posts are published.</div>';
+        return;
+      }
+
       allProducts = entries.map(e => {
-        let price = 0, cat = "General";
+        let price = 0, cat = "Sushi";
+        
+        // Extract Price and Category from Labels
         if (e.category) {
           e.category.forEach(c => {
-            if (c.term.startsWith('price-')) price = c.term.split('-')[1];
-            else cat = c.term;
+            let label = c.term.toLowerCase();
+            if (label.startsWith('price-')) {
+              price = label.split('-')[1];
+            } else {
+              cat = c.term; // Non-price label becomes the category
+            }
           });
         }
+
+        // Extract Image from Post Content
         const content = e.content ? e.content.$t : '';
         const imgMatch = content.match(/<img[^>]+src="([^">]+)"/);
+        const image = imgMatch ? imgMatch[1] : (e.media$thumbnail ? e.media$thumbnail.url.replace('s72-c', 's600') : 'https://via.placeholder.com/300');
+
         return {
           id: e.id.$t.split('post-')[1],
           title: e.title.$t,
           category: cat,
           price: parseFloat(price) || 0,
-          image: imgMatch ? imgMatch[1] : (e.media$thumbnail ? e.media$thumbnail.url.replace('s72-c', 's600') : '')
+          image: image
         };
       });
+
       renderFilters();
       renderProducts(allProducts);
     };
@@ -143,60 +143,18 @@
     };
 
     function renderProducts(items) {
-      document.getElementById('shopContent').innerHTML = items.map(p => `
+      const container = document.getElementById('shopContent');
+      container.innerHTML = items.map(p => `
         <div class="menu-item">
           <img src="${p.image}" class="card-img" />
-          <div class="card-body p-4 d-flex flex-column">
-            <h5 class="fw-bold">${p.title}</h5>
+          <div class="card-body p-3 d-flex flex-column">
+            <h6 class="fw-bold">${p.title}</h6>
             <div class="price mb-3">${p.price} DH</div>
-            <button class="order-btn mt-auto" onclick="addToCart('${p.id}')">Add to Cart</button>
+            <button class="order-btn mt-auto" onclick="window.open('https://wa.me/${CONFIG.whatsapp}?text=Order: ${p.title} (${p.price} DH)')">Order Now</button>
           </div>
         </div>
       `).join('');
     }
-
-    window.addToCart = function(id) {
-      const p = allProducts.find(x => x.id === id);
-      const existing = cart.find(x => x.id === id);
-      if (existing) existing.qty++;
-      else cart.push({...p, qty: 1});
-      updateCartUI();
-      if (!document.getElementById('cartDrawer').classList.contains('open')) toggleCart();
-    };
-
-    function updateCartUI() {
-      document.getElementById('cartCount').innerText = cart.reduce((a, b) => a + b.qty, 0);
-      const total = cart.reduce((a, b) => a + (b.price * b.qty), 0);
-      document.getElementById('cartTotal').innerText = total + " DH";
-      
-      document.getElementById('cartItems').innerHTML = cart.map(i => `
-        <div class="d-flex justify-content-between align-items-center mb-3 border-bottom border-secondary pb-2">
-          <div>
-            <div class="fw-bold">${i.title}</div>
-            <small class="text-primary">${i.qty} x ${i.price} DH</small>
-          </div>
-          <button class="btn btn-sm btn-outline-danger" onclick="removeFromCart('${i.id}')"><i class="bi bi-trash"></i></button>
-        </div>
-      `).join('');
-    }
-
-    window.removeFromCart = function(id) {
-      cart = cart.filter(x => x.id !== id);
-      updateCartUI();
-    };
-
-    window.toggleCart = function() {
-      document.getElementById('cartDrawer').classList.toggle('open');
-      document.getElementById('cartOverlay').classList.toggle('show');
-    };
-
-    window.checkout = function() {
-      if (!cart.length) return alert("Your selection is empty!");
-      const summary = cart.map(i => `${i.qty}x ${i.title}`).join(', ');
-      const total = cart.reduce((a, b) => a + (b.price * b.qty), 0);
-      const msg = encodeURIComponent(`*NEW ORDER FROM SITE*\n------------------\n${summary}\n------------------\n*Total:* ${total} DH`);
-      window.open(`https://wa.me/${CONFIG.whatsapp}?text=${msg}`, '_blank');
-    };
 
     fetchProducts();
   //]]>
