@@ -190,7 +190,7 @@
 
   <header id="hero">
     <div class="container">
-      <h1 class="display-4 fw-bold">Event Sushi</h1>
+      <h1 class="display-4 fw-bold">ES T59</h1>
       <p class="lead">Fresh. Authentic.</p>
       <a href="#menu" class="btn btn-lg shadow mt-3">Menu</a>
     </div>
@@ -250,6 +250,7 @@
   //<![CDATA[
     document.addEventListener('DOMContentLoaded', function() {
       
+      // CONFIGURATION
       const FEED_URL = '/feeds/posts/default?alt=json&max-results=50'; 
       const WHATSAPP_PHONE = "212600000000"; 
       const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbySV9PbNWxQTSdwrZ-1TOgJWI_LUTLlNgX3IO2ovLWjxt4vU13RAo-Sc0CLmzaVNVgc0w/exec';
@@ -261,50 +262,75 @@
       updateCartUI();
       setupEventListeners();
 
+      // --- 1. FETCH DATA ---
       function fetchPosts() {
+        document.getElementById('menuSections').innerHTML = 
+          '<div class="text-center py-5"><div class="spinner-border text-primary"></div><p class="mt-2 text-muted">Loading Products...</p></div>';
+
         fetch(FEED_URL)
           .then(response => response.json())
           .then(data => {
             if(!data.feed.entry) {
-               document.getElementById('menuSections').innerHTML = "<div class='text-center p-5'><h3>No items</h3></div>";
+               document.getElementById('menuSections').innerHTML = "<div class='text-center p-5'><h3>No items found</h3><p>Add posts to your blog to see them here.</p></div>";
                return;
             }
             allPosts = parseBloggerEntries(data.feed.entry);
             renderMenu(allPosts);
           })
-          .catch(err => console.error("Feed Error:", err));
+          .catch(err => {
+             console.error("Feed Error:", err);
+             document.getElementById('menuSections').innerHTML = "<div class='text-center text-danger p-5'>Error loading feed. <br>Make sure blog is Public.</div>";
+          });
       }
 
+      // --- 2. PARSE POSTS (DYNAMIC) ---
       function parseBloggerEntries(entries) {
         return entries.map(entry => {
-          const contentText = entry.content ? entry.content.$t : '';
+          const contentText = entry.content ? entry.content.$t : (entry.summary ? entry.summary.$t : '');
+          
+          // Image Extraction
           const tempDiv = document.createElement('div');
           tempDiv.innerHTML = contentText;
           const firstImage = tempDiv.querySelector('img');
           
           let imageUrl = 'https://via.placeholder.com/600x400?text=No+Image';
-          if (firstImage && firstImage.src) imageUrl = firstImage.src; 
-          else if (entry.media$thumbnail) imageUrl = entry.media$thumbnail.url.replace('s72-c', 's600'); 
+          if (firstImage && firstImage.src) {
+             imageUrl = firstImage.src; 
+          } else if (entry.media$thumbnail) {
+             // High-res replacement
+             imageUrl = entry.media$thumbnail.url.replace('s72-c', 's600').replace('s72-c-k-no', 's600'); 
+          }
 
           let price = 0;
           let isSpecial = false;
-          let category = 'Other';
+          let category = 'General'; // Default category
           let tags = [];
 
           if (entry.category) {
             entry.category.forEach(cat => {
               const term = cat.term;
               tags.push(term);
-              if (term.startsWith('price-')) price = parseFloat(term.replace('price-', ''));
-              if (['Minibox', 'Box', 'Appetizers', 'Taco'].includes(term)) category = term;
-              if (term === 'special-offer') isSpecial = true;
+              
+              // Logic: Tags starting with 'price-' are prices
+              if (term.toLowerCase().startsWith('price-')) {
+                 price = parseFloat(term.split('-')[1]);
+              }
+              // Logic: 'special-offer' is a badge
+              else if (term.toLowerCase() === 'special-offer') {
+                 isSpecial = true;
+              }
+              // Logic: Any other tag is a Category (Take the first one found)
+              else if (category === 'General') {
+                 category = term;
+              }
             });
           }
 
           return {
             id: entry.id.$t.split('post-')[1],
             title: entry.title.$t,
-            desc: tempDiv.textContent.replace(/<[^>]*>/g, '').substring(0, 90) + '...',
+            // Strip HTML for description
+            desc: tempDiv.textContent.replace(/<[^>]*>/g, '').substring(0, 100) + '...',
             image: imageUrl,
             price: price,
             category: category,
@@ -314,36 +340,52 @@
         });
       }
 
+      // --- 3. RENDER (DYNAMIC SECTIONS) ---
       function renderMenu(posts) {
-        const categories = ['Minibox', 'Box', 'Appetizers', 'Taco'];
+        // Get unique categories from the posts
+        const uniqueCategories = [...new Set(posts.map(p => p.category))];
+        
         let html = '';
-        let foundAny = false;
+        let filterHtml = '<button class="filter-btn active" data-filter="all">All</button>';
 
-        categories.forEach(cat => {
+        if (uniqueCategories.length === 0) {
+           document.getElementById('menuSections').innerHTML = "<div class='text-center p-5'>No categories found.</div>";
+           return;
+        }
+
+        // Generate Filters
+        uniqueCategories.forEach(cat => {
+           filterHtml += `<button class="filter-btn" data-filter="${cat}">${cat}</button>`;
+        });
+        document.querySelector('.filter-container').innerHTML = filterHtml;
+        reattachFilterListeners(); // Re-bind click events
+
+        // Generate Sections
+        uniqueCategories.forEach(cat => {
           const catPosts = posts.filter(p => p.category === cat);
+          
           if (catPosts.length > 0) {
-            foundAny = true;
             html += `
-              <div class="category-section" id="${cat}-section">
-                <div class="category-header ${cat.toLowerCase()}">
-                  <h3 class="category-title">${cat}</h3>
+              <div class="category-section" id="cat-${cat.replace(/\s+/g, '-')}">
+                <div class="category-header">
+                  <h3 class="category-title" style="border-left: 5px solid var(--primary); padding-left: 15px;">${cat}</h3>
                 </div>
                 <div class="menu-grid">`;
             
             catPosts.forEach(post => {
               html += `
-                <div class="menu-item">
+                <div class="menu-item" data-category="${cat}">
                   <div class="card-img-container">
                     <img src="${post.image}" alt="${post.title}" loading="lazy" />
-                    <span class="price-badge">${post.price} DH</span>
+                    ${post.price > 0 ? `<span class="price-badge">${post.price} DH</span>` : ''}
                     ${post.isSpecial ? '<span class="special-offer">Special</span>' : ''}
                   </div>
                   <div class="card-body">
                     <h5 class="card-title">${post.title}</h5>
-                    <p class="card-text">${post.desc}</p>
+                    <p class="card-text small text-muted">${post.desc}</p>
                   </div>
                   <div class="card-footer">
-                    <div class="price-tag">${post.price} DH</div>
+                    <div class="price-tag">${post.price > 0 ? post.price + ' DH' : ''}</div>
                     <button class="order-btn" onclick="addToCart('${post.id}')">
                       <i class="bi bi-cart-plus me-1"></i> Add
                     </button>
@@ -355,24 +397,38 @@
           }
         });
         
-        if (!foundAny) html = "<div class='text-center p-5'><h3>No Categories</h3></div>";
         document.getElementById('menuSections').innerHTML = html;
         setTimeout(forceLayout, 200);
       }
 
-      function setupEventListeners() {
+      // --- 4. FILTER LOGIC ---
+      function reattachFilterListeners() {
         document.querySelectorAll('.filter-btn').forEach(btn => {
           btn.addEventListener('click', (e) => {
+             // UI Active State
              document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
              e.target.classList.add('active');
+             
              const filter = e.target.dataset.filter;
+             
+             // Show/Hide Sections
              document.querySelectorAll('.category-section').forEach(sec => {
-                if (filter === 'all' || sec.id.includes(filter)) sec.style.display = 'block';
-                else sec.style.display = 'none';
+                // Check if section ID matches selected filter
+                if (filter === 'all' || sec.id === `cat-${filter.replace(/\s+/g, '-')}`) {
+                   sec.style.display = 'block';
+                } else {
+                   sec.style.display = 'none';
+                }
              });
+             
+             // Fix Layout after filtering
+             setTimeout(forceLayout, 100);
           });
         });
+      }
 
+      function setupEventListeners() {
+        // Search
         const searchInput = document.getElementById('searchInput');
         if (searchInput) {
             searchInput.addEventListener('keyup', (e) => {
@@ -380,22 +436,28 @@
                 const items = document.querySelectorAll('.menu-item');
                 items.forEach(item => {
                     const title = item.querySelector('.card-title').innerText.toLowerCase();
-                    if (title.includes(term)) item.style.display = 'flex';
-                    else item.style.display = 'none';
+                    // Basic parent hiding logic
+                    const parentGrid = item.closest('.menu-grid');
+                    const parentSection = item.closest('.category-section');
+                    
+                    if (title.includes(term)) {
+                        item.style.display = 'flex';
+                    } else {
+                        item.style.display = 'none';
+                    }
                 });
                 setTimeout(forceLayout, 50);
             });
         }
 
+        // Cart
         document.getElementById('closeCart').onclick = closeCart;
         document.getElementById('cartOverlay').onclick = closeCart;
-        
         document.getElementById('checkoutBtn').onclick = () => {
            if (cart.length === 0) return alert("Cart is empty");
            closeCart();
            document.getElementById('phoneModal').classList.add('show');
         };
-        
         document.getElementById('cancelCheckout').onclick = () => {
            document.getElementById('phoneModal').classList.remove('show');
         };
@@ -406,11 +468,15 @@
          document.getElementById('cartOverlay').classList.remove('show');
       }
 
+      // --- 5. CART CORE ---
       window.addToCart = function(id) {
         const product = allPosts.find(p => p.id === id);
+        if(!product) return;
+        
         const existing = cart.find(item => item.id === id);
         if (existing) existing.qty += 1;
         else cart.push({...product, qty: 1});
+        
         saveCart();
         showToast();
       };
@@ -433,13 +499,18 @@
         const count = cart.reduce((acc, item) => acc + item.qty, 0);
         const total = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
         
-        document.getElementById('navCartCount').textContent = count;
-        document.getElementById('floatCartCount').textContent = count;
-        document.getElementById('cartTotal').textContent = total.toFixed(2) + ' DH';
+        const badge = document.getElementById('navCartCount');
+        if(badge) badge.textContent = count;
+        
+        const floatBadge = document.getElementById('floatCartCount');
+        if(floatBadge) floatBadge.textContent = count;
+        
+        const totalEl = document.getElementById('cartTotal');
+        if(totalEl) totalEl.textContent = total.toFixed(2) + ' DH';
         
         const cartBody = document.getElementById('cartBody');
         if (cart.length === 0) {
-           cartBody.innerHTML = '<div class="text-center mt-5" style="color:var(--muted);"><i class="bi bi-basket3 display-1 opacity-25"></i><p class="mt-3">Empty Cart</p></div>';
+           cartBody.innerHTML = '<div class="text-center mt-5" style="color:var(--muted);"><i class="bi bi-basket3 display-1 opacity-25"></i><p class="mt-3">Cart is empty</p></div>';
            return;
         }
         
@@ -448,16 +519,16 @@
            html += `
              <div class="d-flex align-items-center justify-content-between mb-3 border-bottom pb-3">
                 <div class="d-flex align-items-center">
-                   <img src="${item.image}" class="rounded" style="width:60px; height:60px; object-fit:cover; margin-right:15px;" />
+                   <img src="${item.image}" class="rounded" style="width:50px; height:50px; object-fit:cover; margin-right:10px;" />
                    <div>
-                      <div class="fw-bold" style="font-size:0.95rem; color:var(--text-color);">${item.title}</div>
+                      <div class="fw-bold small" style="color:var(--text-color);">${item.title}</div>
                       <div class="text-primary small fw-bold">${item.price} DH</div>
                    </div>
                 </div>
-                <div class="input-group input-group-sm" style="width: 90px;">
-                   <button class="btn btn-outline-secondary" onclick="changeQty('${item.id}', -1)">-</button>
-                   <span class="input-group-text" style="background:var(--card-bg); color:var(--text-color);">${item.qty}</span>
-                   <button class="btn btn-outline-secondary" onclick="changeQty('${item.id}', 1)">+</button>
+                <div class="input-group input-group-sm" style="width: 80px;">
+                   <button class="btn btn-outline-secondary p-0 px-1" onclick="changeQty('${item.id}', -1)">-</button>
+                   <span class="input-group-text p-0 px-2" style="background:var(--card-bg); color:var(--text-color); border:none;">${item.qty}</span>
+                   <button class="btn btn-outline-secondary p-0 px-1" onclick="changeQty('${item.id}', 1)">+</button>
                 </div>
              </div>
            `;
@@ -467,17 +538,20 @@
 
       function showToast() {
          const el = document.getElementById('notificationToast');
-         const toast = new bootstrap.Toast(el);
-         toast.show();
+         if(el) {
+            const toast = new bootstrap.Toast(el);
+            toast.show();
+         }
       }
 
+      // --- 6. CHECKOUT ---
       document.getElementById('confirmCheckout').onclick = function() {
          const btn = this;
          const phone = document.getElementById('customerPhone').value;
          const name = document.getElementById('customerName').value;
          const address = document.getElementById('customerAddress').value;
          
-         if (!phone) return alert("Phone required");
+         if (!phone) return alert("Phone number is required");
          
          btn.disabled = true;
          btn.innerText = "Processing...";
@@ -494,8 +568,9 @@
          const cb = 'cb_' + Date.now();
          
          window[cb] = function(res) {
-            const msg = `*Order*\n${summary}\nTotal: ${total} DH\nName: ${name}\nPhone: ${phone}\nAddress: ${address}`;
+            const msg = `*New Order*\n\n${summary}\nTotal: ${total} DH\n\nName: ${name}\nPhone: ${phone}\nAddress: ${address}`;
             const url = `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(msg)}`;
+            
             cart = [];
             saveCart();
             window.open(url, '_blank');
@@ -506,6 +581,7 @@
          document.body.appendChild(script);
       };
 
+      // --- 7. LAYOUT ENFORCER ---
       function forceLayout() {
          const items = document.querySelectorAll('.menu-item');
          items.forEach(item => {
