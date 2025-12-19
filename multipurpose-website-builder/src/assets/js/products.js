@@ -1,259 +1,78 @@
 /**
- * Products module
- * ---------------
- * Renders products into #productGrid, handles:
- * - filter dropdown (#productFilter)
- * - sort dropdown (#productSort)
- * - "No products found" state (#productsEmpty)
- *
- * IMPORTANT:
- * - Adds data-product-id on the card so QuickView can work reliably
- * - Buttons stopPropagation so clicking buttons doesn't open QuickView
+ * FUSION v5.0 - products.js
+ * Fetches product data from Blogger and renders the dynamic grid.
  */
 
-window.Products = (function () {
-  var allProducts = [];
-  var currentProducts = [];
-  var settings = {};
+const ProductsModule = {
+    allProducts: [],
 
-  var gridEl = null;
-  var emptyEl = null;
-  var filterEl = null;
-  var sortEl = null;
+    init: () => {
+        ProductsModule.fetchFromBlogger();
+    },
 
-  function initElements() {
-    gridEl = document.getElementById("productGrid");
-    emptyEl = document.getElementById("productsEmpty");
-    filterEl = document.getElementById("productFilter");
-    sortEl = document.getElementById("productSort");
-  }
+    fetchFromBlogger: () => {
+        const script = document.createElement('script');
+        // Fetch from Blogger's native JSON feed
+        script.src = `https://${window.FUSION_CONFIG.blog}/feeds/posts/default?alt=json-in-script&max-results=150&callback=ProductsModule.onFetch`;
+        document.body.appendChild(script);
+    },
 
-  function cloneArray(arr) {
-    return arr && arr.slice ? arr.slice() : Array.prototype.slice.call(arr || []);
-  }
-
-  function extractShortDescription(html, maxLength) {
-    if (!html) return "";
-    var text = String(html).replace(/<[^>]+>/g, " ");
-    text = text.replace(/\s+/g, " ").trim();
-    if (text.length <= maxLength) return text;
-    return text.slice(0, maxLength) + "...";
-  }
-
-  function currencySymbol() {
-    return (settings && settings.currency_symbol) ? settings.currency_symbol : "$";
-  }
-
-  function stopBtn(evt) {
-    // prevent QuickView click handler from firing
-    if (!evt) return;
-    evt.preventDefault();
-    evt.stopPropagation();
-  }
-
-  function buildCard(product) {
-    var col = document.createElement("div");
-    col.className = "col-12 col-sm-6 col-md-4 col-lg-3";
-
-    var card = document.createElement("div");
-    card.className = "card h-100 shadow-sm product-card";
-
-    // QuickView relies on this:
-    card.setAttribute("data-product-id", String(product.id || ""));
-    card.setAttribute("data-title", String(product.title || ""));
-    card.setAttribute("data-price", String(product.price || ""));
-    card.setAttribute("data-description", extractShortDescription(product.content, 260));
-
-    if (product.image) {
-      var img = document.createElement("img");
-      img.className = "card-img-top";
-      img.src = product.image;
-      img.alt = product.title || "";
-      card.appendChild(img);
-    }
-
-    var body = document.createElement("div");
-    body.className = "card-body d-flex flex-column";
-
-    var titleEl = document.createElement("h5");
-    titleEl.className = "card-title";
-    titleEl.textContent = product.title || "";
-    body.appendChild(titleEl);
-
-    var descEl = document.createElement("p");
-    descEl.className = "card-text text-muted small";
-    descEl.textContent = extractShortDescription(product.content, 110);
-    body.appendChild(descEl);
-
-    if (product.price != null && product.price !== "") {
-      var priceEl = document.createElement("div");
-      priceEl.className = "fw-semibold mb-2";
-      priceEl.textContent = currencySymbol() + " " + String(product.price);
-      body.appendChild(priceEl);
-    }
-
-    var footer = document.createElement("div");
-    footer.className = "mt-auto d-flex justify-content-between align-items-center gap-2";
-
-    var btn = document.createElement("button");
-    btn.className = "btn btn-sm btn-primary";
-    btn.type = "button";
-    
-    // Check for variants
-    var hasVariants = product.variants && Object.keys(product.variants).length > 0;
-    var btnText = (typeof I18n !== "undefined" && typeof I18n.t === "function") ? I18n.t("ADD_TO_CART") : "Add to cart";
-
-    if (hasVariants) {
-      // If variants exist, clicking the button should explicitly open the QuickView/Details modal.
-      btnText = (typeof I18n !== "undefined" && typeof I18n.t === "function") ? I18n.t("TEXT_DETAILS") || "View Details" : "View Details";
-      btn.textContent = btnText;
-      btn.addEventListener("click", function (e) {
-        stopBtn(e);
-        // Rely on quickview.js (or similar logic) to handle modal opening
-        if (typeof QuickView !== "undefined" && typeof QuickView.open === "function") {
-          QuickView.open(product, card);
-        } else {
-          // Fallback to direct add if modal system is missing (e.g., if quickview.js is commented out)
-          if (typeof Cart !== "undefined" && Cart && typeof Cart.add === "function") {
-            Cart.add(product, 1);
-          } else {
-            console.log("QuickView module not available, fallback Cart module not available. Product:", product);
-          }
+    onFetch: (json) => {
+        const entries = (json.feed && json.feed.entry) ? json.feed.entry : [];
+        
+        if (entries.length === 0) {
+            document.getElementById('shopContent').innerHTML = '<div class="col-12 text-center text-muted">No products found. Ensure your posts have price labels.</div>';
+            return;
         }
-      });
-    } else {
-      // No variants, direct add to cart
-      btn.textContent = btnText;
-      btn.addEventListener("click", function (e) {
-        stopBtn(e);
-        if (typeof Cart !== "undefined" && Cart && typeof Cart.add === "function") {
-          Cart.add(product, 1);
-        } else {
-          console.log("Cart module not available. Product:", product);
-        }
-      });
-    }
 
-    footer.appendChild(btn);
+        // Map Blogger posts to clean product objects
+        ProductsModule.allProducts = entries.map(entry => {
+            let price = 0;
+            let category = "General";
+            
+            if (entry.category) {
+                entry.category.forEach(cat => {
+                    const term = cat.term.toLowerCase();
+                    if (term.startsWith('price-')) price = term.split('-')[1];
+                    // You can add logic here to detect specific categories for tabs
+                });
+            }
 
-    if (typeof Wishlist !== "undefined" && Wishlist && typeof Wishlist.toggle === "function") {
-      var wishBtn = document.createElement("button");
-      wishBtn.className = "btn btn-sm btn-outline-secondary";
-      wishBtn.type = "button";
-      wishBtn.textContent = (typeof I18n !== "undefined" && typeof I18n.t === "function") ? I18n.t("WISHLIST") : "Wishlist";
-      wishBtn.addEventListener("click", function (e) {
-        stopBtn(e);
-        Wishlist.toggle(product);
-      });
-      footer.appendChild(wishBtn);
-    }
-
-    body.appendChild(footer);
-    card.appendChild(body);
-    col.appendChild(card);
-
-    return col;
-  }
-
-  function renderGridInternal(list) {
-    if (!gridEl || !emptyEl) return;
-
-    gridEl.innerHTML = "";
-
-    if (!list || list.length === 0) {
-      emptyEl.classList.remove("d-none");
-      return;
-    }
-
-    emptyEl.classList.add("d-none");
-
-    list.forEach(function (p) {
-      gridEl.appendChild(buildCard(p));
-    });
-  }
-
-  function getUniqueLabels(products) {
-    var set = {};
-    (products || []).forEach(function (p) {
-      (p.labels || []).forEach(function (lab) {
-        if (lab) set[lab] = true;
-      });
-    });
-    return Object.keys(set).sort();
-  }
-
-  function populateFilter(products) {
-    if (!filterEl) return;
-
-    // Keep first option (All)
-    var options = filterEl.querySelectorAll("option");
-    for (var i = options.length - 1; i >= 1; i--) {
-      options[i].remove();
-    }
-
-    var labels = getUniqueLabels(products);
-    labels.forEach(function (lab) {
-      var opt = document.createElement("option");
-      opt.value = lab;
-      opt.textContent = lab;
-      filterEl.appendChild(opt);
-    });
-  }
-
-  function applyFilterAndSort() {
-    var filtered = cloneArray(allProducts);
-
-    if (filterEl && filterEl.value && filterEl.value !== "all") {
-      var filterValue = filterEl.value;
-      filtered = filtered.filter(function (p) {
-        return (p.labels || []).indexOf(filterValue) !== -1;
-      });
-    }
-
-    if (sortEl && sortEl.value) {
-      var sortValue = sortEl.value;
-
-      if (sortValue === "price-asc") {
-        filtered.sort(function (a, b) {
-          // Assuming price is parsable
-          return parseFloat(a.price || "0") - parseFloat(b.price || "0");
+            const content = entry.content ? entry.content.$t : (entry.summary ? entry.summary.$t : '');
+            const imgMatch = content.match(/<img[^>]+src="([^">]+)"/);
+            
+            return {
+                id: entry.id.$t.split('post-')[1],
+                title: entry.title.$t,
+                price: parseFloat(price) || 0,
+                image: imgMatch ? imgMatch[1] : (entry.media$thumbnail ? entry.media$thumbnail.url.replace('s72-c', 's600') : 'https://via.placeholder.com/400x300?text=Sushi'),
+                description: content.replace(/<[^>]+>/g, '').substring(0, 100) + '...'
+            };
         });
-      } else if (sortValue === "price-desc") {
-        filtered.sort(function (a, b) {
-          return parseFloat(b.price || "0") - parseFloat(a.price || "0");
-        });
-      } else if (sortValue === "latest") {
-        filtered.sort(function (a, b) {
-          var ia = a.id || "";
-          var ib = b.id || "";
-          if (ia < ib) return 1;
-          if (ia > ib) return -1;
-          return 0;
-        });
-      }
+
+        ProductsModule.render(ProductsModule.allProducts);
+    },
+
+    render: (items) => {
+        const container = document.getElementById('shopContent');
+        if (!container) return;
+
+        container.innerHTML = items.map(item => `
+            <div class="col-6 col-md-4 col-lg-3 mb-4">
+                <div class="card h-100 bg-dark border-secondary text-white shadow-sm menu-item">
+                    <div class="position-relative overflow-hidden">
+                        <img src="${item.image}" class="card-img-top" alt="${item.title}" style="height: 200px; object-fit: cover;">
+                    </div>
+                    <div class="card-body d-flex flex-column p-3">
+                        <h6 class="card-title fw-bold mb-1">${item.title}</h6>
+                        <p class="card-text text-primary fw-bold mb-3 fs-5">${item.price} DH</p>
+                        <button class="btn btn-primary w-100 rounded-pill mt-auto fw-bold" 
+                                onclick="CartModule.add('${item.id}')">
+                            + ADD TO ORDER
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
     }
-
-    currentProducts = filtered;
-    renderGridInternal(filtered);
-  }
-
-  function attachEvents() {
-    if (filterEl) filterEl.onchange = applyFilterAndSort;
-    if (sortEl) sortEl.onchange = applyFilterAndSort;
-  }
-
-  return {
-    renderGrid: function (products, runtimeSettings) {
-      initElements();
-      settings = runtimeSettings || {};
-      allProducts = products || [];
-      currentProducts = cloneArray(allProducts);
-
-      populateFilter(allProducts);
-      attachEvents();
-      applyFilterAndSort();
-
-      console.log("Products grid rendered:", allProducts.length, "items");
-    }
-  };
-})();
+};
