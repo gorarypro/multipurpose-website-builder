@@ -26,7 +26,6 @@ const Fusion = {
     }
 
     const script = document.createElement('script');
-    // The action 'init_site' is defined in your Code.gs
     script.src = `${apiBase}?action=init_site&callback=Fusion.onSettingsLoaded`;
     script.onerror = () => {
       console.error("Fusion Error: Failed to reach the API. Check Deployment URL.");
@@ -50,6 +49,13 @@ const Fusion = {
     this.applyGlobalStyles();
     this.applyDataBinding();
 
+    // Initialize Search Module if enabled
+    if (this.settings.search_included === 'yes') {
+      if (typeof SearchModule !== 'undefined') {
+        SearchModule.init();
+      }
+    }
+
     // Trigger Ready Events for other modules
     if (window.ProductsModule) ProductsModule.init();
     if (window.CartModule) CartModule.init();
@@ -66,7 +72,7 @@ const Fusion = {
   applyGlobalStyles: function() {
     const primary = this.settings.primary_color || '#0d6efd';
     document.documentElement.style.setProperty('--bs-primary', primary);
-    
+
     // Create a dynamic style block for hover effects
     const style = document.createElement('style');
     style.innerHTML = `
