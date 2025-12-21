@@ -1,0 +1,79 @@
+/* search.css - Search Module Styles */
+
+#searchContainer {
+  margin: 1rem 0;
+  position: relative;
+}
+
+#searchInput {
+  padding: 0.75rem 2.5rem 0.75rem 1rem;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  width: 100%;
+  font-size: 1rem;
+  transition: border-color 0.3s ease;
+}
+
+#searchInput:focus {
+  outline: none;
+  border-color: var(--bs-primary);
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+#searchInput::placeholder {
+  color: #6c757d;
+}
+
+.search-clear-btn {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #6c757d;
+  padding: 0.5rem;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.search-clear-btn:hover {
+  color: #dc3545;
+}
+
+.search-results-info {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: #6c757d;
+}
+
+.search-no-results {
+  text-align: center;
+  padding: 2rem;
+  color: #6c757d;
+}
+
+.search-no-results i {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  opacity: 0.5;
+}
+
+/* Search in Navbar */
+.navbar-search {
+  margin-left: auto;
+}
+
+.navbar-search .form-control {
+  width: 250px;
+  border-radius: 20px;
+  padding: 0.5rem 1rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .navbar-search .form-control {
+    width: 100%;
+    margin-top: 0.5rem;
+  }
+}
