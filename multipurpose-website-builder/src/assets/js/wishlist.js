@@ -1,107 +1,199 @@
 /**
- * Wishlist with localStorage
+ * FUSION v10.8.0 - wishlist.js
+ * Persistent Favorites & Social Signals Engine
+ * Role: Manages "Save for Later" state using LocalStorage and UI synchronization.
  */
 
-window.Wishlist = {
-  key: 'mpwb_wishlist',
+const WishlistModule = {
   items: [],
+  storageKey: 'fusion_wishlist_v10',
+  settings: {},
 
-  init: function () {
+  /**
+   * Initialize the module and load persisted data.
+   */
+  init: function(syncedSettings) {
+    console.log("Wishlist: Initializing Favorites Engine...");
+    this.settings = syncedSettings || (window.FUSION_CONFIG ? window.FUSION_CONFIG.settings : {});
+
+    // Load from browser memory with safety catch
     try {
-      var raw = localStorage.getItem(this.key);
+      const raw = localStorage.getItem(this.storageKey);
       this.items = raw ? JSON.parse(raw) : [];
     } catch (e) {
+      console.error("Wishlist: Corrupted storage detected. Resetting favorites.");
       this.items = [];
     }
-    this.updateBadge();
-    this.renderModal();
+
+    this.refreshUI();
+    this.bindGlobalEvents();
   },
 
-  save: function () {
-    localStorage.setItem(this.key, JSON.stringify(this.items));
-    this.updateBadge();
-    this.renderModal();
-  },
+  /**
+   * Toggles an item's presence in the list.
+   * Called primarily from the heart icons on product cards.
+   */
+  toggle: function(productId) {
+    if (!window.ProductsModule) return;
 
-  toggle: function (product) {
-    var id = String(product && product.id ? product.id : "");
-    if (!id) return;
+    const index = this.items.findIndex(item => String(item.id) === String(productId));
 
-    var idx = -1;
-    for (var i = 0; i < this.items.length; i++) {
-      if (String(this.items[i].id) === id) { idx = i; break; }
-    }
-
-    if (idx >= 0) {
-      this.items.splice(idx, 1);
+    if (index >= 0) {
+      // Item exists, so remove it
+      this.items.splice(index, 1);
     } else {
-      this.items.push({ id: id, title: product.title || "" });
+      // Find full product data in the catalog cache to save rich details
+      const product = window.ProductsModule.catalog.find(p => String(p.id) === String(productId));
+      if (product) {
+        this.items.push({
+          id: product.id,
+          title: product.title,
+          price: product.price,
+          image: product.image
+        });
+      }
     }
+
     this.save();
   },
 
-  removeById: function (productId) {
-    var id = String(productId);
-    this.items = this.items.filter(function (x) { return String(x.id) !== id; });
+  /**
+   * Removes an item by ID directly (used in the Wishlist Sidebar/Modal).
+   */
+  removeById: function(productId) {
+    this.items = this.items.filter(item => String(item.id) !== String(productId));
     this.save();
   },
 
-  updateBadge: function () {
-    var count = this.items.length;
-    ['wishlistCount', 'floatingWishlistCount'].forEach(function (id) {
-      var el = document.getElementById(id);
+  /**
+   * Persists state to LocalStorage and triggers UI updates.
+   */
+  save: function() {
+    localStorage.setItem(this.storageKey, JSON.stringify(this.items));
+    this.refreshUI();
+  },
+
+  /**
+   * Master UI Synchronization: Updates badges, sidebar, and card icons.
+   */
+  refreshUI: function() {
+    this.updateBadges();
+    this.updateCardIcons();
+    this.renderContainer();
+  },
+
+  /**
+   * Updates count badges across the site (Header and Floating buttons).
+   */
+  updateBadges: function() {
+    const count = this.items.length;
+    const badgeIds = ['wishlistCount', 'floatingWishlistCount'];
+    
+    badgeIds.forEach(id => {
+      const el = document.getElementById(id);
       if (el) el.textContent = String(count);
     });
   },
 
-  renderModal: function () {
-    var cont = document.getElementById('wishlistContent');
-    var empty = document.getElementById('wishlistEmpty');
-    if (!cont) return;
+  /**
+   * Visual Feedback: Updates heart icons on the product grid.
+   */
+  updateCardIcons: function() {
+    const allCards = document.querySelectorAll('.product-card, [data-id]');
+    
+    allCards.forEach(card => {
+      const id = card.getAttribute('data-id');
+      const heartIcon = card.querySelector('.btn-wishlist i, .wishlist-toggle i');
+      
+      if (heartIcon) {
+        const isFavorited = this.items.some(item => String(item.id) === String(id));
+        if (isFavorited) {
+          heartIcon.classList.replace('bi-heart', 'bi-heart-fill');
+          heartIcon.classList.add('text-danger');
+        } else {
+          heartIcon.classList.replace('bi-heart-fill', 'bi-heart');
+          heartIcon.classList.remove('text-danger');
+        }
+      }
+    });
+  },
 
-    cont.innerHTML = '';
+  /**
+   * Renders the wishlist list into the sidebar or modal container.
+   */
+  renderContainer: function() {
+    const container = document.getElementById('wishlistBody') || document.getElementById('wishlistContent');
+    const emptyMsg = document.getElementById('wishlistEmpty') || document.getElementById('emptyWishlistMessage');
+    
+    if (!container) return;
 
-    if (!this.items.length) {
-      if (empty) empty.classList.remove('d-none');
+    if (this.items.length === 0) {
+      if (emptyMsg) emptyMsg.style.display = 'block';
+      container.innerHTML = '';
       return;
     }
 
-    if (empty) empty.classList.add('d-none');
+    if (emptyMsg) emptyMsg.style.display = 'none';
+    const currency = this.settings.currency_symbol || 'DH';
 
-    var ul = document.createElement('ul');
-    ul.className = 'list-group list-group-flush';
+    container.innerHTML = this.items.map(item => `
+      <div class="wishlist-item d-flex align-items-center mb-3 pb-3 border-bottom animate-fadeIn">
+        <img src="${item.image}" class="rounded" style="width: 50px; height: 50px; object-fit: cover;" alt="${item.title}">
+        <div class="ms-3 flex-grow-1">
+          <div class="fw-bold small text-truncate" style="max-width: 140px;">${item.title}</div>
+          <div class="text-primary small fw-bold">${item.price} ${currency}</div>
+        </div>
+        <div class="d-flex align-items-center">
+          <button class="btn btn-sm btn-outline-primary rounded-pill me-2" 
+                  onclick="CartModule.add('${item.id}', '${item.title.replace(/'/g, "\\'")}', ${item.price})">
+            <i class="bi bi-cart-plus"></i>
+          </button>
+          <button class="btn btn-sm text-danger" onclick="WishlistModule.removeById('${item.id}')">
+            <i class="bi bi-trash"></i>
+          </button>
+        </div>
+      </div>
+    `).join('');
+  },
 
-    for (var i = 0; i < this.items.length; i++) {
-      var it = this.items[i];
+  /**
+   * Binds global UI triggers like opening the wishlist sidebar.
+   */
+  bindGlobalEvents: function() {
+    const triggers = ['wishlistIcon', 'floatingWishlist'];
+    
+    triggers.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener('click', () => {
+          const sidebar = document.getElementById('wishlistSidebar');
+          if (sidebar) {
+            sidebar.classList.toggle('active');
+            const overlay = document.getElementById('sidebarOverlay');
+            if (overlay) overlay.classList.toggle('active');
+          }
+        });
+      }
+    });
 
-      var li = document.createElement('li');
-      li.className = 'list-group-item d-flex justify-content-between align-items-center';
-
-      li.innerHTML =
-        "<span>" + (it.title || "") + "</span>" +
-        "<button type='button' class='btn btn-sm btn-outline-danger' data-id='" + String(it.id) + "'>&times;</button>";
-
-      ul.appendChild(li);
+    const closeBtn = document.getElementById('closeWishlist');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => {
+        document.getElementById('wishlistSidebar').classList.remove('active');
+        document.getElementById('sidebarOverlay').classList.remove('active');
+      });
     }
-
-    cont.appendChild(ul);
-
-    var self = this;
-    cont.onclick = function (ev) {
-      var btn = ev.target && ev.target.closest ? ev.target.closest("button[data-id]") : null;
-      if (!btn) return;
-      ev.preventDefault();
-      self.removeById(btn.getAttribute("data-id"));
-    };
   }
 };
 
-// auto-init
-document.addEventListener("runtime_ready", function () {
-  try { Wishlist.init(); } catch (e) {}
+/**
+ * Global Initialization Logic
+ */
+document.addEventListener('runtime_ready', function(e) {
+  WishlistModule.init(e.detail);
 });
-document.addEventListener("DOMContentLoaded", function () {
-  setTimeout(function () {
-    try { Wishlist.init(); } catch (e) {}
-  }, 800);
-});
+
+// Fallback for direct loading scenarios
+if (document.readyState === 'complete') {
+  setTimeout(() => { if (!WishlistModule.isReady) WishlistModule.init(); }, 1000);
+}
