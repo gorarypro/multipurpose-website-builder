@@ -1,147 +1,153 @@
 /**
- * QuickView module
- * ----------------
- * Opens #quickViewModal when clicking on a product card.
- * Requires products.js to set: data-product-id on the .card
+ * FUSION v10.8.0 - quickview.js
+ * Modal Detail Engine & UI Recovery Logic
+ * Role: Renders product details and handles modal state lifecycle.
  */
 
-window.QuickView = (function () {
-  var currentProduct = null;
+const QuickView = {
+  settings: {},
+  currentProduct: null,
+  modalInstance: null,
 
-  function $(id) { return document.getElementById(id); }
+  /**
+   * Initialize the detail engine and bind global grid listeners.
+   */
+  init: function(syncedSettings) {
+    console.log("QuickView: Initializing UI Detail Engine...");
+    this.settings = syncedSettings || window.FUSION_CONFIG.settings;
 
-  function findProductById(pid) {
-    var list = (window.Runtime && Array.isArray(Runtime.products)) ? Runtime.products : [];
-    for (var i = 0; i < list.length; i++) {
-      if (String(list[i].id) === String(pid)) return list[i];
-    }
-    return null;
-  }
-
-  function stripHtml(html) {
-    if (!html) return "";
-    return String(html).replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
-  }
-
-  function currencySymbol() {
-    try {
-      return (window.Runtime && Runtime.settings && Runtime.settings.currency_symbol) ? Runtime.settings.currency_symbol : "$";
-    } catch (e) {
-      return "$";
-    }
-  }
-
-  function formatPrice(p) {
-    var n = parseFloat(p || 0);
-    if (isNaN(n)) n = 0;
-    return currencySymbol() + " " + n.toFixed(2);
-  }
-
-  function open(product, card) {
-    var modalEl = $("quickViewModal");
-    if (!modalEl || !(window.bootstrap && bootstrap.Modal)) return;
-
-    currentProduct = product;
-
-    var title = (product && product.title) ? product.title : "Product";
-    var price = (product && product.price != null) ? formatPrice(product.price) : "";
-    var desc = (product && product.content) ? stripHtml(product.content) : "";
-
-    var label = $("quickViewLabel");
-    if (label) label.textContent = title;
-
-    var priceEl = $("quickViewPrice");
-    if (priceEl) priceEl.textContent = price;
-
-    var descEl = $("quickViewDescription");
-    if (descEl) descEl.textContent = desc;
-
-    var imgEl = $("quickViewImage");
-    if (imgEl) {
-      var img = (product && product.image) ? product.image : "";
-      if (!img && card) {
-        var cardImg = card.querySelector("img");
-        img = cardImg ? (cardImg.getAttribute("src") || "") : "";
-      }
-      if (img) {
-        imgEl.setAttribute("src", img);
-        imgEl.style.display = "";
-      } else {
-        imgEl.removeAttribute("src");
-        imgEl.style.display = "none";
-      }
-    }
-
-    modalEl.setAttribute("data-product-id", String(product && product.id ? product.id : ""));
-
-    var bs = bootstrap.Modal.getOrCreateInstance(modalEl, {
-      backdrop: true,
-      keyboard: true,
-      focus: true
-    });
-
-    bs.show();
-  }
-
-  function init() {
-    var grid = $("productGrid");
-    if (!grid) return;
-
-    grid.addEventListener("click", function (e) {
-      // Ignore clicks on buttons/links inside the card
-      var btn = e.target && e.target.closest ? e.target.closest("button, a") : null;
-      if (btn) return;
-
-      var card = e.target && e.target.closest ? e.target.closest(".card[data-product-id]") : null;
-      if (!card) return;
-
-      var pid = card.getAttribute("data-product-id") || "";
-      if (!pid) return;
-
-      var product = findProductById(pid);
-      if (!product) return;
-
-      e.preventDefault();
-      open(product, card);
-    });
-
-    // QuickView "Add to cart"
-    var addBtn = $("quickViewAddToCart");
-    if (addBtn) {
-      addBtn.addEventListener("click", function () {
-        if (!currentProduct) return;
-        if (window.Cart && typeof Cart.add === "function") {
-          Cart.add(currentProduct, 1);
-        }
-        
-        // close modal with robust cleanup
-        var modalEl = $("quickViewModal");
-        if (modalEl && window.bootstrap && bootstrap.Modal) {
-          try { 
-            // 1. Attempt to hide the instance normally
-            bootstrap.Modal.getOrCreateInstance(modalEl).hide(); 
-          } catch (e) {
-            // 2. If hiding fails, manually remove the modal artifacts
-            console.warn("QuickView hide failed. Manual cleanup initiated.", e);
-            modalEl.classList.remove('show');
-            modalEl.style.display = 'none';
-            
-            // Manual backdrop cleanup (CRITICAL FIX)
-            document.body.classList.remove('modal-open');
-            document.querySelectorAll('.modal-backdrop').forEach(function(backdrop) {
-              backdrop.remove();
-            });
-          }
-        }
+    const modalEl = document.getElementById('quickViewModal');
+    if (modalEl && typeof bootstrap !== 'undefined') {
+      this.modalInstance = bootstrap.Modal.getOrCreateInstance(modalEl, {
+        backdrop: true,
+        keyboard: true
       });
     }
+
+    this.bindGridEvents();
+    this.bindActionButtons();
+  },
+
+  /**
+   * Delegated event listener for the product grid.
+   * This handles clicks on any product card, even those loaded via AJAX.
+   */
+  bindGridEvents: function() {
+    const grid = document.getElementById('productGrid');
+    if (!grid) return;
+
+    grid.addEventListener('click', (e) => {
+      // 1. Ignore clicks if the user specifically clicked a "Direct Add" button
+      const isActionBtn = e.target.closest('button, .btn-primary, .btn-cart');
+      if (isActionBtn) return;
+
+      // 2. Locate the product card container
+      const card = e.target.closest('.product-card, [data-id]');
+      if (!card) return;
+
+      const productId = card.getAttribute('data-id');
+      if (productId) {
+        e.preventDefault();
+        this.show(productId);
+      }
+    });
+  },
+
+  /**
+   * Fetches product from catalog and triggers the modal display.
+   */
+  show: function(productId) {
+    if (!window.ProductsModule) {
+      console.error("QuickView Error: ProductsModule not detected.");
+      return;
+    }
+
+    // Access the shared catalog cache established in products.js
+    const product = window.ProductsModule.catalog.find(p => p.id === productId);
+    
+    if (!product) {
+      console.warn(`QuickView: Product ID ${productId} not found in cache.`);
+      return;
+    }
+
+    this.currentProduct = product;
+    this.renderModal(product);
+
+    if (this.modalInstance) {
+      this.modalInstance.show();
+    }
+  },
+
+  /**
+   * Maps product data to the Modal DOM elements.
+   */
+  renderModal: function(p) {
+    const titleEl = document.getElementById('quickViewTitle');
+    const imageEl = document.getElementById('quickViewImage');
+    const priceEl = document.getElementById('quickViewPrice');
+    const descEl = document.getElementById('quickViewDescription');
+    const currency = this.settings.currency_symbol || 'DH';
+
+    if (titleEl) titleEl.textContent = p.title;
+    if (priceEl) priceEl.textContent = `${p.price} ${currency}`;
+    
+    // Renders the full HTML content from Blogger
+    if (descEl) descEl.innerHTML = p.content;
+
+    if (imageEl) {
+      imageEl.src = p.image || 'https://placehold.co/600x400';
+      imageEl.style.display = p.image ? "block" : "none";
+    }
+  },
+
+  /**
+   * Binds internal modal actions like the "Add to Cart" button.
+   */
+  bindActionButtons: function() {
+    const addBtn = document.getElementById('quickViewAddToCartBtn');
+    
+    if (addBtn) {
+      addBtn.addEventListener('click', () => {
+        if (!this.currentProduct) return;
+
+        // Interface with the global CartModule
+        if (window.CartModule) {
+          window.CartModule.add(
+            this.currentProduct.id, 
+            this.currentProduct.title.replace(/'/g, "\\'"), 
+            this.currentProduct.price
+          );
+        }
+
+        this.closeWithCleanup();
+      });
+    }
+  },
+
+  /**
+   * Robust Modal Closing: Ensures the UI doesn't freeze or stay dimmed.
+   */
+  closeWithCleanup: function() {
+    const modalEl = document.getElementById('quickViewModal');
+    if (!modalEl) return;
+
+    try {
+      // 1. Standard Bootstrap Hide
+      if (this.modalInstance) {
+        this.modalInstance.hide();
+      }
+    } catch (err) {
+      // 2. Emergency Recovery Logic
+      console.warn("QuickView: Bootstrap hide failed. Running manual cleanup.");
+      
+      modalEl.classList.remove('show');
+      modalEl.style.display = 'none';
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+
+      // Force-remove stale backdrops
+      document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+    }
   }
-
-  // init now + after runtime is ready (products grid is rendered then)
-  document.addEventListener("DOMContentLoaded", init);
-  document.addEventListener("runtime_ready", function () {
-    // no rebind needed, click handler is delegated on #productGrid
-  });
-
-  return { init: init };
-})();
+};
