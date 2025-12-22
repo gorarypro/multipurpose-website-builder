@@ -1,47 +1,43 @@
 /**
- * FUSION v5.11 - currency.js
- * Handles price formatting and currency symbol injection.
+ * FUSION v10.8.0 - currency.js
+ * Price Formatting & Localization Engine
+ * Role: Standardizes price displays across all modules.
  */
 
 const CurrencyModule = {
-    symbol: '$',
-    position: 'suffix', // 'prefix' or 'suffix'
+  symbol: 'DH',
+  precision: 2,
+  settings: {},
 
-    /**
-     * Initializes the currency settings from Runtime
-     */
-    init: function() {
-        console.log("Currency: Initializing Price Engine...");
-        this.symbol = Runtime.settings.currency_symbol || '$';
-        
-        // Detect position (optional logic: common for AR/FR to use suffix)
-        const lang = I18nModule.activeLang || 'en';
-        this.position = (lang === 'ar' || lang === 'fr') ? 'suffix' : 'prefix';
-        
-        this.applyToStatic();
-    },
+  /**
+   * Initialize with settings from the Hub
+   */
+  init: function(syncedSettings) {
+    console.log("Currency: Initializing Formatting Engine...");
+    this.settings = syncedSettings || (window.FUSION_CONFIG ? window.FUSION_CONFIG.settings : {});
+    this.symbol = this.settings.currency_symbol || 'DH';
+  },
 
-    /**
-     * Formats a raw number into a currency string
-     * @param {number|string} amount 
-     * @returns {string} e.g., "100.00 DH" or "$ 100"
-     */
-    format: function(amount) {
-        const num = parseFloat(amount).toFixed(2);
-        if (this.position === 'prefix') {
-            return `${this.symbol} ${num}`;
-        } else {
-            return `${num} ${this.symbol}`;
-        }
-    },
+  /**
+   * Formats a raw number into a currency string
+   */
+  format: function(amount) {
+    const value = parseFloat(amount || 0);
+    
+    // Handle RTL vs LTR symbol placement based on language
+    const isRtl = (document.documentElement.getAttribute('dir') === 'rtl');
+    const formattedNum = value.toFixed(this.precision);
 
-    /**
-     * Finds any elements with data-price attribute and formats them
-     */
-    applyToStatic: function() {
-        document.querySelectorAll('[data-price]').forEach(el => {
-            const val = el.getAttribute('data-price');
-            if (val) el.textContent = this.format(val);
-        });
-    }
+    return isRtl ? `${formattedNum} ${this.symbol}` : `${this.symbol} ${formattedNum}`;
+  },
+
+  /**
+   * Utility to update all price displays in the DOM
+   */
+  updatePagePrices: function() {
+    document.querySelectorAll('[data-price]').forEach(el => {
+      const rawPrice = el.getAttribute('data-price');
+      el.textContent = this.format(rawPrice);
+    });
+  }
 };
