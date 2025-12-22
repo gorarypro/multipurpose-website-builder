@@ -1,44 +1,54 @@
 /**
  * FUSION v10.9.9 - runtime.js
- * Core Handshake & Defensive Initializer
+ * Core Initialization & Handshake
  */
 
 const Fusion = {
     boot: function() {
-        console.log("Fusion: Starting handshake...");
-        this.init();
+        console.log("Fusion: System check initiated...");
+        this.verifyEnvironment();
     },
 
-    init: function() {
-        // 1. Check if Config was injected by ThemeTemplate
-        if (!window.FUSION_CONFIG) {
-            console.error("Fusion Critical: FUSION_CONFIG is missing. Handshake failed.");
+    verifyEnvironment: function() {
+        // Guard against missing configuration
+        if (!window.FUSION_CONFIG || !window.FUSION_CONFIG.settings) {
+            console.error("Fusion: Critical Error - FUSION_CONFIG not found.");
             return;
         }
 
         const settings = window.FUSION_CONFIG.settings;
+        console.log("Fusion: Configuration loaded for " + (settings.site_title || "Site"));
 
-        // 2. Apply Global Styles with Null-Guards
+        // Initialize Global Branding
         if (document.documentElement) {
             const primary = settings.primary_color || '#0d6efd';
-            document.documentElement.style.setProperty('--bs-primary', primary);
+            document.documentElement.style.setProperty('--fusion-primary', primary);
         }
 
-        // 3. Initialize Sub-Modules if they exist
-        if (window.ProductsModule) {
-            console.log("Fusion: Booting Product Engine...");
+        // Sequential Module Load
+        this.loadModules(settings);
+    },
+
+    loadModules: function(settings) {
+        // Initialize Products
+        if (typeof ProductsModule !== 'undefined') {
             ProductsModule.init(settings);
         }
 
-        if (window.CartModule) {
-            console.log("Fusion: Booting Cart Engine...");
+        // Initialize Cart
+        if (typeof CartModule !== 'undefined') {
             CartModule.init(settings);
         }
 
+        // Initialize QuickView
+        if (typeof QuickView !== 'undefined') {
+            QuickView.init(settings);
+        }
+
         window.FUSION_CONFIG.isReady = true;
-        console.log("Fusion: System fully operational.");
+        console.log("Fusion: Site is fully operational.");
     }
 };
 
-// Start when DOM is ready
+// Start when document is ready
 document.addEventListener('DOMContentLoaded', () => Fusion.boot());
