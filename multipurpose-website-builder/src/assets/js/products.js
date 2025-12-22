@@ -1,176 +1,64 @@
 /**
- * FUSION v10.8.0 - products.js
- * Blogger Feed Parser & Dynamic Catalog Engine
- * Role: Fetches, parses, and renders products with category filtering.
+ * FUSION v10.9.9 - products.js
+ * Blogger Feed Parser
  */
 
 const ProductsModule = {
-  catalog: [],
-  categories: new Set(['all']),
-  currentFilter: 'all',
-  settings: {},
+    catalog: [],
+    settings: {},
 
-  /**
-   * Initialize the module with synchronized settings
-   */
-  init: function(syncedSettings) {
-    console.log("Products: Initializing Catalog...");
-    this.settings = syncedSettings || window.FUSION_CONFIG.settings;
-    this.fetchBloggerFeed();
-    this.setupEventListeners();
-  },
+    init: function(settings) {
+        this.settings = settings;
+        this.fetchFeed();
+    },
 
-  /**
-   * Request data from Blogger via JSONP
-   */
-  fetchBloggerFeed: function() {
-    const domain = this.settings.base_url || 'eventsushi.blogspot.com';
-    const script = document.createElement('script');
-    
-    // Blogger API v3 endpoint for JSON-in-script format
-    script.src = `https://${domain}/feeds/posts/default?alt=json-in-script&max-results=150&callback=ProductsModule.parseFeed`;
-    
-    script.onerror = () => {
-      console.error("Products Error: Could not reach Blogger feed.");
-      this.renderError();
-    };
-    
-    document.body.appendChild(script);
-  },
+    fetchFeed: function() {
+        const domain = this.settings.base_url || location.hostname;
+        const script = document.createElement('script');
+        // JSONP Callback to bypass CORS
+        script.src = `https://${domain}/feeds/posts/default?alt=json-in-script&callback=ProductsModule.parse`;
+        document.body.appendChild(script);
+    },
 
-  /**
-   * Parse the raw JSON feed into usable product objects
-   */
-  parseFeed: function(json) {
-    const entries = (json.feed && json.feed.entry) ? json.feed.entry : [];
-    
-    this.catalog = entries.map(entry => {
-      // 1. Extract Price from Labels (format: price-150)
-      let priceValue = 0;
-      let categories = [];
-      
-      if (entry.category) {
-        entry.category.forEach(cat => {
-          const term = cat.term;
-          if (term.startsWith('price-')) {
-            priceValue = parseFloat(term.split('-')[1]);
-          } else {
-            categories.push(term.toLowerCase());
-            this.categories.add(term.toLowerCase());
-          }
+    parse: function(json) {
+        const entries = json.feed.entry || [];
+        this.catalog = entries.map(e => {
+            const priceTag = (e.category || []).find(c => c.term.startsWith('price-'));
+            return {
+                id: e.id.$t,
+                title: e.title.$t,
+                content: e.content ? e.content.$t : "",
+                price: priceTag ? parseFloat(priceTag.term.split('-')[1]) : 0,
+                image: e.media$thumbnail ? e.media$thumbnail.url.replace('/s72-c/', '/s600/') : "https://placehold.co/600x400"
+            };
         });
-      }
+        this.render();
+    },
 
-      // 2. High-Res Image Logic
-      const rawThumb = entry.media$thumbnail ? entry.media$thumbnail.url : 'https://via.placeholder.com/600';
-      const highResImg = rawThumb.replace('/s72-c/', '/s600/');
+    render: function() {
+        const grid = document.getElementById('productGrid');
+        
+        // NULL GUARD: Prevent TypeError if grid is missing
+        if (!grid) {
+            console.warn("ProductsModule: #productGrid element not found in DOM.");
+            return;
+        }
 
-      // 3. Construct Object
-      return {
-        id: entry.id.$t,
-        title: entry.title.$t,
-        content: entry.content ? entry.content.$t : "",
-        price: priceValue,
-        image: highResImg,
-        categories: categories,
-        link: entry.link.find(l => l.rel === 'alternate').href
-      };
-    });
+        const currency = this.settings.currency_symbol || 'DH';
 
-    this.renderCategoryFilter();
-    this.renderGrid();
-  },
-
-  /**
-   * Builds the filter buttons based on Blogger labels
-   */
-  renderCategoryFilter: function() {
-    const container = document.getElementById('filterContainer');
-    if (!container) return;
-
-    container.innerHTML = Array.from(this.categories).map(cat => `
-      <button class="filter-btn ${this.currentFilter === cat ? 'active' : ''}" 
-              data-filter="${cat}"
-              onclick="ProductsModule.filterBy('${cat}')">
-        ${cat.charAt(0).toUpperCase() + cat.slice(1)}
-      </button>
-    `).join('');
-  },
-
-  /**
-   * Filters the grid based on selection
-   */
-  filterBy: function(category) {
-    this.currentFilter = category;
-    this.renderCategoryFilter();
-    this.renderGrid();
-  },
-
-  /**
-   * Core UI Rendering logic
-   */
-  renderGrid: function() {
-    const grid = document.getElementById('productGrid');
-    if (!grid) return;
-
-    const currency = this.settings.currency_symbol || 'DH';
-    
-    // Filter the items
-    const filteredItems = this.catalog.filter(p => {
-      return this.currentFilter === 'all' || p.categories.includes(this.currentFilter);
-    });
-
-    if (filteredItems.length === 0) {
-      grid.innerHTML = '<div class="col-12 text-center py-5"><h5>Aucun produit trouvé dans cette catégorie.</h5></div>';
-      return;
+        grid.innerHTML = this.catalog.map(p => `
+            <div class="col-md-4 col-sm-6">
+                <div class="card h-100 border-0 shadow-sm overflow-hidden">
+                    <img src="${p.image}" class="card-img-top" alt="${p.title}" style="aspect-ratio: 1/1; object-fit: cover;">
+                    <div class="card-body text-center">
+                        <h6 class="fw-bold">${p.title}</h6>
+                        <p class="text-primary fw-bold fs-5">${p.price} ${currency}</p>
+                        <button class="btn btn-outline-primary btn-sm rounded-pill w-100" onclick="CartModule.add('${p.id}', '${p.title.replace(/'/g, "\\'")}', ${p.price})">
+                            Add to Cart
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
     }
-
-    grid.innerHTML = filteredItems.map(p => `
-      <div class="col-6 col-md-4 col-lg-3 mb-4 animate-fadeIn">
-        <div class="card h-100 border-0 shadow-sm product-card">
-          <div class="position-relative overflow-hidden bg-light rounded-top">
-             <img src="${p.image}" class="card-img-top object-fit-cover" alt="${p.title}" style="aspect-ratio: 1/1;">
-             ${this.settings.quickview_included === 'yes' ? `
-               <button class="btn-quickview" onclick="QuickView.show('${p.id}')">
-                 <i class="bi bi-eye"></i>
-               </button>
-             ` : ''}
-          </div>
-          <div class="card-body p-3 text-center">
-            <h6 class="fw-bold mb-1 text-truncate">${p.title}</h6>
-            <div class="text-primary fw-bold mb-3">${p.price} ${currency}</div>
-            
-            <button class="btn btn-primary btn-sm w-100 rounded-pill" 
-                    onclick="CartModule.add('${p.id}', '${p.title.replace(/'/g, "\\'")}', ${p.price})">
-              <i class="bi bi-cart-plus me-2"></i>AJOUTER
-            </button>
-          </div>
-        </div>
-      </div>
-    `).join('');
-  },
-
-  renderError: function() {
-    const grid = document.getElementById('productGrid');
-    if (grid) grid.innerHTML = '<div class="alert alert-danger">Erreur de chargement du menu.</div>';
-  },
-
-  setupEventListeners: function() {
-    // Listener for the search bar from Builder Step 4
-    const searchInput = document.getElementById('productSearch');
-    if (searchInput) {
-      searchInput.addEventListener('input', (e) => {
-        const term = e.target.value.toLowerCase();
-        this.searchProducts(term);
-      });
-    }
-  },
-
-  searchProducts: function(term) {
-    const cards = document.querySelectorAll('.product-card');
-    cards.forEach(card => {
-      const title = card.querySelector('h6').textContent.toLowerCase();
-      card.parentElement.style.display = title.includes(term) ? 'block' : 'none';
-    });
-  }
 };
