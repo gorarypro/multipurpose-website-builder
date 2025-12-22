@@ -1,246 +1,107 @@
 /**
- * FUSION v6.7.1 - search.js
- * Client-side Search Engine Module with Analytics Integration
+ * FUSION v10.8.0 - search.js
+ * Search Engine & Discovery Analytics
+ * Role: Provides real-time grid filtering and query logging.
  */
 
 const SearchModule = {
-  searchInput: null,
-  productGrid: null,
-  clearButton: null,
-  isInitialized: false,
-  searchAnalyticsEnabled: false,
-  
+  settings: {},
+  searchTimer: null,
+  minChars: 2,
+
   /**
-   * Initialize the search module
+   * Initialize search listeners and sync settings
    */
-  init: function() {
-    console.log("SearchModule: Initializing...");
+  init: function(syncedSettings) {
+    console.log("Search: Initializing Discovery Module...");
+    this.settings = syncedSettings || window.FUSION_CONFIG.settings;
     
-    // Get DOM elements
-    this.searchInput = document.getElementById('searchInput');
-    this.productGrid = document.getElementById('productGrid');
-    this.clearButton = this.searchInput?.parentNode?.querySelector('button');
-    
-    if (!this.searchInput || !this.productGrid) {
-      console.warn("SearchModule: Required elements not found. Skipping initialization.");
+    const searchInput = document.getElementById('productSearch');
+    if (!searchInput) {
+      console.warn("Search: Input element #productSearch not found.");
       return;
     }
-    
-    // Check if search analytics is enabled in settings
-    this.searchAnalyticsEnabled = window.SETTINGS?.search_analytics_enabled === 'yes';
-    
-    // Add event listeners
-    this.searchInput.addEventListener('input', (e) => {
-      this.handleSearch(e.target.value);
-    });
-    
-    if (this.clearButton) {
-      this.clearButton.addEventListener('click', () => {
-        this.searchInput.value = '';
-        this.handleSearch('');
-        this.clearButton.style.display = 'none';
-      });
-    }
-    
-    // Add keyboard shortcuts
-    this.searchInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        this.searchInput.value = '';
-        this.handleSearch('');
-        this.clearButton?.click();
+
+    this.bindEvents(searchInput);
+  },
+
+  /**
+   * Set up input listeners with debouncing to save API calls
+   */
+  bindEvents: function(input) {
+    input.addEventListener('input', (e) => {
+      const term = e.target.value.trim();
+      
+      // Perform immediate UI filtering
+      this.filterGrid(term.toLowerCase());
+
+      // Debounce the analytics recording (wait 1 second after typing stops)
+      clearTimeout(this.searchTimer);
+      if (term.length >= this.minChars) {
+        this.searchTimer = setTimeout(() => {
+          this.logSearchToBackend(term);
+        }, 1000);
       }
     });
-    
-    this.isInitialized = true;
-    console.log("SearchModule: Successfully initialized.");
   },
-  
+
   /**
-   * Handle search input and filter products
+   * Filters the ProductModule catalog in real-time
    */
-  handleSearch: function(query) {
-    if (!query) {
-      this.showAllProducts();
-      return;
-    }
-    
-    const products = this.productGrid.querySelectorAll('.product-card');
-    let visibleCount = 0;
-    const searchTerms = query.toLowerCase().trim().split(' ');
-    
-    products.forEach(product => {
-      const title = product.querySelector('.product-title')?.textContent.toLowerCase() || '';
-      const description = product.querySelector('.product-description')?.textContent.toLowerCase() || '';
-      const tags = product.querySelector('.product-tags')?.textContent.toLowerCase() || '';
-      
-      // Check if product matches any search term
-      const isVisible = searchTerms.some(term => 
-        title.includes(term) || 
-        description.includes(term) ||
-        tags.includes(term)
-      );
-      
-      product.style.display = isVisible ? 'block' : 'none';
-      if (isVisible) visibleCount++;
+  filterGrid: function(term) {
+    const cards = document.querySelectorAll('.product-card');
+    let foundCount = 0;
+
+    cards.forEach(card => {
+      // Find the title element within the card
+      const title = card.querySelector('h6').textContent.toLowerCase();
+      const parent = card.closest('.col-6, .col-md-4, .col-lg-3');
+
+      if (title.includes(term)) {
+        if (parent) parent.style.display = 'block';
+        foundCount++;
+      } else {
+        if (parent) parent.style.display = 'none';
+      }
     });
-    
-    // Show/hide clear button
-    if (this.clearButton) {
-      this.clearButton.style.display = query ? 'inline-block' : 'none';
-    }
-    
-    // Update UI feedback
-    this.updateSearchUI(visibleCount, products.length, query);
-    
-    // Track search analytics if enabled
-    if (this.searchAnalyticsEnabled && query.length > 0) {
-      this.trackSearchAnalytics(query, visibleCount, products.length);
+
+    this.updateStatus(term, foundCount);
+  },
+
+  /**
+   * Updates a status message if present in the UI
+   */
+  updateStatus: function(term, count) {
+    const statusEl = document.getElementById('searchStatus');
+    if (!statusEl) return;
+
+    if (term === '') {
+      statusEl.style.display = 'none';
+    } else {
+      statusEl.style.display = 'block';
+      statusEl.textContent = `${count} résultats pour "${term}"`;
     }
   },
-  
+
   /**
-   * Track search analytics with backend
+   * Sends the search term to Code.gs for spreadsheet archival
    */
-  trackSearchAnalytics: function(searchTerm, resultsFound, totalProducts) {
-    if (!window.BASE_SCRIPT_URL) {
-      console.warn("SearchModule: BASE_SCRIPT_URL not available for analytics.");
-      return;
-    }
+  logSearchToBackend: function(term) {
+    if (this.settings.analytics_included !== 'yes') return;
+
+    console.log(`Search Analytics: Logging "${term}"...`);
     
-    // Create a script element for JSONP call
+    const apiBase = (window.FUSION_CONFIG && window.FUSION_CONFIG.apiUrl) || window.BASE_SCRIPT_URL;
     const script = document.createElement('script');
-    script.src = `${window.BASE_SCRIPT_URL}?action=save_search&term=${encodeURIComponent(searchTerm)}&callback=SearchModule.onAnalyticsSaved&results=${resultsFound}&total=${totalProducts}`;
-    script.onerror = () => {
-      console.warn("SearchModule: Failed to track search analytics.");
-    };
     
-    // Clean up the script after execution
-    script.onload = () => {
-      document.body.removeChild(script);
-    };
-    
+    // Calls the save_search action defined in your backend Code.gs
+    script.src = `${apiBase}?action=save_search&term=${encodeURIComponent(term)}&callback=SearchModule.onLogSuccess`;
     document.body.appendChild(script);
   },
-  
-  /**
-   * Callback for analytics save operation
-   */
-  onAnalyticsSaved: function(response) {
-    if (response?.status === 'success') {
-      console.log("SearchModule: Analytics tracked successfully.");
-    } else {
-      console.warn("SearchModule: Analytics tracking failed:", response?.message);
+
+  onLogSuccess: function(res) {
+    if (res.status === 'success') {
+      console.log("Search Analytics: Data synced.");
     }
-  },
-  
-  /**
-   * Show all products (clear search)
-   */
-  showAllProducts: function() {
-    const products = this.productGrid.querySelectorAll('.product-card');
-    products.forEach(product => {
-      product.style.display = 'block';
-    });
-    
-    // Hide clear button
-    if (this.clearButton) {
-      this.clearButton.style.display = 'none';
-    }
-    
-    this.updateSearchUI(products.length, products.length, '');
-  },
-  
-  /**
-   * Update search UI with results count and feedback
-   */
-  updateSearchUI: function(visibleCount, totalCount, query) {
-    // Remove existing feedback elements
-    const existingFeedback = document.getElementById('search-feedback');
-    if (existingFeedback) {
-      existingFeedback.remove();
-    }
-    
-    // Create new feedback element
-    const feedback = document.createElement('div');
-    feedback.id = 'search-feedback';
-    feedback.className = 'search-results-info mt-2';
-    
-    if (query) {
-      if (visibleCount === 0) {
-        feedback.innerHTML = `
-          <div class="search-no-results">
-            <i class="bi bi-search"></i>
-            <p>No products found matching "${query}"</p>
-          </div>
-        `;
-      } else {
-        feedback.innerHTML = `
-          <span>Found ${visibleCount} of ${totalCount} products matching "${query}"</span>
-        `;
-      }
-    } else {
-      feedback.innerHTML = `<span>Show all ${totalCount} products</span>`;
-    }
-    
-    // Insert feedback after search input
-    this.searchInput.parentNode.appendChild(feedback);
-  },
-  
-  /**
-   * Reset search state
-   */
-  reset: function() {
-    if (this.searchInput) {
-      this.searchInput.value = '';
-      this.handleSearch('');
-    }
-  },
-  
-  /**
-   * Highlight search terms in product cards
-   */
-  highlightSearchTerms: function(product, searchTerm) {
-    const title = product.querySelector('.product-title');
-    const description = product.querySelector('.product-description');
-    
-    if (title && searchTerm) {
-      const regex = new RegExp(`(${searchTerm})`, 'gi');
-      title.innerHTML = title.textContent.replace(regex, '<mark>$1</mark>');
-    }
-    
-    if (description && searchTerm) {
-      const regex = new RegExp(`(${searchTerm})`, 'gi');
-      description.innerHTML = description.textContent.replace(regex, '<mark>$1</mark>');
-    }
-  },
-  
-  /**
-   * Debounce function to optimize search performance
-   */
-  debounce: function(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-      const later = () => {
-        clearTimeout(timeout);
-        func(...args);
-      };
-      clearTimeout(timeout);
-      timeout = setTimeout(later, wait);
-    };
   }
 };
-
-// Create debounced search handler for better performance
-SearchModule.handleSearch = SearchModule.debounce(SearchModule.handleSearch, 300);
-
-// Auto-initialize when runtime is ready
-document.addEventListener('runtime_ready', () => {
-  if (window.SETTINGS.search_included === 'yes') {
-    // Add settings to window for easy access
-    window.SearchModule = SearchModule;
-    SearchModule.init();
-  }
-});
-
-// Global function for external access
-window.SearchModule = SearchModule;
