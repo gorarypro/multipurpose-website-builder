@@ -60,5 +60,6 @@
 
   // Auto-init on DOM ready
   document.addEventListener('DOMContentLoaded', () => GalleryModule.init());
+  window.GalleryModule = GalleryModule;
 
 })();
