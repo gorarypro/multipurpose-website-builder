@@ -186,3 +186,5 @@
   document.addEventListener('runtime_ready', () => CartModule.init());
 
 })();
+  // Expose globally
+  window.CartModule = CartModule;
