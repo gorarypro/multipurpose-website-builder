@@ -91,5 +91,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const variantMap = VariantsModule.parse(content);
     if (variantMap) VariantsModule.renderSelector(productId, container.id, variantMap);
   });
-  window.VariantsModule = VariantsModule;
+  
 });
+window.VariantsModule = VariantsModule;
