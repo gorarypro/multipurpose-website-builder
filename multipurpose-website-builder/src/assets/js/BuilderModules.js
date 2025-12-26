@@ -1,100 +1,103 @@
-/* BuilderModules.js
-   Full Module Stubs for Fusion Hub Builder Step 0 Testing
-*/
+// =====================
+// BuilderModules.js
+// =====================
 
-// ==================== QuickView Module ====================
+// QuickView Module
 const QuickView = {
-    init: () => console.log('[QuickView] Module initialized'),
-    open: (productId) => console.log(`[QuickView] Open product ${productId}`),
-    close: () => console.log('[QuickView] Close QuickView')
-};
-
-// ==================== Variants Module ====================
-const Variants = {
-    init: () => console.log('[Variants] Module initialized'),
-    selectOption: (productId, option) => console.log(`[Variants] Product ${productId} option selected: ${option}`)
-};
-
-// ==================== Products Module ====================
-const Products = {
-    init: () => console.log('[Products] Module initialized'),
-    fetchAll: () => console.log('[Products] Fetching all products'),
-    fetchById: (id) => console.log(`[Products] Fetching product ${id}`)
-};
-
-// ==================== Cart Module ====================
-const Cart = {
-    init: () => console.log('[Cart] Module initialized'),
-    addItem: (id, qty) => console.log(`[Cart] Add product ${id} qty ${qty}`),
-    removeItem: (id) => console.log(`[Cart] Remove product ${id}`),
-    checkout: () => console.log('[Cart] Checkout triggered')
-};
-
-// ==================== Wishlist Module ====================
-const Wishlist = {
-    init: () => console.log('[Wishlist] Module initialized'),
-    add: (id) => console.log(`[Wishlist] Add product ${id}`),
-    remove: (id) => console.log(`[Wishlist] Remove product ${id}`),
-    list: () => console.log('[Wishlist] Listing items')
-};
-
-// ==================== Popup Module ====================
-const Popup = {
-    init: () => console.log('[Popup] Module initialized'),
-    show: (content) => console.log(`[Popup] Showing content: ${content}`),
-    hide: () => console.log('[Popup] Hide popup')
-};
-
-// ==================== Gallery Module ====================
-const Gallery = {
-    init: () => console.log('[Gallery] Module initialized'),
-    open: (id) => console.log(`[Gallery] Open gallery ${id}`),
-    close: () => console.log('[Gallery] Close gallery')
-};
-
-// ==================== Currency Module ====================
-const Currency = {
-    init: () => console.log('[Currency] Module initialized'),
-    format: (value, symbol='$') => {
-        console.log(`[Currency] Formatting ${value} with symbol ${symbol}`);
-        return `${symbol}${parseFloat(value).toFixed(2)}`;
+    open: function(productId){
+        console.log(`QuickView: Opening product ${productId}`);
+        alert(`QuickView: Product ${productId} previewed`);
     }
 };
 
-// ==================== Modal-Guard Module ====================
-const ModalGuard = {
-    init: () => console.log('[ModalGuard] Module initialized'),
-    preventClose: (modalId) => console.log(`[ModalGuard] Prevent close for modal ${modalId}`),
-    allowClose: (modalId) => console.log(`[ModalGuard] Allow close for modal ${modalId}`)
+// Variants Module
+const Variants = {
+    selectOption: function(productId, option){
+        console.log(`Variants: Product ${productId} option selected ${option}`);
+        alert(`Variants: Product ${productId} option "${option}" selected`);
+    }
 };
 
-// ==================== Step 0 Quick Test ====================
-function runQuickTest() {
-    console.log('--- Running Step 0 Quick Test ---');
-    QuickView.init();
-    Variants.init();
-    Products.init();
-    Cart.init();
-    Wishlist.init();
-    Popup.init();
-    Gallery.init();
-    Currency.init();
-    ModalGuard.init();
+// Products Module
+const Products = {
+    fetchAll: function(){
+        console.log("Products: Fetching all products...");
+        alert("Products: All products fetched (mock)");
+    }
+};
 
-    // Test basic functions
-    QuickView.open(101); QuickView.close();
-    Variants.selectOption(101, 'Red');
-    Products.fetchAll(); Products.fetchById(101);
-    Cart.addItem(101, 2); Cart.removeItem(101); Cart.checkout();
-    Wishlist.add(101); Wishlist.remove(101); Wishlist.list();
-    Popup.show('<p>Test Popup</p>'); Popup.hide();
-    Gallery.open(5); Gallery.close();
-    console.log(Currency.format(123.456, '$'));
-    ModalGuard.preventClose('modal1'); ModalGuard.allowClose('modal1');
-    console.log('--- Step 0 Quick Test Finished ---');
+// Cart Module
+const Cart = {
+    addItem: function(productId, quantity){
+        console.log(`Cart: Adding product ${productId}, quantity ${quantity}`);
+        alert(`Cart: Product ${productId} added (${quantity})`);
+    },
+    removeItem: function(productId){
+        console.log(`Cart: Removing product ${productId}`);
+        alert(`Cart: Product ${productId} removed`);
+    }
+};
+
+// Wishlist Module
+const Wishlist = {
+    add: function(productId){
+        console.log(`Wishlist: Adding product ${productId}`);
+        alert(`Wishlist: Product ${productId} added`);
+    },
+    remove: function(productId){
+        console.log(`Wishlist: Removing product ${productId}`);
+        alert(`Wishlist: Product ${productId} removed`);
+    }
+};
+
+// Popup Module
+const Popup = {
+    show: function(html){
+        console.log("Popup: Showing popup", html);
+        alert("Popup: Displayed content (mock)");
+    },
+    hide: function(){
+        console.log("Popup: Hide");
+        alert("Popup hidden");
+    }
+};
+
+// Gallery Module
+const Gallery = {
+    open: function(galleryId){
+        console.log(`Gallery: Open gallery ${galleryId}`);
+        alert(`Gallery: Opened gallery ${galleryId}`);
+    }
+};
+
+// Currency Module
+const Currency = {
+    format: function(amount, symbol="$"){
+        const formatted = `${symbol}${amount.toFixed(2)}`;
+        console.log(`Currency: Formatting amount ${amount} => ${formatted}`);
+        return formatted;
+    }
+};
+
+// Modal Guard
+const ModalGuard = {
+    preventClose: function(modalId){
+        console.log(`ModalGuard: Prevent closing ${modalId}`);
+        alert(`ModalGuard: Closing prevented for ${modalId}`);
+    }
+};
+
+// Export Modules for GitHub usage
+if(typeof module !== 'undefined') {
+    module.exports = {
+        QuickView,
+        Variants,
+        Products,
+        Cart,
+        Wishlist,
+        Popup,
+        Gallery,
+        Currency,
+        ModalGuard
+    };
 }
-
-// Automatically run Quick Test when step 0 is active
-document.addEventListener('DOMContentLoaded', () => {
-    if(document.getElementById('step0')) runQuickTest();
-});
