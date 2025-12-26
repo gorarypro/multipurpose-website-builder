@@ -1,103 +1,106 @@
-// =====================
 // BuilderModules.js
-// =====================
+// Core modules for Fusion Hub Builder
+// Each module exports a template function that can be inserted in the live preview
 
-// QuickView Module
-const QuickView = {
-    open: function(productId){
-        console.log(`QuickView: Opening product ${productId}`);
-        alert(`QuickView: Product ${productId} previewed`);
-    }
-};
-
-// Variants Module
-const Variants = {
-    selectOption: function(productId, option){
-        console.log(`Variants: Product ${productId} option selected ${option}`);
-        alert(`Variants: Product ${productId} option "${option}" selected`);
-    }
-};
-
-// Products Module
-const Products = {
-    fetchAll: function(){
-        console.log("Products: Fetching all products...");
-        alert("Products: All products fetched (mock)");
-    }
-};
-
-// Cart Module
-const Cart = {
-    addItem: function(productId, quantity){
-        console.log(`Cart: Adding product ${productId}, quantity ${quantity}`);
-        alert(`Cart: Product ${productId} added (${quantity})`);
-    },
-    removeItem: function(productId){
-        console.log(`Cart: Removing product ${productId}`);
-        alert(`Cart: Product ${productId} removed`);
-    }
-};
-
-// Wishlist Module
-const Wishlist = {
-    add: function(productId){
-        console.log(`Wishlist: Adding product ${productId}`);
-        alert(`Wishlist: Product ${productId} added`);
-    },
-    remove: function(productId){
-        console.log(`Wishlist: Removing product ${productId}`);
-        alert(`Wishlist: Product ${productId} removed`);
-    }
-};
-
-// Popup Module
-const Popup = {
-    show: function(html){
-        console.log("Popup: Showing popup", html);
-        alert("Popup: Displayed content (mock)");
-    },
-    hide: function(){
-        console.log("Popup: Hide");
-        alert("Popup hidden");
-    }
-};
-
-// Gallery Module
-const Gallery = {
-    open: function(galleryId){
-        console.log(`Gallery: Open gallery ${galleryId}`);
-        alert(`Gallery: Opened gallery ${galleryId}`);
-    }
-};
-
-// Currency Module
-const Currency = {
-    format: function(amount, symbol="$"){
-        const formatted = `${symbol}${amount.toFixed(2)}`;
-        console.log(`Currency: Formatting amount ${amount} => ${formatted}`);
-        return formatted;
-    }
-};
-
-// Modal Guard
-const ModalGuard = {
-    preventClose: function(modalId){
-        console.log(`ModalGuard: Prevent closing ${modalId}`);
-        alert(`ModalGuard: Closing prevented for ${modalId}`);
-    }
-};
-
-// Export Modules for GitHub usage
-if(typeof module !== 'undefined') {
-    module.exports = {
-        QuickView,
-        Variants,
-        Products,
-        Cart,
-        Wishlist,
-        Popup,
-        Gallery,
-        Currency,
-        ModalGuard
-    };
+// ===== Module: Cart =====
+function CartModule(options={}) {
+  const enabled = options.enabled ?? true;
+  return enabled ? `<div class="cart-module">Shopping Cart Loaded ✅</div>` : '';
 }
+
+// ===== Module: QuickView =====
+function QuickViewModule(options={}) {
+  const enabled = options.enabled ?? true;
+  return enabled ? `<div class="quickview-module">QuickView Loaded ✅</div>` : '';
+}
+
+// ===== Module: Wishlist =====
+function WishlistModule(options={}) {
+  const enabled = options.enabled ?? true;
+  return enabled ? `<div class="wishlist-module">Wishlist Loaded ✅</div>` : '';
+}
+
+// ===== Module: Popup =====
+function PopupModule(options={}) {
+  const enabled = options.enabled ?? true;
+  const content = options.content ?? '<div>Popup Content</div>';
+  const delay = options.delay ?? 5;
+  if(!enabled) return '';
+  return `
+    <div class="popup-module" style="display:none;" id="popupModule">
+      ${content}
+    </div>
+    <script>
+      setTimeout(()=>{ document.getElementById('popupModule').style.display='block'; }, ${delay*1000});
+    </script>
+  `;
+}
+
+// ===== Module: Gallery =====
+function GalleryModule(options={}) {
+  const enabled = options.enabled ?? true;
+  const images = options.images ?? [];
+  if(!enabled) return '';
+  const items = images.map(src=>`<img src="${src}" class="gallery-item" style="max-width:100px;margin:5px;">`).join('');
+  return `<div class="gallery-module">${items}</div>`;
+}
+
+// ===== Module: Currency =====
+function CurrencyModule(options={}) {
+  const symbol = options.symbol ?? '$';
+  return `<span class="currency-symbol">${symbol}</span>`;
+}
+
+// ===== Module: Search =====
+function SearchModule(options={}) {
+  const enabled = options.enabled ?? true;
+  return enabled ? `<input type="search" placeholder="Search..." class="search-module">` : '';
+}
+
+// ===== Module: Analytics =====
+function AnalyticsModule(options={}) {
+  const id = options.id ?? '';
+  if(!id) return '';
+  return `<script>console.log("Analytics ID: ${id}")</script>`;
+}
+
+// ===== Module: Floating Buttons =====
+function FloatingButtonsModule(options={}) {
+  const enabled = options.enabled ?? true;
+  if(!enabled) return '';
+  return `
+    <div class="floating-buttons">
+      <button onclick="alert('Chat')">💬</button>
+      <button onclick="alert('Help')">❓</button>
+    </div>
+  `;
+}
+
+// ===== Module Loader for Step 0 Test =====
+function runModulesTest(options={}) {
+  return `
+    ${CartModule({enabled: options.cart})}
+    ${QuickViewModule({enabled: options.quickview})}
+    ${WishlistModule({enabled: options.wishlist})}
+    ${PopupModule({enabled: options.popup, content: options.popupContent, delay: options.popupDelay})}
+    ${GalleryModule({enabled: options.gallery, images: options.galleryImages})}
+    ${CurrencyModule({symbol: options.currencySymbol})}
+    ${SearchModule({enabled: options.search})}
+    ${AnalyticsModule({id: options.analyticsId})}
+    ${FloatingButtonsModule({enabled: options.floatingButtons})}
+  `;
+}
+
+// ===== Export for GitHub or GAS integration =====
+if(typeof module !== 'undefined') module.exports = {
+  CartModule,
+  QuickViewModule,
+  WishlistModule,
+  PopupModule,
+  GalleryModule,
+  CurrencyModule,
+  SearchModule,
+  AnalyticsModule,
+  FloatingButtonsModule,
+  runModulesTest
+};
