@@ -113,3 +113,5 @@
   document.addEventListener('runtime_ready', () => WishlistModule.init());
 
 })();
+  // Expose globally
+  window.WishlistModule = WishlistModule;
