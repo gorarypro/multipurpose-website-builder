@@ -65,3 +65,5 @@ document.addEventListener('runtime_ready', function(e) {
 if (document.readyState === 'complete') {
   setTimeout(() => { if (!CurrencyModule.isReady) CurrencyModule.init(); }, 1000);
 }
+  // Expose globally
+  window.CurrencyModule = CurrencyModule;
