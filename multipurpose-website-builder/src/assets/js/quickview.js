@@ -135,3 +135,5 @@
   }
 
 })();
+  // Expose globally
+  window.QuickViewModule = QuickViewModule;
