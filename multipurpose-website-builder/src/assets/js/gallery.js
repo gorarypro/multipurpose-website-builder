@@ -63,3 +63,4 @@
   window.GalleryModule = GalleryModule;
 
 })();
+  window.GalleryModule = GalleryModule;
