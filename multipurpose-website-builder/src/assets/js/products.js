@@ -1,64 +1,130 @@
 /**
- * FUSION v10.9.9 - products.js
- * Blogger Feed Parser
+ * FUSION v10.8.1 - products.js
+ * --------------------------------
+ * Product Catalog Engine
+ * Role:
+ * - Reads pre-rendered SSR product cards
+ * - Builds product catalog cache
+ * - Binds UI actions (cart, wishlist, quickview)
+ * - Delegates variant parsing
  */
 
-const ProductsModule = {
+(function () {
+
+  const ProductsModule = {
     catalog: [],
-    settings: {},
+    grid: null,
 
-    init: function(settings) {
-        this.settings = settings;
-        this.fetchFeed();
+    /**
+     * Initialize system
+     */
+    init(settings) {
+      console.log("Products: Initializing catalog...");
+      this.grid = document.getElementById('productGrid');
+
+      if (!this.grid) {
+        console.warn("Products: #productGrid not found");
+        return;
+      }
+
+      this.parseSSR();
+      this.bindActions();
     },
 
-    fetchFeed: function() {
-        const domain = this.settings.base_url || location.hostname;
-        const script = document.createElement('script');
-        // JSONP Callback to bypass CORS
-        script.src = `https://${domain}/feeds/posts/default?alt=json-in-script&callback=ProductsModule.parse`;
-        document.body.appendChild(script);
-    },
+    /**
+     * Read SSR HTML and build product cache
+     */
+    parseSSR() {
+      const cards = this.grid.querySelectorAll('[data-id]');
+      this.catalog = [];
 
-    parse: function(json) {
-        const entries = json.feed.entry || [];
-        this.catalog = entries.map(e => {
-            const priceTag = (e.category || []).find(c => c.term.startsWith('price-'));
-            return {
-                id: e.id.$t,
-                title: e.title.$t,
-                content: e.content ? e.content.$t : "",
-                price: priceTag ? parseFloat(priceTag.term.split('-')[1]) : 0,
-                image: e.media$thumbnail ? e.media$thumbnail.url.replace('/s72-c/', '/s600/') : "https://placehold.co/600x400"
-            };
+      cards.forEach(card => {
+        const id = card.dataset.id;
+        if (!id) return;
+
+        const title = card.querySelector('[data-title]')?.textContent?.trim() || '';
+        const price = parseFloat(card.dataset.price || 0);
+        const image = card.querySelector('img')?.src || '';
+        const content = card.querySelector('[data-content]')?.innerHTML || '';
+
+        // Parse variants
+        const variants = window.VariantsModule
+          ? VariantsModule.parse(content)
+          : null;
+
+        this.catalog.push({
+          id,
+          title,
+          price,
+          image,
+          content,
+          variants
         });
-        this.render();
+      });
+
+      console.log(`Products: ${this.catalog.length} products loaded`);
     },
 
-    render: function() {
-        const grid = document.getElementById('productGrid');
-        
-        // NULL GUARD: Prevent TypeError if grid is missing
-        if (!grid) {
-            console.warn("ProductsModule: #productGrid element not found in DOM.");
-            return;
+    /**
+     * Bind UI interactions
+     */
+    bindActions() {
+      this.grid.addEventListener('click', (e) => {
+
+        const card = e.target.closest('[data-id]');
+        if (!card) return;
+
+        const productId = card.dataset.id;
+        const product = this.catalog.find(p => String(p.id) === String(productId));
+        if (!product) return;
+
+        /* ADD TO CART */
+        if (e.target.closest('.add-to-cart-btn')) {
+          if (!window.CartModule) return;
+
+          const variants = window.VariantsModule
+            ? VariantsModule.getSelection(productId)
+            : {};
+
+          CartModule.add(
+            product.id,
+            product.title,
+            product.price,
+            variants
+          );
         }
 
-        const currency = this.settings.currency_symbol || 'DH';
+        /* WISHLIST */
+        if (e.target.closest('.btn-wishlist, .wishlist-toggle')) {
+          if (!window.WishlistModule) return;
+          WishlistModule.toggle(productId);
+        }
 
-        grid.innerHTML = this.catalog.map(p => `
-            <div class="col-md-4 col-sm-6">
-                <div class="card h-100 border-0 shadow-sm overflow-hidden">
-                    <img src="${p.image}" class="card-img-top" alt="${p.title}" style="aspect-ratio: 1/1; object-fit: cover;">
-                    <div class="card-body text-center">
-                        <h6 class="fw-bold">${p.title}</h6>
-                        <p class="text-primary fw-bold fs-5">${p.price} ${currency}</p>
-                        <button class="btn btn-outline-primary btn-sm rounded-pill w-100" onclick="CartModule.add('${p.id}', '${p.title.replace(/'/g, "\\'")}', ${p.price})">
-                            Add to Cart
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `).join('');
+        /* QUICK VIEW */
+        if (e.target.closest('.quick-view-btn')) {
+          if (!window.QuickViewModule) return;
+          QuickViewModule.open(productId);
+        }
+
+      });
+    },
+
+    /**
+     * Public getter
+     */
+    getById(id) {
+      return this.catalog.find(p => String(p.id) === String(id));
     }
-};
+  };
+
+  // Expose globally
+  window.ProductsModule = ProductsModule;
+
+  /**
+   * Runtime boot hook
+   */
+  document.addEventListener('runtime_ready', function (e) {
+    ProductsModule.init(e.detail);
+  });
+
+})();
