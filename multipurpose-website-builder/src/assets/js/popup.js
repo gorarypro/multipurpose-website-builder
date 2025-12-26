@@ -53,3 +53,4 @@
   document.addEventListener('runtime_ready', () => PopupModule.init());
 
 })();
+window.PopupModule = PopupModule;
