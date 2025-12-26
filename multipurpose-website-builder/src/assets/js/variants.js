@@ -1,122 +1,94 @@
 /**
  * FUSION v10.8.1 - variants.js
- * --------------------------------
- * Product Variant & Attribute Engine
- * Role:
- * - Parses variant syntax from Blogger content
- * - Renders selectable UI
- * - Persists selections per product
- * - Exposes selection to CartModule
+ * Product Options & Attribute Manager
+ * Role: Parses content for variant strings and manages selection.
  */
 
-(function () {
+const VariantsModule = {
+  activeSelection: {},
 
-  const VariantsModule = {
-    selections: {},
+  /**
+   * Parse product content for variant options
+   * Syntax Example: [options: Size|Small,Medium,Large; Color|Red,Blue]
+   */
+  parse: function(content) {
+    if (!content) return null;
+    
+    const regex = /\[options:\s*([^\]]+)\]/;
+    const match = content.match(regex);
+    if (!match) return null;
 
-    /**
-     * Parse variant definitions from content
-     * Syntax:
-     * [options: Size|S,M,L; Color|Red,Blue]
-     */
-    parse(content) {
-      if (!content) return null;
+    const optionsString = match[1];
+    const groups = optionsString.split(';');
 
-      const match = content.match(/\[options:\s*([^\]]+)\]/i);
-      if (!match) return null;
+    const variantMap = {};
+    groups.forEach(group => {
+      const [name, values] = group.split('|');
+      if (name && values) {
+        variantMap[name.trim()] = values.split(',').map(v => v.trim());
+      }
+    });
 
-      const groups = match[1].split(';');
-      const map = {};
+    return variantMap;
+  },
 
-      groups.forEach(group => {
-        const [name, values] = group.split('|');
-        if (!name || !values) return;
+  /**
+   * Render variant selection buttons into a container
+   */
+  renderSelector: function(productId, containerId, variantMap) {
+    const container = document.getElementById(containerId);
+    if (!container || !variantMap) return;
 
-        map[name.trim()] = values.split(',').map(v => v.trim());
-      });
-
-      return Object.keys(map).length ? map : null;
-    },
-
-    /**
-     * Render variant selectors
-     */
-    renderSelector(productId, containerId, variantMap) {
-      const container = document.getElementById(containerId);
-      if (!container || !variantMap) return;
-
-      this.selections[productId] = {};
-
-      container.innerHTML = Object.entries(variantMap).map(([type, values]) => `
-        <div class="variant-group mb-3" data-type="${type}">
-          <div class="small fw-bold text-muted mb-2">${type}</div>
-          <div class="d-flex flex-wrap gap-2">
-            ${values.map(value => `
-              <button type="button"
-                class="btn btn-sm btn-outline-secondary variant-option"
-                data-product="${productId}"
-                data-type="${type}"
-                data-value="${value}">
-                ${value}
-              </button>
-            `).join('')}
-          </div>
+    container.innerHTML = Object.keys(variantMap).map(key => `
+      <div class="variant-group mb-3">
+        <label class="form-label small fw-bold text-muted">${key}</label>
+        <div class="d-flex flex-wrap gap-2">
+          ${variantMap[key].map(value => `
+            <button class="btn btn-sm btn-outline-secondary variant-option" 
+                    data-product="${productId}" 
+                    data-type="${key}" 
+                    data-value="${value}"
+                    onclick="VariantsModule.select('${productId}', '${key}', '${value}', this)">
+              ${value}
+            </button>
+          `).join('')}
         </div>
-      `).join('');
+      </div>
+    `).join('');
+  },
 
-      container.querySelectorAll('.variant-option').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          this.select(
-            productId,
-            btn.dataset.type,
-            btn.dataset.value,
-            btn
-          );
-        });
-      });
-    },
+  /**
+   * Handle user selection and update active state
+   */
+  select: function(productId, type, value, element) {
+    if (!this.activeSelection[productId]) this.activeSelection[productId] = {};
+    this.activeSelection[productId][type] = value;
 
-    /**
-     * Handle selection
-     */
-    select(productId, type, value, element) {
-      if (!this.selections[productId]) {
-        this.selections[productId] = {};
-      }
+    // Update UI active states
+    const group = element.closest('.variant-group');
+    group.querySelectorAll('.variant-option').forEach(btn => btn.classList.remove('active', 'btn-primary', 'text-white'));
+    
+    element.classList.add('active', 'btn-primary', 'text-white');
+    console.log(`Variants: Product ${productId} - ${type} set to ${value}`);
+  },
 
-      this.selections[productId][type] = value;
+  /**
+   * Retrieve current selection for CartModule
+   */
+  getSelection: function(productId) {
+    return this.activeSelection[productId] || {};
+  }
+};
 
-      // UI active state (group scoped)
-      const group = element.closest('.variant-group');
-      if (group) {
-        group.querySelectorAll('.variant-option').forEach(btn => {
-          btn.classList.remove('active', 'btn-primary', 'text-white');
-          btn.classList.add('btn-outline-secondary');
-        });
-      }
-
-      element.classList.remove('btn-outline-secondary');
-      element.classList.add('active', 'btn-primary', 'text-white');
-
-      console.log(`Variants: ${productId} → ${type} = ${value}`);
-    },
-
-    /**
-     * Get selected variants
-     */
-    getSelection(productId) {
-      return this.selections[productId] || {};
-    },
-
-    /**
-     * Reset variants for product (modal close safety)
-     */
-    reset(productId) {
-      delete this.selections[productId];
-    }
-  };
-
-  // Expose globally
-  window.VariantsModule = VariantsModule;
-
-})();
+/**
+ * Auto-initialize variant rendering if DOM content is available
+ */
+document.addEventListener('DOMContentLoaded', function() {
+  const variantContainers = document.querySelectorAll('[data-variant-container]');
+  variantContainers.forEach(container => {
+    const content = container.getAttribute('data-variant-content');
+    const productId = container.getAttribute('data-product-id');
+    const variantMap = VariantsModule.parse(content);
+    if (variantMap) VariantsModule.renderSelector(productId, container.id, variantMap);
+  });
+});
