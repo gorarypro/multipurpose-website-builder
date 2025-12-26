@@ -128,3 +128,4 @@
   });
 
 })();
+window.ProductsModule = ProductsModule;
