@@ -1,73 +1,75 @@
 /**
- * FUSION ENGINE v15.8.0 - Unified Runtime
- * Includes: Catalog, Cart, Wishlist, Popup, and i18n Core.
+ * FUSION ENGINE v16.1.0 - Unified Runtime (Inventory Enabled)
  */
 
 const Fusion = (function() {
-    // --- GLOBAL CONFIG & STATE ---
     const settings = window.FUSION_SETTINGS || {};
     const mapping = window.FUSION_TEXTMAPPING || {};
     const currency = settings.currency_symbol || "DH";
-    const feedUrl = `/feeds/posts/default?alt=json&max-results=999`;
+    const scriptUrl = window.location.href.split('?')[0];
 
-    // --- 1. i18n ENGINE ---
+    // --- 1. i18n & CONFIG ---
     const i18n = {
         lang: localStorage.getItem('fusion_lang') || 'en',
         translate: function() {
             document.querySelectorAll('[data-i18n]').forEach(el => {
                 const key = el.getAttribute('data-i18n');
                 if (mapping[key]) el.textContent = mapping[key][this.lang] || mapping[key]['en'];
-                if (el.placeholder) el.placeholder = mapping[key][this.lang] || mapping[key]['en'];
             });
             document.dir = (this.lang === 'ar') ? 'rtl' : 'ltr';
-        },
-        setLang: function(l) { 
-            this.lang = l; 
-            localStorage.setItem('fusion_lang', l); 
-            this.translate(); 
-            location.reload(); 
         }
     };
 
-    // --- 2. CATALOG ENGINE ---
+    // --- 2. CATALOG & INVENTORY ENGINE ---
     const Catalog = {
         products: [],
+        inventory: {},
         init: async function() {
             const grid = document.getElementById('productGrid');
             if (!grid) return;
             try {
-                const res = await fetch(feedUrl);
+                // Fetch Inventory Status first
+                const invRes = await fetch(`${scriptUrl}?action=getInventory`);
+                const invData = await invRes.json();
+                this.inventory = invData.inventory || {};
+
+                // Fetch Blogger Posts
+                const res = await fetch(`/feeds/posts/default?alt=json&max-results=999`);
                 const data = await res.json();
+                
                 this.products = (data.feed.entry || []).map(entry => {
                     const labels = entry.category ? entry.category.map(c => c.term) : [];
-                    let price = "Contact";
-                    const pLabel = labels.find(l => l.toLowerCase().includes('price:'));
-                    if (pLabel) price = pLabel.split(':')[1].trim() + " " + currency;
+                    let p = "Contact";
+                    const lb = labels.find(l => l.toLowerCase().includes('price:'));
+                    if (lb) p = lb.split(':')[1].trim() + " " + currency;
                     
-                    let img = 'https://via.placeholder.com/600x600';
-                    if (entry.media$thumbnail) img = entry.media$thumbnail.url.replace(/\/s[0-9]+-c/, '/w600-h600-c');
+                    let img = entry.media$thumbnail ? entry.media$thumbnail.url.replace(/\/s[0-9]+-c/, '/w600-h600-c') : 'https://via.placeholder.com/600';
                     
-                    return {
-                        id: entry.id.$t,
-                        title: entry.title.$t,
-                        link: entry.link.find(l => l.rel === 'alternate').href,
-                        image: img,
-                        price: price,
-                        categories: labels.filter(l => !l.toLowerCase().includes('price:'))
+                    return { 
+                        id: entry.id.$t, 
+                        title: entry.title.$t, 
+                        image: img, 
+                        price: p,
+                        inStock: this.inventory[entry.id.$t] !== "Out of Stock"
                     };
                 });
                 this.render();
-            } catch (e) { console.error("Catalog Error", e); }
+            } catch (e) { console.error("Fusion Init Error", e); }
         },
         render: function() {
             const grid = document.getElementById('productGrid');
             const wished = Wishlist.items;
             grid.innerHTML = this.products.map(item => {
                 const heart = wished.includes(item.id) ? 'bi-heart-fill text-danger' : 'bi-heart';
+                const stockBadge = item.inStock ? '' : '<span class="badge bg-danger position-absolute top-0 start-0 m-2">Out of Stock</span>';
+                const btnAttr = item.inStock ? `onclick="Fusion.Cart.add('${item.id}')"` : 'disabled';
+                const btnClass = item.inStock ? 'btn-primary' : 'btn-secondary opacity-50';
+
                 return `
                 <div class="col-6 col-md-4 col-lg-3 mb-4">
-                    <div class="card h-100 border-0 shadow-sm product-card">
+                    <div class="card h-100 border-0 shadow-sm product-card ${item.inStock ? '' : 'stock-out'}">
                         <div class="position-relative overflow-hidden" style="padding-top: 100%;">
+                            ${stockBadge}
                             <img src="${item.image}" class="position-absolute top-0 start-0 w-100 h-100 object-fit-cover" loading="lazy">
                             <button class="btn btn-white btn-sm rounded-circle shadow-sm position-absolute top-0 end-0 m-2" onclick="Fusion.Wishlist.toggle('${item.id}')">
                                 <i class="bi ${heart}"></i>
@@ -76,7 +78,9 @@ const Fusion = (function() {
                         <div class="card-body p-3 text-center">
                             <h6 class="small fw-bold text-truncate">${item.title}</h6>
                             <p class="small text-primary fw-bold">${item.price}</p>
-                            <button class="btn btn-sm btn-primary w-100 rounded-pill" onclick="Fusion.Cart.add('${item.id}')">Add</button>
+                            <button class="btn btn-sm ${btnClass} w-100 rounded-pill" ${btnAttr}>
+                                ${item.inStock ? 'Add to Cart' : 'Sold Out'}
+                            </button>
                         </div>
                     </div>
                 </div>`;
@@ -89,9 +93,9 @@ const Fusion = (function() {
         items: JSON.parse(localStorage.getItem('fusion_cart')) || [],
         add: function(id) {
             const p = Catalog.products.find(x => x.id === id);
-            if (!p) return;
-            const exist = this.items.find(x => x.id === id);
-            if (exist) exist.qty++; else this.items.push({...p, qty: 1});
+            if (!p || !p.inStock) return;
+            const ex = this.items.find(x => x.id === id);
+            if (ex) ex.qty++; else this.items.push({...p, qty: 1});
             this.save();
         },
         save: function() {
@@ -104,30 +108,38 @@ const Fusion = (function() {
                 const el = document.getElementById(id);
                 if (el) el.textContent = count;
             });
-            // Render Modal Logic here...
+        },
+        checkout: function() {
+            const n = document.getElementById('checkoutName').value;
+            const ph = document.getElementById('checkoutPhone').value;
+            const tot = document.getElementById('cartTotal').textContent;
+            if (!n || !ph) return alert("Missing Info");
+
+            const payload = { name: n, phone: ph, total: tot, items: this.items };
+            fetch(`${scriptUrl}?action=saveOrder&payload=${encodeURIComponent(JSON.stringify(payload))}`, { mode: 'no-cors' });
+            
+            const waMsg = `*New Order*\nName: ${n}\nItems: ${this.items.map(i => i.title).join(', ')}`;
+            window.open(`https://wa.me/${settings.contact_whatsapp.replace(/\D/g,'')}?text=${encodeURIComponent(waMsg)}`, '_blank');
         }
     };
 
-    // --- 4. WISHLIST ENGINE ---
+    // --- 4. WISHLIST & POPUP ---
     const Wishlist = {
         items: JSON.parse(localStorage.getItem('fusion_wishlist')) || [],
         toggle: function(id) {
-            if (this.items.includes(id)) this.items = this.items.filter(x => x !== id);
-            else this.items.push(id);
+            this.items = this.items.includes(id) ? this.items.filter(x => x !== id) : [...this.items, id];
             localStorage.setItem('fusion_wishlist', JSON.stringify(this.items));
             this.updateUI();
-            Catalog.render(); // Re-sync heart icons
+            Catalog.render();
         },
         updateUI: function() {
-            const count = this.items.length;
+            const c = this.items.length;
             ['wishlistCount', 'floatingWishlistCount'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.textContent = count;
+                if (document.getElementById(id)) document.getElementById(id).textContent = c;
             });
         }
     };
 
-    // --- 5. POPUP ENGINE ---
     const Popup = {
         init: function() {
             const dismissed = localStorage.getItem('fusion_popup_dismissed');
@@ -136,27 +148,13 @@ const Fusion = (function() {
                 const el = document.getElementById('popupModal');
                 if (el) new bootstrap.Modal(el).show();
             }, settings.popup_delay || 3000);
-        },
-        dismiss: function() {
-            const expiry = new Date().getTime() + (24 * 60 * 60 * 1000);
-            localStorage.setItem('fusion_popup_dismissed', expiry);
         }
     };
 
-    /**
-     * Boot Sequence
-     */
-    function boot() {
-        i18n.translate();
-        Catalog.init();
-        Cart.updateUI();
-        Wishlist.updateUI();
-        Popup.init();
-    }
-
-    // Expose API
-    return { boot, i18n, Catalog, Cart, Wishlist, Popup };
+    return { 
+        boot: () => { i18n.translate(); Catalog.init(); Cart.updateUI(); Wishlist.updateUI(); Popup.init(); }, 
+        Cart, Wishlist, i18n 
+    };
 })();
 
-// Auto-start
 document.addEventListener('DOMContentLoaded', Fusion.boot);
