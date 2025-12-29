@@ -1,117 +1,113 @@
 /**
- * FUSION v10.8.1 - wishlist.js
- * --------------------------------
- * Wishlist Module
+ * FUSION ENGINE v14.0.0 - wishlist.js
+ * Persistent Wishlist Module
+ * -----------------------------------------------------
  * Features:
- * - Add / remove products
- * - Tracks quantity & variants
- * - Syncs with floating wishlist UI
- * - Works with quickview & product grid
+ * - LocalStorage Persistence
+ * - Variant-aware duplicate checking
+ * - FusionCurrency Integration
  */
 
-(function () {
-
-  const WishlistModule = {
+window.FusionWishlist = (function () {
+  const STORAGE_KEY = 'fusion_wishlist_v1';
+  
+  const state = {
     items: [],
-    wishlistCountEl: null,
-    wishlistBodyEl: null,
-
-    init() {
-      this.wishlistCountEl = document.getElementById('wishlistCount');
-      this.wishlistBodyEl = document.getElementById('wishlistBody');
-
-      this.bindFloatingWishlist();
-      this.render();
-    },
-
-    add(id, title, price, variants = {}) {
-      // Avoid duplicates
-      const exists = this.items.find(item =>
-        item.id === id && JSON.stringify(item.variants) === JSON.stringify(variants)
-      );
-
-      if (!exists) {
-        this.items.push({ id, title, price, variants });
-        this.render();
-      }
-    },
-
-    remove(index) {
-      if (index < 0 || index >= this.items.length) return;
-      this.items.splice(index, 1);
-      this.render();
-    },
-
-    render() {
-      this.wishlistBodyEl.innerHTML = '';
-
-      if (this.items.length === 0) {
-        document.getElementById('emptyWishlistMessage').style.display = 'block';
-        this.updateFloatingCount();
-        return;
-      }
-
-      document.getElementById('emptyWishlistMessage').style.display = 'none';
-
-      this.items.forEach((item, idx) => {
-        const row = document.createElement('div');
-        row.className = 'd-flex justify-content-between align-items-center mb-3';
-        row.innerHTML = `
-          <div>
-            <strong>${item.title}</strong>
-            ${this.renderVariants(item.variants)}
-            <div class="text-muted small">Price: ${item.price} ${window.FUSION_CONFIG.settings.currency_symbol}</div>
-          </div>
-          <button class="btn btn-sm btn-outline-danger remove-item"><i class="bi bi-trash"></i></button>
-        `;
-
-        row.querySelector('.remove-item').addEventListener('click', () => this.remove(idx));
-
-        this.wishlistBodyEl.appendChild(row);
-      });
-
-      this.updateFloatingCount();
-    },
-
-    renderVariants(variants) {
-      if (!variants || Object.keys(variants).length === 0) return '';
-      return `<div class="text-muted small">
-        ${Object.entries(variants).map(([k,v]) => `${k}: ${v}`).join(', ')}
-      </div>`;
-    },
-
-    updateFloatingCount() {
-      const count = this.items.length;
-      const el = document.getElementById('floatingWishlistCount');
-      if (el) el.textContent = count;
-      if (this.wishlistCountEl) this.wishlistCountEl.textContent = count;
-    },
-
-    bindFloatingWishlist() {
-      const wishlistIcon = document.getElementById('wishlistIcon');
-      const sidebar = document.getElementById('wishlistSidebar');
-      const overlay = document.getElementById('sidebarOverlay');
-      const closeBtn = document.getElementById('closeWishlist');
-
-      const toggleSidebar = () => {
-        sidebar.classList.toggle('active');
-        overlay.classList.toggle('active');
-      };
-
-      if (wishlistIcon) wishlistIcon.addEventListener('click', toggleSidebar);
-      if (overlay) overlay.addEventListener('click', toggleSidebar);
-      if (closeBtn) closeBtn.addEventListener('click', toggleSidebar);
-
-      const floatingBtn = document.getElementById('floatingWishlist');
-      if (floatingBtn) floatingBtn.addEventListener('click', toggleSidebar);
+    elements: {
+      count: null,
+      floatingCount: null,
+      body: null,
+      emptyMsg: null
     }
   };
 
-  // Expose globally
-  window.WishlistModule = WishlistModule;
+  function init() {
+    state.elements.count = document.getElementById('wishlistCount');
+    state.elements.floatingCount = document.getElementById('floatingWishlistCount');
+    state.elements.body = document.getElementById('wishlistContent'); // Match ThemeTemplate ID
+    state.elements.emptyMsg = document.getElementById('wishlistEmpty');
 
-  document.addEventListener('runtime_ready', () => WishlistModule.init());
+    // Load persisted data
+    state.items = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+    
+    render();
+    console.log("FusionWishlist: Persistence Engine Active");
+  }
 
+  function add(product, variants = {}) {
+    // Unique ID based on product + variants
+    const variantKey = JSON.stringify(variants);
+    const exists = state.items.find(i => i.id === product.id && JSON.stringify(i.variants) === variantKey);
+
+    if (!exists) {
+      state.items.push({
+        id: product.id,
+        title: product.title,
+        price: product.price,
+        image: product.image,
+        variants: variants
+      });
+      save();
+    }
+  }
+
+  function remove(productId, variantKey) {
+    state.items = state.items.filter(i => !(i.id === productId && JSON.stringify(i.variants) === variantKey));
+    save();
+  }
+
+  function save() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state.items));
+    render();
+  }
+
+  function render() {
+    if (!state.elements.body) return;
+
+    state.elements.body.innerHTML = '';
+    const hasItems = state.items.length > 0;
+
+    if (!hasItems) {
+      if (state.elements.emptyMsg) state.elements.emptyMsg.classList.remove('d-none');
+      updateCounts(0);
+      return;
+    }
+
+    if (state.elements.emptyMsg) state.elements.emptyMsg.classList.add('d-none');
+
+    state.items.forEach((item) => {
+      const formattedPrice = window.FusionCurrency ? FusionCurrency.format(item.price) : item.price;
+      const row = document.createElement('div');
+      row.className = 'col-12 d-flex align-items-center gap-3 mb-3 pb-3 border-bottom';
+      
+      row.innerHTML = `
+        <img src="${item.image}" class="rounded" style="width: 60px; height: 60px; object-fit: cover;">
+        <div class="flex-grow-1">
+          <div class="fw-bold small">${item.title}</div>
+          <div class="text-muted" style="font-size: 11px;">
+            ${Object.entries(item.variants).map(([k,v]) => `${k}: ${v}`).join(', ')}
+          </div>
+          <div class="text-primary fw-bold small">${formattedPrice}</div>
+        </div>
+        <button class="btn btn-sm btn-outline-danger border-0 remove-wish">
+          <i class="bi bi-trash"></i>
+        </button>
+      `;
+
+      row.querySelector('.remove-wish').onclick = () => remove(item.id, JSON.stringify(item.variants));
+      state.elements.body.appendChild(row);
+    });
+
+    updateCounts(state.items.length);
+  }
+
+  function updateCounts(count) {
+    if (state.elements.count) state.elements.count.textContent = count;
+    if (state.elements.floatingCount) state.elements.floatingCount.textContent = count;
+  }
+
+  return { init, add, remove, load: () => state.items };
 })();
-  // Expose globally
-  window.WishlistModule = WishlistModule;
+
+// Initialize on Fusion Runtime ready
+window.addEventListener('fusion:ready', () => FusionWishlist.init());
