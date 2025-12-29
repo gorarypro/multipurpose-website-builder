@@ -1,6 +1,11 @@
 /**
- * FUSION ENGINE v15.4.0 - Headless Catalog Controller
- * Features: High-Res Thumbnails, Label-to-Category Mapping, Price Extraction.
+ * FUSION ENGINE v15.6.0 - Headless Catalog Controller
+ * --------------------------------------------------------
+ * Features: 
+ * - Wishlist State Sync (Real-time Heart Icons)
+ * - Intelligent Price Extraction from Blogger Labels
+ * - High-Res Image Scaling (s1600/w800 logic)
+ * - Search & Dynamic Category Filtering
  */
 
 const FusionCatalog = (function() {
@@ -12,7 +17,7 @@ const FusionCatalog = (function() {
     // Blogger Feed URL (max results 999 for full catalog)
     const feedUrl = `/feeds/posts/default?alt=json&max-results=999`;
 
-    // 2. DOM Cache
+    // 2. DOM Elements Cache
     const grid = document.getElementById('productGrid');
     const loading = document.getElementById('gridLoading');
     const emptyState = document.getElementById('productsEmpty');
@@ -26,6 +31,7 @@ const FusionCatalog = (function() {
         if (!grid) return;
         
         try {
+            // Fetch Blogger JSON Feed
             const response = await fetch(feedUrl);
             const data = await response.json();
             
@@ -34,15 +40,19 @@ const FusionCatalog = (function() {
             render(allProducts);
             setupListeners();
             
-            console.log("FusionCatalog: Catalog synchronized.");
+            console.log("FusionCatalog: Catalog synchronized and state mapped.");
         } catch (err) {
-            console.error("Fusion Error: Failed to fetch catalog.", err);
-            if (loading) loading.innerHTML = `<div class="alert alert-danger">Catalog Error. Please check feed settings.</div>`;
+            console.error("Fusion Error: Catalog synchronization failed.", err);
+            if (loading) loading.innerHTML = `
+                <div class="col-12 text-center py-5">
+                    <i class="bi bi-exclamation-triangle display-4 text-warning"></i>
+                    <p class="mt-3">Unable to load catalog. Please check your Blogger Feed settings.</p>
+                </div>`;
         }
     }
 
     /**
-     * Parse Blogger JSON into Clean Product Objects
+     * Parse Blogger JSON into Optimized Product Objects
      */
     function parseBloggerData(json) {
         const entries = json.feed.entry || [];
@@ -61,11 +71,14 @@ const FusionCatalog = (function() {
                 priceText = `${val} ${currency}`;
             }
 
-            // High-Resolution Image Processing
-            let img = 'https://via.placeholder.com/600x600?text=No+Image';
+            // High-Resolution Image Logic
+            // Replaces Blogger's tiny /s72-c/ with high-quality /w800/
+            let img = 'https://via.placeholder.com/800x800?text=No+Image';
             if (entry.media$thumbnail) {
-                // Change s72-c (Blogger default) to s1600 (Original size) or w600 (Optimized)
-                img = entry.media$thumbnail.url.replace(/\/s[0-9]+-c/, '/w600-h600-c');
+                img = entry.media$thumbnail.url.replace(/\/s[0-9]+-c/, '/w800-h800-c');
+            } else if (entry.content && entry.content.$t.includes('<img')) {
+                const match = entry.content.$t.match(/src="([^"]+)"/);
+                if (match) img = match[1];
             }
 
             return {
@@ -81,7 +94,7 @@ const FusionCatalog = (function() {
     }
 
     /**
-     * Render the UI Grid
+     * Render the UI Grid with Wishlist State Sync
      */
     function render(products) {
         if (loading) loading.style.display = 'none';
@@ -94,33 +107,44 @@ const FusionCatalog = (function() {
 
         if (emptyState) emptyState.classList.add('d-none');
 
-        const html = products.map(item => `
-            <div class="col-6 col-md-4 col-lg-3 mb-4">
-                <div class="card h-100 border-0 shadow-sm product-card transition-hover">
-                    <div class="position-relative overflow-hidden" style="padding-top: 100%;">
-                        <img src="${item.image}" class="position-absolute top-0 start-0 w-100 h-100 object-fit-cover" alt="${item.title}">
-                        <div class="position-absolute top-0 end-0 p-2">
-                             <button class="btn btn-white btn-sm rounded-circle shadow-sm" onclick="FusionWishlist.add('${item.id}')">
-                                <i class="bi bi-heart"></i>
-                             </button>
+        // Check current wishlist items for heart state
+        const wishedItems = (typeof FusionWishlist !== 'undefined') ? FusionWishlist.getItems() : [];
+
+        const html = products.map(item => {
+            const isWished = wishedItems.includes(item.id);
+            const heartIcon = isWished ? 'bi-heart-fill text-danger' : 'bi-heart';
+
+            return `
+                <div class="col-6 col-md-4 col-lg-3 mb-4">
+                    <div class="card h-100 border-0 shadow-sm product-card transition-hover">
+                        <div class="position-relative overflow-hidden" style="padding-top: 100%;">
+                            <img src="${item.image}" class="position-absolute top-0 start-0 w-100 h-100 object-fit-cover" alt="${item.title}" loading="lazy">
+                            <div class="position-absolute top-0 end-0 p-2">
+                                 <button class="btn btn-white btn-sm rounded-circle shadow-sm" onclick="FusionWishlist.toggle('${item.id}')">
+                                    <i class="bi ${heartIcon}"></i>
+                                 </button>
+                            </div>
+                        </div>
+                        <div class="card-body p-3 text-center">
+                            <h6 class="card-title text-truncate mb-1 small fw-bold">${item.title}</h6>
+                            <p class="text-primary fw-bold mb-3 small">${item.price}</p>
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-sm btn-primary rounded-pill py-2" onclick="FusionCart.add('${item.id}')">
+                                    <i class="bi bi-cart-plus me-1"></i> Add to Cart
+                                </button>
+                                <a href="${item.link}" class="btn btn-sm btn-outline-light text-dark rounded-pill py-1 x-small border-0">View Details</a>
+                            </div>
                         </div>
                     </div>
-                    <div class="card-body p-3 text-center">
-                        <h6 class="card-title text-truncate mb-1 small fw-bold">${item.title}</h6>
-                        <p class="text-primary fw-bold mb-3 small">${item.price}</p>
-                        <button class="btn btn-sm btn-primary w-100 rounded-pill py-2" onclick="FusionCart.add('${item.id}')">
-                            <i class="bi bi-cart-plus me-1"></i> Add to Cart
-                        </button>
-                    </div>
                 </div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
 
         grid.innerHTML = html;
     }
 
     /**
-     * Auto-generate Category Dropdown from Labels
+     * Auto-generate Category Filter from Labels
      */
     function populateFilters() {
         if (!filterSelect) return;
@@ -137,7 +161,7 @@ const FusionCatalog = (function() {
     }
 
     /**
-     * Search and Filter Handlers
+     * Search and Category Listeners
      */
     function setupListeners() {
         const runFilter = () => {
@@ -155,18 +179,36 @@ const FusionCatalog = (function() {
 
         if (searchInput) searchInput.oninput = runFilter;
         if (filterSelect) filterSelect.onchange = runFilter;
+
+        // Listen for Wishlist updates to refresh heart icons without re-fetching data
+        window.addEventListener('fusion:wishlistUpdated', () => {
+            renderCurrentSelection();
+        });
     }
 
     /**
-     * Helper for cart.js and wishlist.js
+     * Re-renders the current view (useful for state changes)
+     */
+    function renderCurrentSelection() {
+        const term = searchInput ? searchInput.value.toLowerCase() : "";
+        const cat = filterSelect ? filterSelect.value : "all";
+        const filtered = allProducts.filter(p => {
+            const matchesSearch = p.title.toLowerCase().includes(term);
+            const matchesCat = (cat === "all" || p.categories.includes(cat));
+            return matchesSearch && matchesCat;
+        });
+        render(filtered);
+    }
+
+    /**
+     * Public API for Cart and Wishlist modules
      */
     function getProductById(id) {
         return allProducts.find(p => p.id === id);
     }
 
-    // Public API
-    return { init, getProductById };
+    return { init, getProductById, render: renderCurrentSelection };
 })();
 
-// Auto-boot
+// Auto-run on DOM ready
 document.addEventListener('DOMContentLoaded', FusionCatalog.init);
