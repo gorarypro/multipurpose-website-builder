@@ -1,69 +1,59 @@
 /**
- * FUSION v10.8.1 - currency.js
- * --------------------------------
+ * FUSION ENGINE v12.0.0 - currency.js
  * Price Formatting & Localization Engine
- * Features:
- * - Standardizes price display
- * - Updates DOM elements dynamically
  */
 
-const CurrencyModule = {
-  symbol: 'DH',
-  precision: 2,
-  settings: {},
+window.FusionCurrency = (function() {
+  
+  const state = {
+    symbol: 'DH',
+    precision: 2
+  };
 
   /**
-   * Initialize with settings from FUSION_CONFIG
+   * Initialization called by runtime.js
    */
-  init: function(syncedSettings) {
-    console.log("Currency: Initializing formatting engine...");
-    this.settings = syncedSettings || (window.FUSION_CONFIG ? window.FUSION_CONFIG.settings : {});
-    this.symbol = this.settings.currency_symbol || 'DH';
-    this.updatePagePrices();
-  },
+  function init(symbol) {
+    state.symbol = symbol || 'DH';
+    updatePagePrices();
+  }
 
   /**
-   * Format number into currency string
+   * Formats a number into a localized string
+   * Handles RTL symbol placement automatically.
    */
-  format: function(amount) {
-    const value = parseFloat(amount || 0).toFixed(this.precision);
+  function format(amount) {
+    const num = parseFloat(amount || 0);
+    const value = num.toLocaleString(undefined, { 
+      minimumFractionDigits: state.precision, 
+      maximumFractionDigits: state.precision 
+    });
+    
     const isRtl = document.documentElement.getAttribute('dir') === 'rtl';
-    return isRtl ? `${value} ${this.symbol}` : `${this.symbol} ${value}`;
-  },
+    return isRtl ? `${value} ${state.symbol}` : `${state.symbol} ${value}`;
+  }
 
   /**
-   * Update all elements with data-price attribute
+   * Re-scans the page for [data-price] and [data-total]
    */
-  updatePagePrices: function() {
+  function updatePagePrices() {
+    // Standard product prices
     document.querySelectorAll('[data-price]').forEach(el => {
-      const rawPrice = el.getAttribute('data-price');
-      if (rawPrice !== null) {
-        el.textContent = this.format(rawPrice);
-      }
+      const p = el.getAttribute('data-price');
+      if (p) el.textContent = format(p);
     });
 
-    // Update quickview price if exists
-    const quickviewPrice = document.getElementById('quickViewPrice');
-    if (quickviewPrice && quickviewPrice.getAttribute('data-price')) {
-      quickviewPrice.textContent = this.format(quickviewPrice.getAttribute('data-price'));
-    }
-
-    // Update cart totals
-    const cartTotalEl = document.getElementById('cartTotal');
-    if (cartTotalEl && cartTotalEl.getAttribute('data-total')) {
-      cartTotalEl.textContent = this.format(cartTotalEl.getAttribute('data-total'));
-    }
+    // Cart and Order totals
+    document.querySelectorAll('[data-total]').forEach(el => {
+      const t = el.getAttribute('data-total');
+      if (t) el.textContent = format(t);
+    });
   }
-};
 
-// Auto-init on runtime_ready event
-document.addEventListener('runtime_ready', function(e) {
-  CurrencyModule.init(e.detail);
-});
+  return {
+    init,
+    format,
+    updatePagePrices
+  };
 
-// Fallback if loaded directly
-if (document.readyState === 'complete') {
-  setTimeout(() => { if (!CurrencyModule.isReady) CurrencyModule.init(); }, 1000);
-}
-  // Expose globally
-  window.CurrencyModule = CurrencyModule;
+})();
