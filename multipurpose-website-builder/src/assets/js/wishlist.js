@@ -1,113 +1,136 @@
 /**
- * FUSION ENGINE v14.0.0 - wishlist.js
- * Persistent Wishlist Module
- * -----------------------------------------------------
- * Features:
- * - LocalStorage Persistence
- * - Variant-aware duplicate checking
- * - FusionCurrency Integration
+ * FUSION ENGINE v15.5.0 - Wishlist Logic
+ * Features: Toggle State, LocalStorage Persistence, Cross-Component Sync.
  */
 
-window.FusionWishlist = (function () {
-  const STORAGE_KEY = 'fusion_wishlist_v1';
-  
-  const state = {
-    items: [],
-    elements: {
-      count: null,
-      floatingCount: null,
-      body: null,
-      emptyMsg: null
-    }
-  };
+const FusionWishlist = (function() {
+    // 1. Internal State
+    let wishlist = JSON.parse(localStorage.getItem('fusion_wishlist')) || [];
 
-  function init() {
-    state.elements.count = document.getElementById('wishlistCount');
-    state.elements.floatingCount = document.getElementById('floatingWishlistCount');
-    state.elements.body = document.getElementById('wishlistContent'); // Match ThemeTemplate ID
-    state.elements.emptyMsg = document.getElementById('wishlistEmpty');
-
-    // Load persisted data
-    state.items = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-    
-    render();
-    console.log("FusionWishlist: Persistence Engine Active");
-  }
-
-  function add(product, variants = {}) {
-    // Unique ID based on product + variants
-    const variantKey = JSON.stringify(variants);
-    const exists = state.items.find(i => i.id === product.id && JSON.stringify(i.variants) === variantKey);
-
-    if (!exists) {
-      state.items.push({
-        id: product.id,
-        title: product.title,
-        price: product.price,
-        image: product.image,
-        variants: variants
-      });
-      save();
-    }
-  }
-
-  function remove(productId, variantKey) {
-    state.items = state.items.filter(i => !(i.id === productId && JSON.stringify(i.variants) === variantKey));
-    save();
-  }
-
-  function save() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state.items));
-    render();
-  }
-
-  function render() {
-    if (!state.elements.body) return;
-
-    state.elements.body.innerHTML = '';
-    const hasItems = state.items.length > 0;
-
-    if (!hasItems) {
-      if (state.elements.emptyMsg) state.elements.emptyMsg.classList.remove('d-none');
-      updateCounts(0);
-      return;
+    /**
+     * Entry Point
+     */
+    function init() {
+        updateUI();
+        console.log("FusionWishlist: System Synced.");
     }
 
-    if (state.elements.emptyMsg) state.elements.emptyMsg.classList.add('d-none');
+    /**
+     * Toggle Product in Wishlist
+     */
+    function toggle(productId) {
+        const index = wishlist.indexOf(productId);
+        
+        if (index > -1) {
+            wishlist.splice(index, 1);
+            showToast("Removed from wishlist");
+        } else {
+            wishlist.push(productId);
+            showToast("Added to wishlist");
+        }
 
-    state.items.forEach((item) => {
-      const formattedPrice = window.FusionCurrency ? FusionCurrency.format(item.price) : item.price;
-      const row = document.createElement('div');
-      row.className = 'col-12 d-flex align-items-center gap-3 mb-3 pb-3 border-bottom';
-      
-      row.innerHTML = `
-        <img src="${item.image}" class="rounded" style="width: 60px; height: 60px; object-fit: cover;">
-        <div class="flex-grow-1">
-          <div class="fw-bold small">${item.title}</div>
-          <div class="text-muted" style="font-size: 11px;">
-            ${Object.entries(item.variants).map(([k,v]) => `${k}: ${v}`).join(', ')}
-          </div>
-          <div class="text-primary fw-bold small">${formattedPrice}</div>
-        </div>
-        <button class="btn btn-sm btn-outline-danger border-0 remove-wish">
-          <i class="bi bi-trash"></i>
-        </button>
-      `;
+        save();
+    }
 
-      row.querySelector('.remove-wish').onclick = () => remove(item.id, JSON.stringify(item.variants));
-      state.elements.body.appendChild(row);
-    });
+    /**
+     * Add specifically (for 'Buy Later' buttons)
+     */
+    function add(productId) {
+        if (!wishlist.includes(productId)) {
+            wishlist.push(productId);
+            save();
+            showToast("Added to wishlist");
+        }
+    }
 
-    updateCounts(state.items.length);
-  }
+    /**
+     * Remove specifically
+     */
+    function remove(productId) {
+        wishlist = wishlist.filter(id => id !== productId);
+        save();
+    }
 
-  function updateCounts(count) {
-    if (state.elements.count) state.elements.count.textContent = count;
-    if (state.elements.floatingCount) state.elements.floatingCount.textContent = count;
-  }
+    /**
+     * Persist and Notify
+     */
+    function save() {
+        localStorage.setItem('fusion_wishlist', JSON.stringify(wishlist));
+        updateUI();
+        // Dispatch event for other components (like product cards)
+        window.dispatchEvent(new CustomEvent('fusion:wishlistUpdated', { detail: wishlist }));
+    }
 
-  return { init, add, remove, load: () => state.items };
+    /**
+     * Sync UI Elements
+     */
+    function updateUI() {
+        const count = wishlist.length;
+        
+        // Update all badges (Navbar & Floating)
+        const badges = ['wishlistCount', 'floatingWishlistCount'];
+        badges.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.textContent = count;
+                el.style.display = count > 0 ? 'flex' : 'none';
+            }
+        });
+
+        renderModal();
+    }
+
+    /**
+     * Render items inside the Wishlist Modal
+     */
+    function renderModal() {
+        const container = document.getElementById('wishlistContent');
+        const emptyState = document.getElementById('wishlistEmpty');
+        
+        if (!container) return;
+
+        if (wishlist.length === 0) {
+            container.innerHTML = '';
+            if (emptyState) emptyState.classList.remove('d-none');
+            return;
+        }
+
+        if (emptyState) emptyState.classList.add('d-none');
+
+        // Fetch full product details from the Catalog
+        container.innerHTML = wishlist.map(id => {
+            const product = FusionCatalog.getProductById(id);
+            if (!product) return '';
+
+            return `
+                <div class="col-6 col-md-4">
+                    <div class="card h-100 border-0 shadow-sm overflow-hidden">
+                        <img src="${product.image}" class="card-img-top" style="aspect-ratio:1/1; object-fit:cover;">
+                        <div class="card-body p-2 text-center">
+                            <h6 class="small fw-bold text-truncate mb-1">${product.title}</h6>
+                            <p class="small text-primary mb-2">${product.price}</p>
+                            <div class="d-grid gap-1">
+                                <button class="btn btn-xs btn-primary py-1" onclick="FusionCart.add('${product.id}')">
+                                    <i class="bi bi-cart"></i>
+                                </button>
+                                <button class="btn btn-xs btn-outline-danger py-1" onclick="FusionWishlist.remove('${product.id}')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function showToast(msg) {
+        // Implementation for UI feedback
+        console.log("Wishlist:", msg);
+    }
+
+    return { init, toggle, add, remove, getItems: () => wishlist };
 })();
 
-// Initialize on Fusion Runtime ready
-window.addEventListener('fusion:ready', () => FusionWishlist.init());
+// Auto-boot
+document.addEventListener('DOMContentLoaded', FusionWishlist.init);
