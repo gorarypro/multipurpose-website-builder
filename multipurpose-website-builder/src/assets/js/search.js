@@ -1,61 +1,50 @@
 /**
- * FUSION v10.8.0 - search.js
+ * FUSION ENGINE v14.0.0 - search.js
  * Search Engine & Discovery Analytics
+ * -----------------------------------------------------
  * Role: Provides real-time grid filtering and query logging.
  */
 
-const SearchModule = {
-  settings: {},
-  searchTimer: null,
-  minChars: 2,
+window.FusionSearch = (function () {
+  const state = {
+    settings: window.FUSION_SETTINGS || {},
+    searchTimer: null,
+    minChars: 2
+  };
 
   /**
-   * Initialize search listeners and sync settings
+   * Initialize search listeners
    */
-  init: function(syncedSettings) {
-    console.log("Search: Initializing Discovery Module...");
-    this.settings = syncedSettings || window.FUSION_CONFIG.settings;
-    
+  function init() {
     const searchInput = document.getElementById('productSearch');
-    if (!searchInput) {
-      console.warn("Search: Input element #productSearch not found.");
-      return;
-    }
+    if (!searchInput) return;
 
-    this.bindEvents(searchInput);
-  },
-
-  /**
-   * Set up input listeners with debouncing to save API calls
-   */
-  bindEvents: function(input) {
-    input.addEventListener('input', (e) => {
-      const term = e.target.value.trim();
+    searchInput.addEventListener('input', (e) => {
+      const term = e.target.value.trim().toLowerCase();
       
       // Perform immediate UI filtering
-      this.filterGrid(term.toLowerCase());
+      filterGrid(term);
 
-      // Debounce the analytics recording (wait 1 second after typing stops)
-      clearTimeout(this.searchTimer);
-      if (term.length >= this.minChars) {
-        this.searchTimer = setTimeout(() => {
-          this.logSearchToBackend(term);
-        }, 1000);
+      // Debounce analytics logging
+      clearTimeout(state.searchTimer);
+      if (term.length >= state.minChars) {
+        state.searchTimer = setTimeout(() => logToBackend(term), 1200);
       }
     });
-  },
+    
+    console.log("FusionSearch: Discovery Engine Active");
+  }
 
   /**
-   * Filters the ProductModule catalog in real-time
+   * Optimized Grid Filtering
    */
-  filterGrid: function(term) {
-    const cards = document.querySelectorAll('.product-card');
+  function filterGrid(term) {
+    const items = document.querySelectorAll('.content-item');
     let foundCount = 0;
 
-    cards.forEach(card => {
-      // Find the title element within the card
-      const title = card.querySelector('h6').textContent.toLowerCase();
-      const parent = card.closest('.col-6, .col-md-4, .col-lg-3');
+    items.forEach(item => {
+      const title = item.querySelector('.card-title').textContent.toLowerCase();
+      const parent = item.closest('.col');
 
       if (title.includes(term)) {
         if (parent) parent.style.display = 'block';
@@ -65,13 +54,13 @@ const SearchModule = {
       }
     });
 
-    this.updateStatus(term, foundCount);
-  },
+    updateStatus(term, foundCount);
+  }
 
   /**
-   * Updates a status message if present in the UI
+   * Localized Status Update
    */
-  updateStatus: function(term, count) {
+  function updateStatus(term, count) {
     const statusEl = document.getElementById('searchStatus');
     if (!statusEl) return;
 
@@ -79,29 +68,33 @@ const SearchModule = {
       statusEl.style.display = 'none';
     } else {
       statusEl.style.display = 'block';
-      statusEl.textContent = `${count} résultats pour "${term}"`;
-    }
-  },
-
-  /**
-   * Sends the search term to Code.gs for spreadsheet archival
-   */
-  logSearchToBackend: function(term) {
-    if (this.settings.analytics_included !== 'yes') return;
-
-    console.log(`Search Analytics: Logging "${term}"...`);
-    
-    const apiBase = (window.FUSION_CONFIG && window.FUSION_CONFIG.apiUrl) || window.BASE_SCRIPT_URL;
-    const script = document.createElement('script');
-    
-    // Calls the save_search action defined in your backend Code.gs
-    script.src = `${apiBase}?action=save_search&term=${encodeURIComponent(term)}&callback=SearchModule.onLogSuccess`;
-    document.body.appendChild(script);
-  },
-
-  onLogSuccess: function(res) {
-    if (res.status === 'success') {
-      console.log("Search Analytics: Data synced.");
+      // Uses I18n if available, falls back to French as per original logic
+      const label = window.FusionI18n 
+        ? `${count} ${FusionI18n.get('SEARCH_RESULTS_FOR')} "${term}"`
+        : `${count} résultats pour "${term}"`;
+      statusEl.textContent = label;
     }
   }
-};
+
+  /**
+   * Logs query to Entries sheet via GAS
+   */
+  function logToBackend(term) {
+    if (state.settings.analytics_included !== 'yes') return;
+
+    const payload = {
+      type: 'search_query',
+      term: term,
+      timestamp: new Date().toISOString()
+    };
+
+    if (window.google && google.script) {
+      google.script.run.saveEntry(JSON.stringify(payload));
+    }
+  }
+
+  return { init };
+})();
+
+// Initialize on Fusion Runtime ready
+window.addEventListener('fusion:ready', () => FusionSearch.init());
