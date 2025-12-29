@@ -1,142 +1,162 @@
 /**
- * FUSION ENGINE v12.0.0 - runtime.js
- * Core Orchestrator & Handshake
- * -----------------------------------------------------
- * Responsibilities:
- * - Bootstrapping the Headless CMS Pipeline
- * - Synchronizing Data (Feed) with UI (Modules)
- * - Handling Multi-language & Global Branding
- * - Event Bus Management
+ * FUSION ENGINE v15.8.0 - Unified Runtime
+ * Includes: Catalog, Cart, Wishlist, Popup, and i18n Core.
  */
 
-const FusionRuntime = (function() {
+const Fusion = (function() {
+    // --- GLOBAL CONFIG & STATE ---
+    const settings = window.FUSION_SETTINGS || {};
+    const mapping = window.FUSION_TEXTMAPPING || {};
+    const currency = settings.currency_symbol || "DH";
+    const feedUrl = `/feeds/posts/default?alt=json&max-results=999`;
 
-    const state = {
-        isDataReady: false,
-        config: window.FUSION_SETTINGS || null
+    // --- 1. i18n ENGINE ---
+    const i18n = {
+        lang: localStorage.getItem('fusion_lang') || 'en',
+        translate: function() {
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (mapping[key]) el.textContent = mapping[key][this.lang] || mapping[key]['en'];
+                if (el.placeholder) el.placeholder = mapping[key][this.lang] || mapping[key]['en'];
+            });
+            document.dir = (this.lang === 'ar') ? 'rtl' : 'ltr';
+        },
+        setLang: function(l) { 
+            this.lang = l; 
+            localStorage.setItem('fusion_lang', l); 
+            this.translate(); 
+            location.reload(); 
+        }
+    };
+
+    // --- 2. CATALOG ENGINE ---
+    const Catalog = {
+        products: [],
+        init: async function() {
+            const grid = document.getElementById('productGrid');
+            if (!grid) return;
+            try {
+                const res = await fetch(feedUrl);
+                const data = await res.json();
+                this.products = (data.feed.entry || []).map(entry => {
+                    const labels = entry.category ? entry.category.map(c => c.term) : [];
+                    let price = "Contact";
+                    const pLabel = labels.find(l => l.toLowerCase().includes('price:'));
+                    if (pLabel) price = pLabel.split(':')[1].trim() + " " + currency;
+                    
+                    let img = 'https://via.placeholder.com/600x600';
+                    if (entry.media$thumbnail) img = entry.media$thumbnail.url.replace(/\/s[0-9]+-c/, '/w600-h600-c');
+                    
+                    return {
+                        id: entry.id.$t,
+                        title: entry.title.$t,
+                        link: entry.link.find(l => l.rel === 'alternate').href,
+                        image: img,
+                        price: price,
+                        categories: labels.filter(l => !l.toLowerCase().includes('price:'))
+                    };
+                });
+                this.render();
+            } catch (e) { console.error("Catalog Error", e); }
+        },
+        render: function() {
+            const grid = document.getElementById('productGrid');
+            const wished = Wishlist.items;
+            grid.innerHTML = this.products.map(item => {
+                const heart = wished.includes(item.id) ? 'bi-heart-fill text-danger' : 'bi-heart';
+                return `
+                <div class="col-6 col-md-4 col-lg-3 mb-4">
+                    <div class="card h-100 border-0 shadow-sm product-card">
+                        <div class="position-relative overflow-hidden" style="padding-top: 100%;">
+                            <img src="${item.image}" class="position-absolute top-0 start-0 w-100 h-100 object-fit-cover" loading="lazy">
+                            <button class="btn btn-white btn-sm rounded-circle shadow-sm position-absolute top-0 end-0 m-2" onclick="Fusion.Wishlist.toggle('${item.id}')">
+                                <i class="bi ${heart}"></i>
+                            </button>
+                        </div>
+                        <div class="card-body p-3 text-center">
+                            <h6 class="small fw-bold text-truncate">${item.title}</h6>
+                            <p class="small text-primary fw-bold">${item.price}</p>
+                            <button class="btn btn-sm btn-primary w-100 rounded-pill" onclick="Fusion.Cart.add('${item.id}')">Add</button>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+    };
+
+    // --- 3. CART ENGINE ---
+    const Cart = {
+        items: JSON.parse(localStorage.getItem('fusion_cart')) || [],
+        add: function(id) {
+            const p = Catalog.products.find(x => x.id === id);
+            if (!p) return;
+            const exist = this.items.find(x => x.id === id);
+            if (exist) exist.qty++; else this.items.push({...p, qty: 1});
+            this.save();
+        },
+        save: function() {
+            localStorage.setItem('fusion_cart', JSON.stringify(this.items));
+            this.updateUI();
+        },
+        updateUI: function() {
+            const count = this.items.reduce((a, b) => a + b.qty, 0);
+            ['cartCount', 'floatingCartCount'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = count;
+            });
+            // Render Modal Logic here...
+        }
+    };
+
+    // --- 4. WISHLIST ENGINE ---
+    const Wishlist = {
+        items: JSON.parse(localStorage.getItem('fusion_wishlist')) || [],
+        toggle: function(id) {
+            if (this.items.includes(id)) this.items = this.items.filter(x => x !== id);
+            else this.items.push(id);
+            localStorage.setItem('fusion_wishlist', JSON.stringify(this.items));
+            this.updateUI();
+            Catalog.render(); // Re-sync heart icons
+        },
+        updateUI: function() {
+            const count = this.items.length;
+            ['wishlistCount', 'floatingWishlistCount'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = count;
+            });
+        }
+    };
+
+    // --- 5. POPUP ENGINE ---
+    const Popup = {
+        init: function() {
+            const dismissed = localStorage.getItem('fusion_popup_dismissed');
+            if (dismissed && new Date().getTime() < parseInt(dismissed)) return;
+            setTimeout(() => {
+                const el = document.getElementById('popupModal');
+                if (el) new bootstrap.Modal(el).show();
+            }, settings.popup_delay || 3000);
+        },
+        dismiss: function() {
+            const expiry = new Date().getTime() + (24 * 60 * 60 * 1000);
+            localStorage.setItem('fusion_popup_dismissed', expiry);
+        }
     };
 
     /**
-     * Entry Point: Triggered on DOMContentLoaded
+     * Boot Sequence
      */
-    async function boot() {
-        console.group("Fusion Engine: System Boot");
-        
-        if (!validateConfig()) {
-            console.error("Fusion: Critical initialization failure.");
-            console.groupEnd();
-            return;
-        }
-
-        applyBranding();
-        await initializeCore();
-        await bootModules();
-
-        console.log("Fusion: System is fully operational.");
-        console.groupEnd();
-        
-        // Final Ready Event
-        window.dispatchEvent(new CustomEvent('fusion:ready'));
+    function boot() {
+        i18n.translate();
+        Catalog.init();
+        Cart.updateUI();
+        Wishlist.updateUI();
+        Popup.init();
     }
 
-    /**
-     * Validate Settings from Google Sheets
-     */
-    function validateConfig() {
-        if (!state.config) {
-            console.error("Fusion: FUSION_SETTINGS not found. Verify Code.gs and ThemeTemplate.html.");
-            return false;
-        }
-        return true;
-    }
-
-    /**
-     * Inject Branding from Builder settings
-     */
-    function applyBranding() {
-        const primary = state.config.primary_color || '#4f46e5';
-        document.documentElement.style.setProperty('--primary', primary);
-        document.documentElement.style.setProperty('--fusion-primary', primary);
-        console.log("Fusion: Branding applied (" + primary + ")");
-    }
-
-    /**
-     * Initialize non-blocking core utilities (I18N, Currency)
-     */
-    async function initializeCore() {
-        // Initialize I18n if present
-        if (window.FusionI18n) {
-            await FusionI18n.init(state.config.default_language);
-            console.log("Fusion: I18n Ready");
-        }
-
-        // Initialize Currency formatting
-        if (window.FusionCurrency) {
-            FusionCurrency.init(state.config.currency_symbol);
-            console.log("Fusion: Currency Engine Ready");
-        }
-    }
-
-    /**
-     * Fetch Blogger Feed and boot enabled modules
-     */
-    async function bootModules() {
-        // 1. Fetch Products (The Source of Truth)
-        if (window.FusionProducts && state.config.blogger_feed_url) {
-            const feedUrl = state.config.blogger_feed_url;
-            console.log("Fusion: Fetching feed from " + feedUrl);
-            await FusionProducts.fetchFeed(feedUrl);
-            state.isDataReady = true;
-        }
-
-        // 2. Initialize Shopping Cart
-        if (state.config.cart_included && window.FusionCart) {
-            FusionCart.init ? FusionCart.init() : null;
-            // Update UI count immediately
-            const cart = FusionCart.load();
-            window.dispatchEvent(new CustomEvent('fusion:cart_updated', { detail: cart }));
-            console.log("Fusion: Cart Module Active");
-        }
-
-        // 3. Initialize QuickView
-        if (state.config.quickview_included && window.FusionQuickView) {
-            FusionQuickView.init();
-            console.log("Fusion: QuickView Module Active");
-        }
-
-        // 4. Initialize Marketing Popup
-        if (state.config.popup_enabled) {
-            initPopupTrigger();
-        }
-
-        // 5. Initialize Wishlist
-        if (state.config.wishlist_included && window.FusionWishlist) {
-            FusionWishlist.init();
-            console.log("Fusion: Wishlist Module Active");
-        }
-    }
-
-    /**
-     * Handles the Timed Popup trigger
-     */
-    function initPopupTrigger() {
-        const delay = (parseInt(state.config.popup_delay) || 5) * 1000;
-        setTimeout(() => {
-            const modalEl = document.getElementById('timedPopup');
-            if (modalEl && window.bootstrap) {
-                const modal = new bootstrap.Modal(modalEl);
-                modal.show();
-                console.log("Fusion: Marketing Popup Triggered");
-            }
-        }, delay);
-    }
-
-    return {
-        boot: boot,
-        getState: () => ({ ...state })
-    };
-
+    // Expose API
+    return { boot, i18n, Catalog, Cart, Wishlist, Popup };
 })();
 
-// Global Safety Hook
-document.addEventListener('DOMContentLoaded', () => FusionRuntime.boot());
+// Auto-start
+document.addEventListener('DOMContentLoaded', Fusion.boot);
