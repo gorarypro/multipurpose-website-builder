@@ -1,139 +1,101 @@
 /**
- * FUSION v10.8.0 - quickview.js
- * --------------------------------
- * Bootstrap-based Quick View Engine
- * Role:
- * - Opens product details in a Bootstrap modal
- * - Injects variants
- * - Connects to CartModule & CurrencyModule
+ * FUSION ENGINE v13.1.0 - quickview.js
+ * Bootstrap-based Modal Orchestration
+ * -----------------------------------------------------
+ * Responsibilities:
+ * - Handling global click listeners for [data-quickview]
+ * - Populating the QuickView modal from memory (FusionCatalog)
+ * - Integrating with Variants and Cart modules
  */
 
-(function () {
+window.FusionQuickView = (function () {
 
-  const QuickView = {
+  const state = {
     modal: null,
-    currentProduct: null,
-
-    /**
-     * Initialize QuickView system
-     */
-    init() {
-      const modalEl = document.getElementById('quickViewModal');
-      if (!modalEl || !window.bootstrap) return;
-
-      this.modal = new bootstrap.Modal(modalEl);
-
-      // Attach event listeners to product cards
-      document.addEventListener('click', (e) => {
-        const btn = e.target.closest('[data-quickview]');
-        if (!btn) return;
-
-        e.preventDefault();
-        const productId = btn.getAttribute('data-quickview');
-        this.open(productId);
-      });
-
-      console.log('QuickView: Initialized');
-    },
-
-    /**
-     * Open QuickView for a product
-     */
-    open(productId) {
-      if (!window.ProductsModule || !ProductsModule.catalog) {
-        console.warn('QuickView: Products not ready');
-        return;
-      }
-
-      const product = ProductsModule.catalog.find(p => String(p.id) === String(productId));
-      if (!product) return;
-
-      this.currentProduct = product;
-
-      // Populate modal
-      this.setText('quickViewTitle', product.title);
-      this.setImage('quickViewImage', product.image);
-      this.setText('quickViewDescription', product.description || '');
-
-      const priceEl = document.getElementById('quickViewPrice');
-      if (priceEl && window.CurrencyModule) {
-        priceEl.textContent = CurrencyModule.format(product.price);
-      }
-
-      // Variants
-      this.renderVariants(product);
-
-      // Cart button
-      const btn = document.getElementById('quickViewAddToCartBtn');
-      if (btn) {
-        btn.onclick = () => {
-          if (!window.CartModule) return;
-
-          const variants = window.VariantsModule
-            ? VariantsModule.getSelection(product.id)
-            : {};
-
-          CartModule.add(
-            product.id,
-            product.title,
-            product.price,
-            variants
-          );
-
-          this.modal.hide();
-        };
-      }
-
-      this.modal.show();
-    },
-
-    /**
-     * Render variants inside modal
-     */
-    renderVariants(product) {
-      const container = document.getElementById('quickViewVariants');
-      if (!container) return;
-
-      container.innerHTML = '';
-
-      if (!window.VariantsModule) return;
-
-      const variantMap = VariantsModule.parse(product.raw || product.description);
-      if (!variantMap) return;
-
-      VariantsModule.renderSelector(
-        product.id,
-        'quickViewVariants',
-        variantMap
-      );
-    },
-
-    /**
-     * Helpers
-     */
-    setText(id, text) {
-      const el = document.getElementById(id);
-      if (el) el.textContent = text;
-    },
-
-    setImage(id, src) {
-      const el = document.getElementById(id);
-      if (el) el.src = src;
-    }
+    activeProduct: null,
+    activeVariants: {}
   };
 
   /**
-   * Runtime hook
+   * Initialization called by FusionRuntime
    */
-  document.addEventListener('runtime_ready', function () {
-    QuickView.init();
-  });
+  function init() {
+    const modalEl = document.getElementById('quickViewModal');
+    if (!modalEl || !window.bootstrap) {
+      console.warn("FusionQuickView: Bootstrap or Modal container missing.");
+      return;
+    }
 
-  // Safety fallback
-  if (document.readyState === 'complete') {
-    setTimeout(() => QuickView.init(), 1000);
+    state.modal = new bootstrap.Modal(modalEl);
+
+    // Global Event Delegation for Product Cards
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-quickview]');
+      if (!btn) return;
+
+      e.preventDefault();
+      const productId = btn.getAttribute('data-quickview');
+      open(productId);
+    });
   }
 
+  /**
+   * Opens the modal and populates data from the Catalog
+   */
+  function open(productId) {
+    // Look up product in memory (populated by products.js)
+    const product = (window.FusionCatalog || []).find(p => String(p.id) === String(productId));
+    
+    if (!product) {
+      console.error(`FusionQuickView: Product ID ${productId} not found in Catalog.`);
+      return;
+    }
+
+    state.activeProduct = product;
+
+    // 1. Populate Basic Info
+    dom('quickViewTitle', product.title);
+    dom('quickViewImage', product.image, 'src');
+    dom('quickViewDescription', product.description);
+
+    // 2. Handle Localized Pricing
+    const priceEl = document.getElementById('quickViewPrice');
+    if (priceEl) {
+      priceEl.textContent = window.FusionCurrency 
+        ? FusionCurrency.format(product.price) 
+        : product.price;
+    }
+
+    // 3. Render Variants and Capture Reference
+    const variantContainer = document.getElementById('quickViewVariants');
+    if (variantContainer && window.FusionVariants) {
+      state.activeVariants = FusionVariants.createSelectors(product.variants, variantContainer);
+    }
+
+    // 4. Bind Cart Logic
+    const cartBtn = document.getElementById('quickViewAddToCartBtn');
+    if (cartBtn) {
+      cartBtn.onclick = () => {
+        if (window.FusionCart) {
+          FusionCart.add(product, state.activeVariants);
+          state.modal.hide();
+        }
+      };
+    }
+
+    state.modal.show();
+  }
+
+  /**
+   * Internal DOM Helper
+   */
+  function dom(id, value, attr = 'textContent') {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (attr === 'textContent') el.textContent = value;
+    else el.setAttribute(attr, value);
+  }
+
+  return { init, open };
+
 })();
-  // Expose globally
-  window.QuickViewModule = QuickViewModule;
