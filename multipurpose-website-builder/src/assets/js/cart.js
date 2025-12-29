@@ -1,136 +1,190 @@
 /**
- * FUSION ENGINE v12.0.0 - cart.js
- * Persistent, Variant-Aware Cart Logic
- * -----------------------------------------------------
- * Responsibilities:
- * - LocalStorage state management
- * - Checkout lead preparation for Code.gs
- * - Global event dispatching (fusion:cart_updated)
+ * FUSION ENGINE v15.3.0 - Shopping Cart Logic
+ * Manages persistence, UI synchronization, and checkout.
  */
 
-window.FusionCart = (function () {
-  const KEY = 'fusion_cart_v1';
+const FusionCart = (function() {
+    // 1. Internal State
+    let cart = JSON.parse(localStorage.getItem('fusion_cart')) || [];
+    const settings = window.FUSION_SETTINGS || {};
 
-  /**
-   * Load cart from LocalStorage
-   */
-  function load() {
-    try {
-      return JSON.parse(localStorage.getItem(KEY)) || [];
-    } catch { return []; }
-  }
-
-  /**
-   * Save cart and notify other modules
-   */
-  function save(cart) {
-    localStorage.setItem(KEY, JSON.stringify(cart));
-    // Dispatch event for UI sync (cart-ui.js, runtime.js)
-    window.dispatchEvent(new CustomEvent('fusion:cart_updated', { detail: cart }));
-  }
-
-  /**
-   * Add item to cart with variant support
-   */
-  function add(product, variantState = {}) {
-    const cart = load();
-    
-    // Safely generate a unique key for this product+variant combination
-    const variantKey = window.FusionVariants 
-      ? FusionVariants.serialize(variantState) 
-      : JSON.stringify(variantState);
-
-    const found = cart.find(i => i.id === product.id && i.variantKey === variantKey);
-
-    if (found) {
-      found.qty += 1;
-    } else {
-      cart.push({
-        id: product.id,
-        title: product.title,
-        price: product.price,
-        variantKey,
-        variants: { ...variantState },
-        qty: 1,
-        image: product.image
-      });
+    /**
+     * Initialize Cart UI
+     */
+    function init() {
+        updateUI();
+        setupListeners();
+        console.log("FusionCart: System Ready.");
     }
-    save(cart);
-  }
 
-  function remove(index) {
-    const cart = load();
-    cart.splice(index, 1);
-    save(cart);
-  }
+    /**
+     * Add Item to Cart
+     */
+    function add(productId) {
+        // Find product details from the Catalog (loaded by products.js)
+        const product = (typeof FusionCatalog !== 'undefined') 
+            ? FusionCatalog.getProductById(productId) 
+            : null;
 
-  function clear() { 
-    save([]); 
-  }
+        if (!product) {
+            console.error("FusionCart: Product not found in catalog.");
+            return;
+        }
 
-  function total() {
-    return load().reduce((sum, item) => sum + (parseFloat(item.price) * item.qty), 0);
-  }
+        const existingItem = cart.find(item => item.id === productId);
+        if (existingItem) {
+            existingItem.quantity += 1;
+        } else {
+            cart.push({
+                id: product.id,
+                title: product.title,
+                price: product.price,
+                image: product.image,
+                quantity: 1
+            });
+        }
 
-  /**
-   * CHECKOUT LOGIC
-   * Communicates with saveEntry in Code.gs
-   */
-  async function checkout(details) {
-    const cartItems = load();
-    if (cartItems.length === 0) return { status: 'error', message: 'Cart is empty' };
+        save();
+        showToast(`Added ${product.title} to cart`);
+    }
 
-    const payload = {
-      type: 'order',
-      name: details.name,
-      email: details.email,
-      phone: details.phone,
-      // Map address/notes to the "message" column in Code.gs v13.1.0
-      message: details.address || details.message || '',
-      total: total(),
-      items: cartItems,
-      timestamp: new Date().toISOString()
-    };
+    /**
+     * Remove or Decrease Quantity
+     */
+    function remove(productId, forceDelete = false) {
+        const index = cart.findIndex(item => item.id === productId);
+        if (index === -1) return;
 
-    return new Promise((resolve, reject) => {
-      // Check if running in Google Apps Script environment
-      if (window.google && google.script) {
-        google.script.run
-          .withSuccessHandler(res => {
-            if (res.status === 'ok') {
-              clear();
-              resolve(res);
-            } else {
-              reject(res);
+        if (forceDelete || cart[index].quantity <= 1) {
+            cart.splice(index, 1);
+        } else {
+            cart[index].quantity -= 1;
+        }
+
+        save();
+    }
+
+    /**
+     * Persist to Storage and Update UI
+     */
+    function save() {
+        localStorage.setItem('fusion_cart', JSON.stringify(cart));
+        updateUI();
+        // Dispatch event for other modules
+        window.dispatchEvent(new CustomEvent('fusion:cartUpdated', { detail: cart }));
+    }
+
+    /**
+     * Sync all counters and modal content
+     */
+    function updateUI() {
+        const count = cart.reduce((sum, item) => sum + item.quantity, 0);
+        
+        // Update all badges (Navbar & Floating)
+        const badges = ['cartCount', 'floatingCartCount'];
+        badges.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.textContent = count;
+                el.style.display = count > 0 ? 'flex' : 'none';
             }
-          })
-          .withFailureHandler(err => reject(err))
-          .saveEntry(JSON.stringify(payload));
-      } else {
-        // Fallback for simulation/local preview
-        console.log("Fusion Engine: Checkout Simulation Payload:", payload);
-        setTimeout(() => {
-          clear();
-          resolve({ status: 'ok', simulation: true });
-        }, 1500);
-      }
-    });
-  }
+        });
 
-  return { load, add, remove, clear, total, checkout };
+        renderCartModal();
+    }
+
+    /**
+     * Render the Cart Modal Content
+     */
+    function renderCartModal() {
+        const container = document.getElementById('cartContent');
+        const emptyState = document.getElementById('cartEmpty');
+        const checkoutFields = document.getElementById('checkoutFields');
+        const totalEl = document.getElementById('cartTotal');
+
+        if (!container) return;
+
+        if (cart.length === 0) {
+            container.innerHTML = '';
+            emptyState.classList.remove('d-none');
+            if (checkoutFields) checkoutFields.style.display = 'none';
+            if (totalEl) totalEl.textContent = '0 ' + (settings.currency_symbol || 'DH');
+            return;
+        }
+
+        emptyState.classList.add('d-none');
+        if (checkoutFields) checkoutFields.style.display = 'block';
+
+        let total = 0;
+        container.innerHTML = cart.map(item => {
+            const priceNum = parseFloat(item.price.replace(/[^0-9.]/g, '')) || 0;
+            total += (priceNum * item.quantity);
+            
+            return `
+                <div class="d-flex align-items-center mb-3 border-bottom pb-2">
+                    <img src="${item.image}" class="rounded me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                    <div class="flex-grow-1">
+                        <h6 class="mb-0 small fw-bold">${item.title}</h6>
+                        <div class="text-primary small">${item.price} x ${item.quantity}</div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <button class="btn btn-sm btn-light py-0" onclick="FusionCart.remove('${item.id}')">-</button>
+                        <button class="btn btn-sm btn-light py-0" onclick="FusionCart.add('${item.id}')">+</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        if (totalEl) totalEl.textContent = total.toFixed(2) + ' ' + (settings.currency_symbol || 'DH');
+    }
+
+    /**
+     * Checkout - WhatsApp Integration
+     */
+    function checkout() {
+        if (cart.length === 0) return;
+
+        const name = document.getElementById('checkoutName')?.value;
+        const phone = document.getElementById('checkoutPhone')?.value;
+        
+        if (!name || !phone) {
+            alert("Please fill in your Name and Phone Number.");
+            return;
+        }
+
+        let message = `*New Order from ${settings.site_title}*\n\n`;
+        message += `*Customer:* ${name}\n`;
+        message += `*Phone:* ${phone}\n\n`;
+        message += `*Items:*\n`;
+        
+        cart.forEach(item => {
+            message += `- ${item.title} (x${item.quantity}) - ${item.price}\n`;
+        });
+
+        const total = document.getElementById('cartTotal')?.textContent;
+        message += `\n*Total:* ${total}`;
+
+        const waNumber = (settings.contact_whatsapp || '').replace(/\D/g, '');
+        const waUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`;
+        
+        window.open(waUrl, '_blank');
+        
+        // Clear cart after redirect?
+        // cart = []; save();
+    }
+
+    function setupListeners() {
+        const btn = document.getElementById('checkoutButton');
+        if (btn) btn.onclick = checkout;
+    }
+
+    function showToast(msg) {
+        console.log("Cart Toast:", msg);
+        // Add your favorite toast notification logic here
+    }
+
+    return { init, add, remove, getItems: () => cart };
 })();
 
-/**
- * Global UI Synchronization
- * Automatically updates navbar and floating cart counts
- */
-window.addEventListener('fusion:cart_updated', (e) => {
-  const cart = e.detail || [];
-  const count = cart.reduce((sum, item) => sum + item.qty, 0);
-  
-  // Update standard navbar and floating button count elements
-  ['cartCount', 'floatingCartCount'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.textContent = count;
-  });
-});
+// Auto-init
+document.addEventListener('DOMContentLoaded', FusionCart.init);
