@@ -1,24 +1,32 @@
 /**
- * FUSION ENGINE v16.2.0 - Unified Runtime (Auto-Stock Compatible)
+ * FUSION ENGINE v16.3.0 - Unified Runtime
+ * Includes: i18n, Catalog, Cart, Wishlist, Popup, & Inventory Logic
  */
 
 const Fusion = (function() {
+    // --- GLOBAL CONFIG ---
     const settings = window.FUSION_SETTINGS || {};
     const mapping = window.FUSION_TEXTMAPPING || {};
     const currency = settings.currency_symbol || "DH";
     const scriptUrl = window.location.href.split('?')[0];
 
+    // --- 1. i18n ENGINE ---
     const i18n = {
         lang: localStorage.getItem('fusion_lang') || 'en',
         translate: function() {
             document.querySelectorAll('[data-i18n]').forEach(el => {
                 const key = el.getAttribute('data-i18n');
-                if (mapping[key]) el.textContent = mapping[key][this.lang] || mapping[key]['en'];
+                if (mapping[key]) {
+                    const text = mapping[key][this.lang] || mapping[key]['en'];
+                    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') el.placeholder = text;
+                    else el.textContent = text;
+                }
             });
             document.dir = (this.lang === 'ar') ? 'rtl' : 'ltr';
         }
     };
 
+    // --- 2. CATALOG & INVENTORY ENGINE ---
     const Catalog = {
         products: [],
         inventory: {},
@@ -26,10 +34,12 @@ const Fusion = (function() {
             const grid = document.getElementById('productGrid');
             if (!grid) return;
             try {
+                // Fetch Inventory Map from GAS
                 const invRes = await fetch(`${scriptUrl}?action=getInventory`);
                 const invData = await invRes.json();
                 this.inventory = invData.inventory || {};
 
+                // Fetch Blogger Posts
                 const res = await fetch(`/feeds/posts/default?alt=json&max-results=999`);
                 const data = await res.json();
                 
@@ -38,20 +48,31 @@ const Fusion = (function() {
                     let p = "Contact";
                     const lb = labels.find(l => l.toLowerCase().includes('price:'));
                     if (lb) p = lb.split(':')[1].trim() + " " + currency;
+                    
                     let img = entry.media$thumbnail ? entry.media$thumbnail.url.replace(/\/s[0-9]+-c/, '/w600-h600-c') : 'https://via.placeholder.com/600';
-                    return { id: entry.id.$t, title: entry.title.$t, image: img, price: p, inStock: this.inventory[entry.id.$t] !== "Out of Stock" };
+                    
+                    const pid = entry.id.$t;
+                    return { 
+                        id: pid, 
+                        title: entry.title.$t, 
+                        image: img, 
+                        price: p,
+                        inStock: this.inventory[pid] !== "Out of Stock"
+                    };
                 });
                 this.render();
-            } catch (e) { console.error(e); }
+            } catch (e) { console.error("Fusion Catalog Error:", e); }
         },
         render: function() {
             const grid = document.getElementById('productGrid');
             const wished = (typeof Wishlist !== 'undefined') ? Wishlist.items : [];
+            
             grid.innerHTML = this.products.map(item => {
                 const heart = wished.includes(item.id) ? 'bi-heart-fill text-danger' : 'bi-heart';
                 const stockBadge = item.inStock ? '' : '<span class="badge bg-danger position-absolute top-0 start-0 m-2">Out of Stock</span>';
                 const btnAttr = item.inStock ? `onclick="Fusion.Cart.add('${item.id}')"` : 'disabled';
                 const btnClass = item.inStock ? 'btn-primary' : 'btn-secondary opacity-50';
+
                 return `
                 <div class="col-6 col-md-4 col-lg-3 mb-4">
                     <div class="card h-100 border-0 shadow-sm product-card ${item.inStock ? '' : 'stock-out'}">
@@ -63,8 +84,8 @@ const Fusion = (function() {
                             </button>
                         </div>
                         <div class="card-body p-3 text-center">
-                            <h6 class="small fw-bold text-truncate">${item.title}</h6>
-                            <p class="small text-primary fw-bold">${item.price}</p>
+                            <h6 class="card-title text-truncate mb-1 small fw-bold">${item.title}</h6>
+                            <p class="small text-primary fw-bold mb-3">${item.price}</p>
                             <button class="btn btn-sm ${btnClass} w-100 rounded-pill" ${btnAttr}>
                                 ${item.inStock ? 'Add to Cart' : 'Sold Out'}
                             </button>
@@ -75,6 +96,7 @@ const Fusion = (function() {
         }
     };
 
+    // --- 3. CART ENGINE ---
     const Cart = {
         items: JSON.parse(localStorage.getItem('fusion_cart')) || [],
         add: function(id) {
@@ -90,33 +112,65 @@ const Fusion = (function() {
         },
         updateUI: function() {
             const count = this.items.reduce((a, b) => a + b.qty, 0);
-            ['cartCount', 'floatingCartCount'].forEach(id => { if (document.getElementById(id)) document.getElementById(id).textContent = count; });
+            ['cartCount', 'floatingCartCount'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = count;
+            });
         },
         checkout: function() {
             const n = document.getElementById('checkoutName').value;
             const ph = document.getElementById('checkoutPhone').value;
-            const tot = document.getElementById('cartTotal').textContent;
-            if (!n || !ph) return alert("Missing Info");
-            const payload = { name: n, phone: ph, total: tot, items: this.items };
+            if (!n || !ph) return alert("Please fill required fields.");
+            
+            const payload = { name: n, phone: ph, total: document.getElementById('cartTotal')?.textContent || '0', items: this.items };
+            
+            // Sync to Google Sheets
             fetch(`${scriptUrl}?action=saveOrder&payload=${encodeURIComponent(JSON.stringify(payload))}`, { mode: 'no-cors' });
-            window.open(`https://wa.me/${settings.contact_whatsapp.replace(/\D/g,'')}?text=${encodeURIComponent('New Order: ' + n)}`, '_blank');
+
+            // Send to WhatsApp
+            const waMsg = `*Order from ${settings.site_title}*\nName: ${n}\nItems: ${this.items.map(i => i.title + ' (x'+i.qty+')').join(', ')}`;
+            window.open(`https://wa.me/${settings.contact_whatsapp.replace(/\D/g,'')}?text=${encodeURIComponent(waMsg)}`, '_blank');
         }
     };
 
+    // --- 4. WISHLIST ENGINE ---
     const Wishlist = {
         items: JSON.parse(localStorage.getItem('fusion_wishlist')) || [],
         toggle: function(id) {
             this.items = this.items.includes(id) ? this.items.filter(x => x !== id) : [...this.items, id];
             localStorage.setItem('fusion_wishlist', JSON.stringify(this.items));
-            this.updateUI(); Catalog.render();
+            this.updateUI(); 
+            Catalog.render();
         },
         updateUI: function() {
             const c = this.items.length;
-            ['wishlistCount', 'floatingWishlistCount'].forEach(id => { if (document.getElementById(id)) document.getElementById(id).textContent = c; });
+            ['wishlistCount', 'floatingWishlistCount'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = c;
+            });
         }
     };
 
-    return { boot: () => { i18n.translate(); Catalog.init(); Cart.updateUI(); Wishlist.updateUI(); }, Cart, Wishlist };
+    // --- 5. POPUP ENGINE ---
+    const Popup = {
+        init: function() {
+            const dismissed = localStorage.getItem('fusion_popup_dismissed');
+            if (dismissed && new Date().getTime() < parseInt(dismissed)) return;
+            setTimeout(() => {
+                const el = document.getElementById('popupModal');
+                if (el) new bootstrap.Modal(el).show();
+            }, settings.popup_delay || 3000);
+        },
+        dismiss: function() {
+            const expiry = new Date().getTime() + (24 * 60 * 60 * 1000);
+            localStorage.setItem('fusion_popup_dismissed', expiry);
+        }
+    };
+
+    return { 
+        boot: () => { i18n.translate(); Catalog.init(); Cart.updateUI(); Wishlist.updateUI(); Popup.init(); }, 
+        Cart, Wishlist, i18n, Popup 
+    };
 })();
 
 document.addEventListener('DOMContentLoaded', Fusion.boot);
